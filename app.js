@@ -12,8 +12,13 @@ const faceConfidence = document.getElementById("faceConfidence");
 const faceSeasonReason = document.getElementById("faceSeasonReason");
 const facePaletteSwatches = document.getElementById("facePaletteSwatches");
 const seasonCandidates = document.getElementById("seasonCandidates");
-const creatorPrompt = document.getElementById("creatorPrompt");
-const copyPromptButton = document.getElementById("copyPromptButton");
+const styleOccasionSelect = document.getElementById("styleOccasionSelect");
+const styleBackgroundSelect = document.getElementById("styleBackgroundSelect");
+const generatePhotoButton = document.getElementById("generatePhotoButton");
+const generationStatus = document.getElementById("generationStatus");
+const generatedStyleImage = document.getElementById("generatedStyleImage");
+
+let latestFaceResult = null;
 
 const seasonProfiles = [
   {
@@ -250,7 +255,7 @@ function sampleFaceImage(image) {
   };
 }
 
-function buildCreatorPrompt(result) {
+function buildStyleImagePrompt(result) {
   const palette = result.profile.palette.join(", ");
   const axisSummary = [
     axisLabel("temperature", result.axes.temperature),
@@ -258,25 +263,16 @@ function buildCreatorPrompt(result) {
     axisLabel("chroma", result.axes.chroma),
     axisLabel("contrast", result.axes.contrast),
   ].join(", ");
+  const occasion = styleOccasionSelect?.value || "business";
+  const background = styleBackgroundSelect?.value || "premium boutique studio";
 
   return [
-    "Use the uploaded face photo as the identity reference. Create a sleek men's fashion portrait using the styling direction below.",
-    "",
-    `Colour profile: ${result.profile.name}. Palette hex colours: ${palette}. Visual read: ${axisSummary}.`,
-    `Wardrobe direction: ${result.profile.wardrobe}. Use a polished night-out / luxury menswear feel with tailored clothing, controlled lighting, and premium textures.`,
-    "",
-    "Identity preservation rules:",
-    "- Keep the exact same face identity, face shape, head shape, jawline, cheekbones, forehead, eye shape, eye spacing, nose shape, mouth shape, ears, hairline, hairstyle, facial hair, skin tone, age, and expression.",
-    "- Do not beautify, slim, widen, age, de-age, change ethnicity, change eye colour, change hairstyle, change facial hair, or alter the natural face proportions.",
-    "- Keep the face angle, camera perspective, and head size close to the reference photo. Do not stretch, warp, liquify, smooth too much, or make the face look like a different person.",
-    "- Only change styling elements: outfit, background, lighting, colour palette, accessories, and overall fashion mood.",
-    "",
-    "Image direction:",
-    "A realistic high-end men's style editorial portrait. Tailored fit, clean collar, season-safe near-face colour, subtle luxury styling, natural skin texture, sharp but believable lighting, premium boutique or evening lounge background. Photorealistic, no logos, no text, no watermark.",
-    "",
-    "Negative prompt:",
-    "warped face, changed identity, different person, altered facial structure, distorted eyes, uneven eyes, changed nose, changed lips, changed jawline, plastic skin, over-smoothed face, exaggerated muscles, cartoon, low detail, blurry face, extra fingers, bad hands, watermark, text.",
-  ].join("\n");
+    "High-end IC_wearables fashion editorial image.",
+    `Occasion: ${occasion}. Background: ${background}.`,
+    `Colour profile: ${result.profile.name}. Palette hex colours for clothing, shoes, and accessories only: ${palette}.`,
+    `Visual read: ${axisSummary}. Wardrobe direction: ${result.profile.wardrobe}.`,
+    "Show a clear full face, premium textures, tailored outfit, clean realistic lighting, photorealistic skin texture, no text, no logos, no watermark.",
+  ].join(" ");
 }
 
 function createBrowserResult(sample) {
@@ -293,6 +289,7 @@ function createBrowserResult(sample) {
 }
 
 function renderFaceResult(result) {
+  latestFaceResult = result;
   const topProfiles = result.ranked.slice(0, 3);
   const top = result.profile;
   const sourceLabel = result.source === "python" ? "Python demo backend estimate" : "browser estimate";
@@ -327,7 +324,9 @@ function renderFaceResult(result) {
     seasonCandidates.appendChild(item);
   });
 
-  creatorPrompt.value = result.prompt || buildCreatorPrompt(result);
+  if (generationStatus) {
+    generationStatus.textContent = "Face scan ready. Select occasion and background, then generate the photo.";
+  }
 }
 
 async function analyzeFaceWithBackend(dataUrl) {
@@ -402,35 +401,39 @@ function handleFaceUpload(file) {
   reader.readAsDataURL(file);
 }
 
-function copyPrompt() {
-  if (!creatorPrompt?.value) return;
-  const original = copyPromptButton.textContent;
-  const fallback = () => {
-    creatorPrompt.focus();
-    creatorPrompt.select();
-    document.execCommand("copy");
-  };
+function generatedImageUrl(prompt) {
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=1000&nologo=true`;
+}
 
-  const copied = navigator.clipboard?.writeText(creatorPrompt.value) || Promise.resolve().then(fallback);
-  copied
-    .then(() => {
-      copyPromptButton.textContent = "Copied";
-      window.setTimeout(() => {
-        copyPromptButton.textContent = original;
-      }, 1400);
-    })
-    .catch(() => {
-      fallback();
-      copyPromptButton.textContent = "Copied";
-    });
+function generateStylePhoto() {
+  if (!latestFaceResult) {
+    if (generationStatus) generationStatus.textContent = "Scan or upload a face photo first.";
+    faceUpload?.focus();
+    return;
+  }
+
+  const prompt = buildStyleImagePrompt(latestFaceResult);
+  if (generationStatus) generationStatus.textContent = "Generating photo...";
+  if (generatePhotoButton) generatePhotoButton.disabled = true;
+  if (generatedStyleImage) {
+    generatedStyleImage.onload = () => {
+      if (generationStatus) generationStatus.textContent = "Photo generated. API keys can replace this with live backend generation later.";
+      if (generatePhotoButton) generatePhotoButton.disabled = false;
+    };
+    generatedStyleImage.onerror = () => {
+      if (generationStatus) generationStatus.textContent = "Image service did not respond. Try again.";
+      if (generatePhotoButton) generatePhotoButton.disabled = false;
+    };
+    generatedStyleImage.src = generatedImageUrl(prompt);
+  }
 }
 
 function initFaceColourStudio() {
-  if (!faceUpload || !copyPromptButton) return;
+  if (!faceUpload) return;
   faceUpload.addEventListener("change", (event) => {
     handleFaceUpload(event.target.files?.[0]);
   });
-  copyPromptButton.addEventListener("click", copyPrompt);
+  generatePhotoButton?.addEventListener("click", generateStylePhoto);
 }
 
 updateHeader();

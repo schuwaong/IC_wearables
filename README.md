@@ -2,9 +2,9 @@
 
 Premium landing page for IC_wearables.
 
-The primary landing-page CTA opens the hosted demo account:
+The primary landing-page CTA opens the hosted scan flow:
 
-`https://schuwaong.github.io/IC_avatar/#results`
+`https://schuwaong.github.io/IC_avatar/#capture`
 
 ## Face Colour Demo
 
