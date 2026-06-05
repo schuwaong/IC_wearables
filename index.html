@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="IC_wearables is a premium AI styling experience that scans your look, finds your seasonal colour palette, recommends outfits, and connects you to nearby shops."
+    />
+    <title>IC_wearables</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <header class="site-header" data-site-header>
+      <a class="brand" href="#top" aria-label="IC_wearables home">
+        <span class="brand-mark" aria-hidden="true">IC</span>
+        <span>IC_wearables</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#scan">Scan</a>
+        <a href="#palette">Palette</a>
+        <a href="#looks">Looks</a>
+        <a href="#shop">Shop</a>
+      </nav>
+
+      <a class="header-cta" href="https://schuwaong.github.io/IC_avatar/#results">Open demo</a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <img
+          class="hero-backdrop"
+          src="./assets/video-reference/prompt-scene-refs/scene-01-lifestyle-hook.png"
+          alt="Premium lifestyle moments styled by IC_wearables"
+        />
+        <div class="hero-shade" aria-hidden="true"></div>
+
+        <div class="hero-content">
+          <p class="eyebrow">AI personal styling, made wearable</p>
+          <h1 id="hero-title">IC_wearables</h1>
+          <p class="hero-copy">
+            Scan once. See your best colours, build complete outfits, and move from inspiration to purchase without guessing.
+          </p>
+          <div class="hero-actions" aria-label="Landing page actions">
+            <a class="primary-link" href="https://schuwaong.github.io/IC_avatar/#results">Open demo account</a>
+            <a class="secondary-link" href="#scan">View the flow</a>
+          </div>
+        </div>
+
+        <div class="hero-proof" aria-label="IC_wearables product highlights">
+          <span>12-season colour read</span>
+          <span>Outfit edits</span>
+          <span>Nearby shop handoff</span>
+        </div>
+      </section>
+
+      <section class="opening-band" aria-label="Product promise">
+        <div class="section-kicker">From photo to outfit</div>
+        <div class="opening-grid">
+          <h2>A premium styling layer that turns your face, season, and wardrobe into a clear buying decision.</h2>
+          <p>
+            IC_wearables is built for shoppers who want the confidence of a stylist with the speed of a mobile scan.
+            The experience moves from analysis to palette to ready-to-buy pieces in one refined flow.
+          </p>
+        </div>
+      </section>
+
+      <section class="story-progress" aria-label="IC_wearables scenes">
+        <a class="story-pill active" href="#scan" data-nav-section="scan">
+          <span>01</span>
+          Scan
+        </a>
+        <a class="story-pill" href="#palette" data-nav-section="palette">
+          <span>02</span>
+          Palette
+        </a>
+        <a class="story-pill" href="#looks" data-nav-section="looks">
+          <span>03</span>
+          Outfits
+        </a>
+        <a class="story-pill" href="#moments" data-nav-section="moments">
+          <span>04</span>
+          Moments
+        </a>
+        <a class="story-pill" href="#shop" data-nav-section="shop">
+          <span>05</span>
+          Buy
+        </a>
+      </section>
+
+      <section class="scene-section" id="scan" data-scene-section>
+        <div class="scene-copy">
+          <p class="eyebrow">Scene 01</p>
+          <h2>Scan your style in seconds.</h2>
+          <p>
+            The first interaction feels precise and private: a guided mirror scan, face read, and style DNA progress state
+            before the recommendation engine opens up.
+          </p>
+          <ul class="feature-list" aria-label="Scan benefits">
+            <li>Front-facing photo guidance</li>
+            <li>Feature analysis progress</li>
+            <li>Private profile creation</li>
+          </ul>
+        </div>
+        <figure class="scene-media">
+          <img src="./assets/video-reference/prompt-scene-refs/scene-02-scan.png" alt="IC_wearables scan interface on a phone" />
+        </figure>
+      </section>
+
+      <section class="scene-section scene-section-reverse" id="palette" data-scene-section>
+        <div class="scene-copy">
+          <p class="eyebrow">Scene 02</p>
+          <h2>Your seasonal colour palette, made actionable.</h2>
+          <p>
+            The palette output does not stop at a label. It shows the season, neighbouring palettes, and a set of colours
+            that can become clothes, accessories, and makeup choices.
+          </p>
+          <div class="swatch-row" aria-label="Soft Autumn sample colours">
+            <span style="--swatch: #f1dcc0"></span>
+            <span style="--swatch: #d6b073"></span>
+            <span style="--swatch: #8b5e3c"></span>
+            <span style="--swatch: #6f7557"></span>
+            <span style="--swatch: #bd654b"></span>
+            <span style="--swatch: #154f5b"></span>
+          </div>
+        </div>
+        <figure class="scene-media">
+          <img
+            src="./assets/video-reference/prompt-scene-refs/scene-03-seasonal-colour-palette.png"
+            alt="Soft Autumn seasonal colour palette in IC_wearables"
+          />
+        </figure>
+      </section>
+
+      <section class="scene-section" id="looks" data-scene-section>
+        <div class="scene-copy">
+          <p class="eyebrow">Scene 03</p>
+          <h2>Clothes that change the way your look reads.</h2>
+          <p>
+            IC_wearables connects palette logic to real outfit categories: tops, outerwear, bottoms, dresses, and complete
+            combinations that already match the user.
+          </p>
+          <div class="mini-metrics" aria-label="Outfit recommendation details">
+            <span><strong>4</strong> item categories</span>
+            <span><strong>8</strong> outfit ideas</span>
+            <span><strong>1</strong> best-colour logic</span>
+          </div>
+        </div>
+        <figure class="scene-media scene-media-wide">
+          <img
+            src="./assets/video-reference/prompt-scene-refs/scene-04-clothes-change-your-look.png"
+            alt="IC_wearables clothing and outfit recommendations"
+          />
+        </figure>
+      </section>
+
+      <section class="moments-band" id="moments" data-scene-section>
+        <img
+          src="./assets/video-reference/prompt-scene-refs/scene-01-lifestyle-hook.png"
+          alt="Lifestyle moments styled by IC_wearables"
+        />
+        <div class="moments-copy">
+          <p class="eyebrow">Scene 04</p>
+          <h2>Made for your real moments.</h2>
+          <p>
+            Work, dates, gifting, and daily dressing all get the same treatment: a polished recommendation that fits the
+            moment instead of another generic product feed.
+          </p>
+        </div>
+      </section>
+
+      <section class="scene-section scene-section-reverse" id="shop" data-scene-section>
+        <div class="scene-copy">
+          <p class="eyebrow">Scene 05</p>
+          <h2>Buy now, or pick up nearby.</h2>
+          <p>
+            The final step feels like a premium retail handoff: delivery estimate, nearby boutique option, selected pieces,
+            secure payment cues, and clear returns support.
+          </p>
+          <a class="text-link" href="https://schuwaong.github.io/IC_avatar/#results">Open the demo account</a>
+        </div>
+        <figure class="scene-media">
+          <img
+            src="./assets/video-reference/prompt-scene-refs/scene-05-buy-now-nearby-shop.png"
+            alt="IC_wearables buy now and nearby shop checkout screen"
+          />
+        </figure>
+      </section>
+
+      <section class="premium-band" aria-label="Premium product pillars">
+        <div class="pillar">
+          <span>01</span>
+          <h3>Personal read</h3>
+          <p>Face, colour, and styling context are treated as one profile.</p>
+        </div>
+        <div class="pillar">
+          <span>02</span>
+          <h3>Edited wardrobe</h3>
+          <p>Recommendations stay tight, seasonal, and easy to compare.</p>
+        </div>
+        <div class="pillar">
+          <span>03</span>
+          <h3>Retail ready</h3>
+          <p>The path ends with delivery, pickup, or nearby store action.</p>
+        </div>
+      </section>
+
+      <section class="access-band" id="access" aria-labelledby="access-title">
+        <div class="access-copy">
+          <p class="eyebrow">Private beta</p>
+          <h2 id="access-title">Try the premium demo account next.</h2>
+          <p>
+            The landing page hands off to the interactive IC_avatar demo so you can see the profile readout, outfit edit, and shopping workflow.
+          </p>
+        </div>
+
+        <div class="access-form demo-card">
+          <span class="demo-card-label">Hosted demo</span>
+          <h3>Demo account page</h3>
+          <p>Jump directly into the profile readout section of the IC_avatar product demo.</p>
+          <a class="primary-button form-demo-link" href="https://schuwaong.github.io/IC_avatar/#results">Open demo account</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>IC_wearables</span>
+      <a href="#top">Back to top</a>
+    </footer>
+  </body>
+</html>
