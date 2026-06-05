@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="IC_wearables is a premium AI styling experience that scans your look, finds your seasonal colour palette, recommends outfits, and connects you to nearby shops."
+      content="IC_wearables for men is a sleek AI styling experience for colour profile, face-aware grooming, body-shape fit, and ready-to-buy menswear."
     />
-    <title>IC_wearables</title>
+    <title>IC_wearables for Men</title>
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./app.js"></script>
   </head>
@@ -22,6 +22,7 @@
         <a href="#scan">Scan</a>
         <a href="#palette">Palette</a>
         <a href="#looks">Looks</a>
+        <a href="#search">Search</a>
         <a href="#shop">Shop</a>
       </nav>
 
@@ -32,37 +33,38 @@
       <section class="hero" aria-labelledby="hero-title">
         <img
           class="hero-backdrop"
-          src="./assets/ic-wearables-hero-premium-v2.png"
-          alt="Premium IC_wearables client using AI styling in a clear boutique wardrobe studio"
+          src="./assets/mens-fitting-room.jpg"
+          alt="Two stylish men in tailored suits checking their fit in a dark boutique mirror"
         />
         <div class="hero-shade" aria-hidden="true"></div>
 
         <div class="hero-content">
-          <p class="eyebrow">AI personal styling, made wearable</p>
+          <p class="eyebrow">AI menswear styling, after dark</p>
           <h1 id="hero-title">IC_wearables</h1>
           <p class="hero-copy">
-            Scan once. See your best colours, build complete outfits, and move from inspiration to purchase without guessing.
+            A private style read for men: colour season, face-aware grooming, body-shape fit, and a sharp outfit before the night starts.
           </p>
           <div class="hero-actions" aria-label="Landing page actions">
-            <a class="primary-link" href="https://schuwaong.github.io/IC_avatar/#results">Open demo account</a>
-            <a class="secondary-link" href="#scan">View the flow</a>
+            <a class="primary-link" href="https://schuwaong.github.io/IC_avatar/#results">Open demo</a>
+            <a class="secondary-link" href="#scan">See the flow</a>
           </div>
         </div>
 
         <div class="hero-proof" aria-label="IC_wearables product highlights">
+          <span>Men-only demo direction</span>
           <span>12-season colour read</span>
-          <span>Outfit edits</span>
-          <span>Nearby shop handoff</span>
+          <span>Tailored fit logic</span>
+          <span>Night-out retail handoff</span>
         </div>
       </section>
 
       <section class="opening-band" aria-label="Product promise">
-        <div class="section-kicker">From photo to outfit</div>
+        <div class="section-kicker">The black book for getting dressed</div>
         <div class="opening-grid">
-          <h2>A premium styling layer that turns your face, season, and wardrobe into a clear buying decision.</h2>
+          <h2>From one scan to a look that feels expensive, intentional, and ready to wear.</h2>
           <p>
-            IC_wearables is built for shoppers who want the confidence of a stylist with the speed of a mobile scan.
-            The experience moves from analysis to palette to ready-to-buy pieces in one refined flow.
+            IC_wearables turns undertone, contrast, face shape, and frame into a practical menswear edit:
+            the right near-face colour, the right silhouette, and the exact shopping terms to find it.
           </p>
         </div>
       </section>
@@ -80,9 +82,9 @@
           <span>03</span>
           Outfits
         </a>
-        <a class="story-pill" href="#moments" data-nav-section="moments">
+        <a class="story-pill" href="#search" data-nav-section="search">
           <span>04</span>
-          Moments
+          Search
         </a>
         <a class="story-pill" href="#shop" data-nav-section="shop">
           <span>05</span>
@@ -93,133 +95,192 @@
       <section class="scene-section" id="scan" data-scene-section>
         <div class="scene-copy">
           <p class="eyebrow">Scene 01</p>
-          <h2>Scan your style in seconds.</h2>
+          <h2>Scan the face, frame, and intent.</h2>
           <p>
-            The first interaction feels precise and private: a guided mirror scan, face read, and style DNA progress state
-            before the recommendation engine opens up.
+            The profile starts with a clear men’s read: skin undertone, visual contrast, face shape, shoulders, waist, and the occasion.
           </p>
           <ul class="feature-list" aria-label="Scan benefits">
-            <li>Front-facing photo guidance</li>
-            <li>Feature analysis progress</li>
-            <li>Private profile creation</li>
+            <li>Private front-photo profile</li>
+            <li>Face-aware grooming direction</li>
+            <li>Body-shape fit tags for menswear</li>
           </ul>
         </div>
-        <figure class="scene-media">
-          <img src="./assets/video-reference/prompt-scene-refs/scene-02-scan.png" alt="IC_wearables scan interface on a phone" />
+        <figure class="scene-media portrait-media">
+          <img src="./assets/mens-phone-style.jpg" alt="Well-dressed man in a suit checking his phone for a style scan" />
+          <figcaption class="media-caption">
+            <span>Profile scan</span>
+            <strong>Undertone + contrast + frame</strong>
+          </figcaption>
         </figure>
       </section>
 
       <section class="scene-section scene-section-reverse" id="palette" data-scene-section>
         <div class="scene-copy">
           <p class="eyebrow">Scene 02</p>
-          <h2>Your seasonal colour palette, made actionable.</h2>
+          <h2>Turn colour season into a masculine palette.</h2>
           <p>
-            The palette output does not stop at a label. It shows the season, neighbouring palettes, and a set of colours
-            that can become clothes, accessories, and makeup choices.
+            The result does not stop at a label. It translates Soft Autumn, True Winter, Deep Autumn, and sister palettes into shirts,
+            jackets, watches, shoes, and fragrance notes.
           </p>
-          <div class="swatch-row" aria-label="Soft Autumn sample colours">
-            <span style="--swatch: #f1dcc0"></span>
-            <span style="--swatch: #d6b073"></span>
-            <span style="--swatch: #8b5e3c"></span>
-            <span style="--swatch: #6f7557"></span>
-            <span style="--swatch: #bd654b"></span>
-            <span style="--swatch: #154f5b"></span>
+          <div class="swatch-row" aria-label="Men's evening palette colours">
+            <span style="--swatch: #0d0d0f"></span>
+            <span style="--swatch: #f3efe5"></span>
+            <span style="--swatch: #7a1f2b"></span>
+            <span style="--swatch: #b98945"></span>
+            <span style="--swatch: #24464a"></span>
+            <span style="--swatch: #6f5b45"></span>
           </div>
         </div>
         <figure class="scene-media">
-          <img
-            src="./assets/video-reference/prompt-scene-refs/scene-03-seasonal-colour-palette.png"
-            alt="Soft Autumn seasonal colour palette in IC_wearables"
-          />
+          <img src="./assets/mens-black-suit.jpg" alt="Male model in a black suit showing a high-contrast menswear colour direction" />
+          <figcaption class="media-caption dark-caption">
+            <span>Example profile</span>
+            <strong>True Winter / high contrast</strong>
+          </figcaption>
         </figure>
       </section>
 
       <section class="scene-section" id="looks" data-scene-section>
         <div class="scene-copy">
           <p class="eyebrow">Scene 03</p>
-          <h2>Clothes that change the way your look reads.</h2>
+          <h2>Build the outfit like a stylist would.</h2>
           <p>
-            IC_wearables connects palette logic to real outfit categories: tops, outerwear, bottoms, dresses, and complete
-            combinations that already match the user.
+            IC_wearables converts the readout into high-signal menswear: the jacket cut, trouser shape, near-face colour,
+            metal tone, and a clean retail search path.
           </p>
           <div class="mini-metrics" aria-label="Outfit recommendation details">
-            <span><strong>4</strong> item categories</span>
-            <span><strong>8</strong> outfit ideas</span>
-            <span><strong>1</strong> best-colour logic</span>
+            <span><strong>6</strong> menswear categories</span>
+            <span><strong>12</strong> season-safe colours</span>
+            <span><strong>1</strong> best first buy</span>
           </div>
         </div>
         <figure class="scene-media scene-media-wide">
-          <img
-            src="./assets/video-reference/prompt-scene-refs/scene-04-clothes-change-your-look.png"
-            alt="IC_wearables clothing and outfit recommendations"
-          />
+          <img src="./assets/mens-suit-shop.jpg" alt="Two men selecting tailored menswear inside a premium suit shop" />
+          <figcaption class="media-caption">
+            <span>Shopping edit</span>
+            <strong>Tailoring, shirts, watches, shoes</strong>
+          </figcaption>
         </figure>
       </section>
 
-      <section class="moments-band" id="moments" data-scene-section>
-        <img
-          src="./assets/ic-wearables-hero-premium-v2.png"
-          alt="Clear premium boutique styling scene for IC_wearables"
-        />
-        <div class="moments-copy">
+      <section class="search-band" id="search" data-scene-section>
+        <div class="search-copy">
           <p class="eyebrow">Scene 04</p>
-          <h2>Made for your real moments.</h2>
+          <h2>Search nearby for clothes that already fit your style and colour.</h2>
           <p>
-            Work, dates, gifting, and daily dressing all get the same treatment: a polished recommendation that fits the
-            moment instead of another generic product feed.
+            IC_wearables turns the profile into an AI retail search: colour-safe pieces, fit tags, nearby stock,
+            and price bands before you leave the house.
           </p>
+          <div class="search-filters" aria-label="AI search filters">
+            <span>Soft Autumn</span>
+            <span>Tailored fit</span>
+            <span>2.5 km radius</span>
+            <span>Under HK$1,200</span>
+          </div>
+        </div>
+
+        <div class="search-console" aria-label="Nearby AI clothes search results">
+          <div class="search-console-header">
+            <div>
+              <span>AI nearby search</span>
+              <strong>4 colour-safe pieces found</strong>
+            </div>
+            <b>Live stock</b>
+          </div>
+
+          <article class="search-result-card">
+            <div class="result-swatch" style="--swatch: #6f7557"></div>
+            <div>
+              <span>0.8 km - Connaught Place</span>
+              <h3>Muted olive overshirt</h3>
+              <p>Warm near-face layer, relaxed shoulder, Soft Autumn match.</p>
+            </div>
+            <strong>HK$690</strong>
+          </article>
+
+          <article class="search-result-card">
+            <div class="result-swatch" style="--swatch: #24464a"></div>
+            <div>
+              <span>1.4 km - Central tailoring</span>
+              <h3>Deep teal pleated trouser</h3>
+              <p>Lengthens the leg line and anchors lighter shirts.</p>
+            </div>
+            <strong>HK$980</strong>
+          </article>
+
+          <article class="search-result-card">
+            <div class="result-swatch" style="--swatch: #b98945"></div>
+            <div>
+              <span>2.1 km - Accessories edit</span>
+              <h3>Champagne metal watch</h3>
+              <p>Warm metal accent for date-night and work looks.</p>
+            </div>
+            <strong>HK$430</strong>
+          </article>
         </div>
       </section>
 
       <section class="scene-section scene-section-reverse" id="shop" data-scene-section>
         <div class="scene-copy">
           <p class="eyebrow">Scene 05</p>
-          <h2>Buy now, or pick up nearby.</h2>
+          <h2>Buy the look without second guessing.</h2>
           <p>
-            The final step feels like a premium retail handoff: delivery estimate, nearby boutique option, selected pieces,
-            secure payment cues, and clear returns support.
+            The final step becomes a concise menswear brief: exact colour family, fit tags, search phrases, price band,
+            and nearby boutique handoff when a tailor matters.
           </p>
           <a class="text-link" href="https://schuwaong.github.io/IC_avatar/#results">Open the demo account</a>
         </div>
-        <figure class="scene-media">
-          <img
-            src="./assets/video-reference/prompt-scene-refs/scene-05-buy-now-nearby-shop.png"
-            alt="IC_wearables buy now and nearby shop checkout screen"
-          />
-        </figure>
+        <div class="shop-board" aria-label="Example men’s shopping output">
+          <article>
+            <span>01</span>
+            <h3>Black textured jacket</h3>
+            <p>High-contrast layer for True Winter profiles.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Ivory open collar</h3>
+            <p>Near-face lift without looking corporate.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Champagne metal watch</h3>
+            <p>Warm accent for evening and date-night edits.</p>
+          </article>
+        </div>
       </section>
 
       <section class="premium-band" aria-label="Premium product pillars">
         <div class="pillar">
           <span>01</span>
-          <h3>Personal read</h3>
-          <p>Face, colour, and styling context are treated as one profile.</p>
+          <h3>Colour that sells the face</h3>
+          <p>Seasonal palettes become shirts, jackets, metals, eyewear, and fragrance direction.</p>
         </div>
         <div class="pillar">
           <span>02</span>
-          <h3>Edited wardrobe</h3>
-          <p>Recommendations stay tight, seasonal, and easy to compare.</p>
+          <h3>Silhouette that respects the frame</h3>
+          <p>Shoulders, waist, leg line, and collar shape get translated into fit tags.</p>
         </div>
         <div class="pillar">
           <span>03</span>
-          <h3>Retail ready</h3>
-          <p>The path ends with delivery, pickup, or nearby store action.</p>
+          <h3>Retail that feels edited</h3>
+          <p>Less scrolling, better search terms, and a clean handoff to the demo profile.</p>
         </div>
       </section>
 
       <section class="access-band" id="access" aria-labelledby="access-title">
         <div class="access-copy">
-          <p class="eyebrow">Private beta</p>
-          <h2 id="access-title">Try the premium demo account next.</h2>
+          <p class="eyebrow">Private demo</p>
+          <h2 id="access-title">Try the men’s style profile next.</h2>
           <p>
-            The landing page hands off to the interactive IC_avatar demo so you can see the profile readout, outfit edit, and shopping workflow.
+            Jump into the hosted IC_avatar demo to test the profile readout, backend colour classifier, outfit edit,
+            and menswear shopping workflow.
           </p>
         </div>
 
         <div class="access-form demo-card">
           <span class="demo-card-label">Hosted demo</span>
           <h3>Demo account page</h3>
-          <p>Jump directly into the profile readout section of the IC_avatar product demo.</p>
+          <p>Use the protected backend panel for the new Python profile hints, then run a men’s colour and fit read.</p>
           <a class="primary-button form-demo-link" href="https://schuwaong.github.io/IC_avatar/#results">Open demo account</a>
         </div>
       </section>
