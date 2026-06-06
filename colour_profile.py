@@ -134,6 +134,33 @@ def score_seasons(axes: dict[str, float]) -> list[dict[str, Any]]:
     return sorted(ranked, key=lambda item: item["score"], reverse=True)
 
 
+def pixel_metrics(r: int, g: int, b: int) -> dict[str, float]:
+    luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    colour_range = max(r, g, b) - min(r, g, b)
+    cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b
+    cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b
+    return {"luma": luma, "range": colour_range, "cb": cb, "cr": cr}
+
+
+def is_skin_tone_pixel(r: int, g: int, b: int, metrics: dict[str, float]) -> bool:
+    if metrics["luma"] < 35 or metrics["luma"] > 245:
+        return False
+    if not 72 <= metrics["cb"] <= 146:
+        return False
+    if not 118 <= metrics["cr"] <= 186:
+        return False
+
+    rg_ratio = r / max(g, 1)
+    bg_ratio = b / max(g, 1)
+    if not 0.72 <= rg_ratio <= 1.65:
+        return False
+    if not 0.45 <= bg_ratio <= 1.38:
+        return False
+
+    # Strongly saturated pixels are usually clothes, lipstick, background, or screen glare.
+    return metrics["range"] <= 145
+
+
 def crop_cover(image: Image.Image, size: int = 180) -> Image.Image:
     width, height = image.size
     scale = max(size / width, size / height)
@@ -151,10 +178,13 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
     size = image.width
     pixels = image.load()
     samples: list[dict[str, float]] = []
+    fallback_samples: list[dict[str, float]] = []
     center_x = size / 2
     center_y = size * 0.43
-    radius_x = size * 0.28
-    radius_y = size * 0.34
+    radius_x = size * 0.23
+    radius_y = size * 0.3
+    rejected_non_skin = 0
+    rejected_exposure = 0
 
     for y in range(0, size, 2):
         for x in range(0, size, 2):
@@ -164,24 +194,42 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
             r, g, b, alpha = pixels[x, y]
             if alpha < 200:
                 continue
-            luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
-            colour_range = max(r, g, b) - min(r, g, b)
-            if luma < 35 or luma > 245 or colour_range > 170:
+            metrics = pixel_metrics(r, g, b)
+            if metrics["luma"] < 35 or metrics["luma"] > 245:
+                rejected_exposure += 1
                 continue
-            samples.append({"r": r, "g": g, "b": b, "luma": luma, "range": colour_range})
+            weight = 1 - normalized * 0.55
+            candidate = {
+                "r": r,
+                "g": g,
+                "b": b,
+                "luma": metrics["luma"],
+                "range": metrics["range"],
+                "weight": weight,
+            }
+            fallback_samples.append(candidate)
+            if is_skin_tone_pixel(r, g, b, metrics):
+                samples.append(candidate)
+            else:
+                rejected_non_skin += 1
+
+    used_skin_mask = len(samples) >= 30
+    if not used_skin_mask:
+        samples = fallback_samples
 
     if not samples:
         raise ValueError("Could not sample enough face pixels. Try a clearer front-facing photo.")
 
     count = len(samples)
+    total_weight = sum(pixel["weight"] for pixel in samples)
     avg = {
-        "r": sum(pixel["r"] for pixel in samples) / count,
-        "g": sum(pixel["g"] for pixel in samples) / count,
-        "b": sum(pixel["b"] for pixel in samples) / count,
-        "luma": sum(pixel["luma"] for pixel in samples) / count,
-        "saturation": sum(pixel["range"] for pixel in samples) / count / 255,
+        "r": sum(pixel["r"] * pixel["weight"] for pixel in samples) / total_weight,
+        "g": sum(pixel["g"] * pixel["weight"] for pixel in samples) / total_weight,
+        "b": sum(pixel["b"] * pixel["weight"] for pixel in samples) / total_weight,
+        "luma": sum(pixel["luma"] * pixel["weight"] for pixel in samples) / total_weight,
+        "saturation": sum(pixel["range"] * pixel["weight"] for pixel in samples) / total_weight / 255,
     }
-    variance = sum((pixel["luma"] - avg["luma"]) ** 2 for pixel in samples) / count
+    variance = sum(pixel["weight"] * (pixel["luma"] - avg["luma"]) ** 2 for pixel in samples) / total_weight
     luma_std = sqrt(variance)
 
     axes = {
@@ -191,7 +239,49 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
         "contrast": clamp((luma_std - 34) / 28),
     }
 
-    return {"count": count, "axes": axes, "average": avg}
+    return {
+        "count": count,
+        "axes": axes,
+        "average": avg,
+        "sampling": {
+            "method": "skin-masked central face oval",
+            "usedSkinMask": used_skin_mask,
+            "skinSampleCount": len(samples) if used_skin_mask else 0,
+            "fallbackSampleCount": len(fallback_samples),
+            "rejectedNonSkinPixels": rejected_non_skin,
+            "rejectedExposurePixels": rejected_exposure,
+            "note": (
+                "Sampled only skin-tone pixels inside the central face oval."
+                if used_skin_mask
+                else "Skin mask found too few pixels, so the script used the central face oval fallback."
+            ),
+        },
+    }
+
+
+def build_decision_explanation(result: dict[str, Any]) -> str:
+    axes = result["axes"]
+    top = result["profile"]
+    ranked = result["ranked"]
+    runner_up = ranked[1] if len(ranked) > 1 else None
+    sampling = result.get("sampling", {})
+    axis_summary = [
+        f"{axis_label('temperature', axes['temperature'])} undertone ({axes['temperature']:+.2f})",
+        f"{axis_label('value', axes['value'])} value ({axes['value']:+.2f})",
+        f"{axis_label('chroma', axes['chroma'])} chroma ({axes['chroma']:+.2f})",
+        f"{axis_label('contrast', axes['contrast'])} contrast ({axes['contrast']:+.2f})",
+    ]
+    runner_text = ""
+    if runner_up:
+        runner_text = f" The next closest season was {runner_up['name']} at {round(runner_up['score'])}%."
+
+    return (
+        f"{top['name']} was selected because the face sample measured "
+        f"{', '.join(axis_summary)}. The closest profile match scored {round(top['score'])}%."
+        f"{runner_text} The script used {result['sampleCount']} weighted pixels from a "
+        f"{sampling.get('method', 'central face oval')} and rejected "
+        f"{sampling.get('rejectedNonSkinPixels', 0)} non-skin/background-like pixels."
+    )
 
 
 def build_creator_prompt(result: dict[str, Any]) -> str:
@@ -239,12 +329,14 @@ def analyze_image_bytes(image_bytes: bytes) -> dict[str, Any]:
         "axes": sample["axes"],
         "average": sample["average"],
         "sampleCount": sample["count"],
+        "sampling": sample["sampling"],
         "ranked": ranked,
         "profile": ranked[0],
         "season": ranked[0]["name"],
         "palette": ranked[0]["palette"],
         "confidence": confidence,
     }
+    result["explanation"] = build_decision_explanation(result)
     result["prompt"] = build_creator_prompt(result)
     return result
 

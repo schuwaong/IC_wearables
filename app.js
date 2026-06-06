@@ -244,6 +244,48 @@ function scoreSeasons(axes) {
     .sort((a, b) => b.score - a.score);
 }
 
+function pixelStats(r, g, b) {
+  return {
+    luma: 0.2126 * r + 0.7152 * g + 0.0722 * b,
+    range: Math.max(r, g, b) - Math.min(r, g, b),
+    cb: 128 - 0.168736 * r - 0.331264 * g + 0.5 * b,
+    cr: 128 + 0.5 * r - 0.418688 * g - 0.081312 * b,
+  };
+}
+
+function isSkinTonePixel(r, g, b, stats) {
+  if (stats.luma < 35 || stats.luma > 245) return false;
+  if (stats.cb < 72 || stats.cb > 146) return false;
+  if (stats.cr < 118 || stats.cr > 186) return false;
+
+  const rgRatio = r / Math.max(g, 1);
+  const bgRatio = b / Math.max(g, 1);
+  if (rgRatio < 0.72 || rgRatio > 1.65) return false;
+  if (bgRatio < 0.45 || bgRatio > 1.38) return false;
+
+  return stats.range <= 145;
+}
+
+function buildDecisionExplanation(result) {
+  const axes = result.axes;
+  const top = result.profile;
+  const runnerUp = result.ranked?.[1];
+  const sampling = result.sampling || {};
+  const signals = [
+    `${axisLabel("temperature", axes.temperature)} undertone (${axes.temperature >= 0 ? "+" : ""}${axes.temperature.toFixed(2)})`,
+    `${axisLabel("value", axes.value)} value (${axes.value >= 0 ? "+" : ""}${axes.value.toFixed(2)})`,
+    `${axisLabel("chroma", axes.chroma)} chroma (${axes.chroma >= 0 ? "+" : ""}${axes.chroma.toFixed(2)})`,
+    `${axisLabel("contrast", axes.contrast)} contrast (${axes.contrast >= 0 ? "+" : ""}${axes.contrast.toFixed(2)})`,
+  ];
+  const runnerText = runnerUp ? ` The next closest season was ${runnerUp.name} at ${Math.round(runnerUp.score)}%.` : "";
+  const count = result.sampleCount || result.count || 0;
+  return `${top.name} was selected because the face sample measured ${signals.join(", ")}. The closest profile match scored ${Math.round(
+    top.score || 0,
+  )}%.${runnerText} The scan used ${count} weighted pixels from a ${
+    sampling.method || "central face oval"
+  } and rejected ${sampling.rejectedNonSkinPixels || 0} non-skin/background-like pixels.`;
+}
+
 function sampleFaceImage(image) {
   const size = 180;
   const canvas = document.createElement("canvas");
@@ -259,11 +301,15 @@ function sampleFaceImage(image) {
   context.drawImage(image, dx, dy, drawWidth, drawHeight);
 
   const pixels = context.getImageData(0, 0, size, size).data;
-  const samples = [];
+  let samples = [];
+  const skinSamples = [];
+  const fallbackSamples = [];
   const centerX = size / 2;
   const centerY = size * 0.43;
-  const radiusX = size * 0.28;
-  const radiusY = size * 0.34;
+  const radiusX = size * 0.23;
+  const radiusY = size * 0.3;
+  let rejectedNonSkin = 0;
+  let rejectedExposure = 0;
 
   for (let y = 0; y < size; y += 2) {
     for (let x = 0; x < size; x += 2) {
@@ -275,41 +321,43 @@ function sampleFaceImage(image) {
       const b = pixels[index + 2];
       const alpha = pixels[index + 3];
       if (alpha < 200) continue;
-      const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      const range = Math.max(r, g, b) - Math.min(r, g, b);
-      if (luma < 35 || luma > 245 || range > 170) continue;
-      samples.push({ r, g, b, luma, range });
+      const stats = pixelStats(r, g, b);
+      if (stats.luma < 35 || stats.luma > 245) {
+        rejectedExposure += 1;
+        continue;
+      }
+      const sample = { r, g, b, luma: stats.luma, range: stats.range, weight: 1 - normalized * 0.55 };
+      fallbackSamples.push(sample);
+      if (isSkinTonePixel(r, g, b, stats)) {
+        skinSamples.push(sample);
+      } else {
+        rejectedNonSkin += 1;
+      }
     }
   }
+
+  const usedSkinMask = skinSamples.length >= 30;
+  samples = usedSkinMask ? skinSamples : fallbackSamples;
 
   if (!samples.length) {
     throw new Error("Could not sample enough face pixels. Try a clearer front-facing photo.");
   }
 
-  const totals = samples.reduce(
-    (sum, pixel) => ({
-      r: sum.r + pixel.r,
-      g: sum.g + pixel.g,
-      b: sum.b + pixel.b,
-      luma: sum.luma + pixel.luma,
-      range: sum.range + pixel.range,
-    }),
-    { r: 0, g: 0, b: 0, luma: 0, range: 0 },
-  );
-
   const count = samples.length;
+  const totalWeight = samples.reduce((sum, pixel) => sum + pixel.weight, 0);
   const avg = {
-    r: totals.r / count,
-    g: totals.g / count,
-    b: totals.b / count,
-    luma: totals.luma / count,
-    saturation: totals.range / count / 255,
+    r: samples.reduce((sum, pixel) => sum + pixel.r * pixel.weight, 0) / totalWeight,
+    g: samples.reduce((sum, pixel) => sum + pixel.g * pixel.weight, 0) / totalWeight,
+    b: samples.reduce((sum, pixel) => sum + pixel.b * pixel.weight, 0) / totalWeight,
+    luma: samples.reduce((sum, pixel) => sum + pixel.luma * pixel.weight, 0) / totalWeight,
+    saturation: samples.reduce((sum, pixel) => sum + pixel.range * pixel.weight, 0) / totalWeight / 255,
   };
-  const variance = samples.reduce((sum, pixel) => sum + (pixel.luma - avg.luma) ** 2, 0) / count;
+  const variance = samples.reduce((sum, pixel) => sum + pixel.weight * (pixel.luma - avg.luma) ** 2, 0) / totalWeight;
   const lumaStd = Math.sqrt(variance);
 
   return {
     count,
+    sampleCount: count,
     axes: {
       temperature: clamp((avg.r - avg.b) / 55),
       value: clamp((145 - avg.luma) / 85),
@@ -317,6 +365,17 @@ function sampleFaceImage(image) {
       contrast: clamp((lumaStd - 34) / 28),
     },
     average: avg,
+    sampling: {
+      method: "skin-masked central face oval",
+      usedSkinMask,
+      skinSampleCount: usedSkinMask ? skinSamples.length : 0,
+      fallbackSampleCount: fallbackSamples.length,
+      rejectedNonSkinPixels: rejectedNonSkin,
+      rejectedExposurePixels: rejectedExposure,
+      note: usedSkinMask
+        ? "Sampled only skin-tone pixels inside the central face oval."
+        : "Skin mask found too few pixels, so the scan used the central face oval fallback.",
+    },
   };
 }
 
@@ -356,31 +415,34 @@ function createBrowserResult(sample) {
   const ranked = scoreSeasons(sample.axes);
   const gap = Math.max(0, ranked[0].score - ranked[1].score);
   const confidence = Math.round(clamp(58 + gap * 1.4 + Math.min(sample.count / 120, 14), 45, 88));
-  return {
+  const result = {
     ...sample,
     source: "browser",
     ranked,
     profile: ranked[0],
     confidence,
   };
+  result.explanation = buildDecisionExplanation(result);
+  return result;
 }
 
 function renderFaceResult(result) {
   latestFaceResult = result;
   const topProfiles = result.ranked.slice(0, 3);
   const top = result.profile;
-  const sourceLabel = result.source === "python" ? "Python demo backend estimate" : "browser estimate";
   faceSeasonResult.textContent = top.name;
   faceConfidence.textContent = `${result.confidence}%`;
   faceStatus.textContent =
     result.source === "python" ? "Colour profile generated by demo backend" : "Colour profile generated";
-  faceSeasonReason.textContent = `${top.name} is the strongest match from sampled ${axisLabel(
-    "temperature",
-    result.axes.temperature,
-  )}, ${axisLabel("value", result.axes.value)}, ${axisLabel("chroma", result.axes.chroma)}, and ${axisLabel(
-    "contrast",
-    result.axes.contrast,
-  )} signals. This is a ${sourceLabel}, so natural-light face photos improve accuracy.`;
+  faceSeasonReason.textContent =
+    result.explanation ||
+    `${top.name} is the strongest match from sampled ${axisLabel("temperature", result.axes.temperature)}, ${axisLabel(
+      "value",
+      result.axes.value,
+    )}, ${axisLabel("chroma", result.axes.chroma)}, and ${axisLabel(
+      "contrast",
+      result.axes.contrast,
+    )} signals. Natural-light face photos improve accuracy.`;
 
   facePaletteSwatches.innerHTML = "";
   top.palette.forEach((color) => {

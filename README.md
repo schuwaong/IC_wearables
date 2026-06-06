@@ -26,6 +26,11 @@ Then open:
 The landing page posts uploaded face images to `/api/colour-profile`. If the
 API is unavailable, the page falls back to the browser-side analyser.
 
+The analyser samples a skin-masked central face oval and returns an
+`explanation` field showing the measured undertone, value, chroma, contrast,
+runner-up season, and how many non-skin/background pixels were rejected. It is
+still an estimate, so natural light and a clear front-facing photo matter.
+
 Run the analyser directly:
 
 ```powershell
