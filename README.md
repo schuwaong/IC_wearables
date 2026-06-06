@@ -83,3 +83,58 @@ INVOLVE_ASIA_AUTH_HEADER=Authorization
 
 The backend returns a safe fallback retailer search if the affiliate API keys
 are not configured yet, so the product cards still open useful shopping pages.
+
+## Image Generation Backend
+
+The outfit images can be generated through:
+
+`/api/generate-style-image`
+
+Provider order defaults to:
+
+```text
+dashscope,cloudflare,pollinations
+```
+
+This avoids OpenAI and Google image APIs. Alibaba DashScope/Qwen Image is tried
+first, Cloudflare Workers AI is the free-tier fallback, and Pollinations remains
+the no-key fallback.
+
+Alibaba DashScope / Qwen Image env vars:
+
+```text
+DASHSCOPE_API_KEY=your_alibaba_model_studio_api_key
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
+DASHSCOPE_IMAGE_MODEL=qwen-image-2.0-pro
+```
+
+If your DashScope account is in Singapore, use the regional Model Studio base
+URL from Alibaba Cloud instead of the Beijing default.
+
+Cloudflare Workers AI fallback env vars:
+
+```text
+CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
+CLOUDFLARE_API_TOKEN=your_workers_ai_api_token
+CLOUDFLARE_IMAGE_MODEL=@cf/stabilityai/stable-diffusion-xl-base-1.0
+```
+
+Optional controls:
+
+```text
+IMAGE_PROVIDER_ORDER=dashscope,cloudflare,pollinations
+IMAGE_NEGATIVE_PROMPT=low quality, distorted face, text, logo, watermark
+DASHSCOPE_PROMPT_EXTEND=true
+```
+
+For GitHub Pages, point the frontend at the deployed Vercel endpoint:
+
+```js
+localStorage.setItem(
+  "icImageGenerationEndpoint",
+  "https://your-vercel-project.vercel.app/api/generate-style-image",
+);
+```
+
+When served directly from Vercel, the frontend uses `/api/generate-style-image`
+automatically.

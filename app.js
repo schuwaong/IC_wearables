@@ -769,12 +769,17 @@ function generatedImageUrl(prompt, options = {}) {
   const width = options.width || 800;
   const height = options.height || 1000;
   const seed = options.seed ? `&seed=${encodeURIComponent(String(options.seed))}` : "";
+  const host = window.location.hostname;
+  const defaultBackendEndpoint =
+    host && !host.endsWith("github.io") && host !== "localhost" && host !== "127.0.0.1"
+      ? "/api/generate-style-image"
+      : "";
   const explicitEndpoint =
     window.IC_IMAGE_GENERATION_ENDPOINT ||
     window.IC_IMAGE_ENDPOINT ||
     safeStorageValue("icImageGenerationEndpoint") ||
     safeStorageValue("icImageEndpoint") ||
-    "";
+    defaultBackendEndpoint;
 
   if (explicitEndpoint) {
     const url = new URL(explicitEndpoint, window.location.href);
