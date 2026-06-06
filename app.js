@@ -33,6 +33,9 @@ const isFemalePath = pathName.includes("/female/");
 const isFemaleResultsPage = Boolean(femaleLooksGrid);
 
 let latestFaceResult = null;
+const MIN_SKIN_SAMPLES_FOR_FACE = 24;
+const MIN_SKIN_RATIO_FOR_FALLBACK = 0.04;
+const WHITE_BALANCE_STRENGTH = 0.68;
 
 const seasonProfiles = [
   {
@@ -229,6 +232,32 @@ function axisLabel(axis, value) {
   return "balanced";
 }
 
+function seasonalFamilyAdjustment(profileName, axes) {
+  let adjustment = 0;
+
+  if (axes.temperature <= 0.08 && axes.chroma < -0.2 && axes.contrast < 0.48 && axes.value < 0.36) {
+    if (profileName.includes("Summer")) adjustment += 14;
+    if (profileName.includes("Autumn")) adjustment -= 7;
+  }
+
+  if (axes.temperature <= -0.18 && axes.contrast > 0.5) {
+    if (profileName.includes("Winter")) adjustment += 9;
+    if (profileName.includes("Autumn")) adjustment -= 5;
+  }
+
+  if (axes.temperature >= 0.18 && axes.value < 0.28 && axes.contrast < 0.44) {
+    if (profileName.includes("Spring")) adjustment += 16;
+    if (profileName.includes("Autumn")) adjustment -= 10;
+  }
+
+  if (axes.temperature >= 0.24 && axes.value >= 0.28 && axes.contrast >= 0.36) {
+    if (profileName.includes("Autumn")) adjustment += 6;
+    if (profileName.includes("Spring") && axes.chroma < 0.15) adjustment -= 4;
+  }
+
+  return adjustment;
+}
+
 function scoreSeasons(axes) {
   const weights = { temperature: 1.25, value: 0.85, chroma: 1.05, contrast: 0.82 };
   return seasonProfiles
@@ -238,7 +267,10 @@ function scoreSeasons(axes) {
       }, 0);
       return {
         ...profile,
-        score: Math.max(0, Math.round((100 - Math.sqrt(distance) * 37) * 10) / 10),
+        score: Math.max(
+          0,
+          Math.round((100 - Math.sqrt(distance) * 37 + seasonalFamilyAdjustment(profile.name, axes)) * 10) / 10,
+        ),
       };
     })
     .sort((a, b) => b.score - a.score);
@@ -250,6 +282,74 @@ function pixelStats(r, g, b) {
     range: Math.max(r, g, b) - Math.min(r, g, b),
     cb: 128 - 0.168736 * r - 0.331264 * g + 0.5 * b,
     cr: 128 + 0.5 * r - 0.418688 * g - 0.081312 * b,
+  };
+}
+
+function clampChannel(value) {
+  return Math.round(Math.max(0, Math.min(255, value)));
+}
+
+function applyRgbGains(r, g, b, gains) {
+  return {
+    r: clampChannel(r * gains.r),
+    g: clampChannel(g * gains.g),
+    b: clampChannel(b * gains.b),
+  };
+}
+
+function estimateWhiteBalanceGains(pixels, size) {
+  const neutralSamples = [];
+
+  for (let y = 0; y < size; y += 4) {
+    for (let x = 0; x < size; x += 4) {
+      const isBorderReference = x < size * 0.18 || x > size * 0.82 || y < size * 0.14 || y > size * 0.9;
+      if (!isBorderReference) continue;
+
+      const index = (y * size + x) * 4;
+      const r = pixels[index];
+      const g = pixels[index + 1];
+      const b = pixels[index + 2];
+      const alpha = pixels[index + 3];
+      if (alpha < 200) continue;
+
+      const stats = pixelStats(r, g, b);
+      if (stats.luma < 78 || stats.luma > 238) continue;
+      if (stats.range > 105) continue;
+      neutralSamples.push({ r, g, b });
+    }
+  }
+
+  if (neutralSamples.length < 80) {
+    return {
+      applied: false,
+      sampleCount: neutralSamples.length,
+      gains: { r: 1, g: 1, b: 1 },
+      note: "No stable neutral background reference was found.",
+    };
+  }
+
+  const avg = {
+    r: neutralSamples.reduce((sum, pixel) => sum + pixel.r, 0) / neutralSamples.length,
+    g: neutralSamples.reduce((sum, pixel) => sum + pixel.g, 0) / neutralSamples.length,
+    b: neutralSamples.reduce((sum, pixel) => sum + pixel.b, 0) / neutralSamples.length,
+  };
+  const target = (avg.r + avg.g + avg.b) / 3;
+  const rawGains = {
+    r: target / Math.max(avg.r, 1),
+    g: target / Math.max(avg.g, 1),
+    b: target / Math.max(avg.b, 1),
+  };
+
+  return {
+    applied: true,
+    sampleCount: neutralSamples.length,
+    referenceAverage: avg,
+    gains: {
+      r: clamp(1 + (rawGains.r - 1) * WHITE_BALANCE_STRENGTH, 0.78, 1.22),
+      g: clamp(1 + (rawGains.g - 1) * WHITE_BALANCE_STRENGTH, 0.78, 1.22),
+      b: clamp(1 + (rawGains.b - 1) * WHITE_BALANCE_STRENGTH, 0.78, 1.22),
+    },
+    note: "Applied conservative white-balance correction from neutral border/background pixels.",
   };
 }
 
@@ -271,6 +371,8 @@ function buildDecisionExplanation(result) {
   const top = result.profile;
   const runnerUp = result.ranked?.[1];
   const sampling = result.sampling || {};
+  const appearance = result.appearance || {};
+  const whiteBalance = sampling.whiteBalance || {};
   const signals = [
     `${axisLabel("temperature", axes.temperature)} undertone (${axes.temperature >= 0 ? "+" : ""}${axes.temperature.toFixed(2)})`,
     `${axisLabel("value", axes.value)} value (${axes.value >= 0 ? "+" : ""}${axes.value.toFixed(2)})`,
@@ -283,7 +385,9 @@ function buildDecisionExplanation(result) {
     top.score || 0,
   )}%.${runnerText} The scan used ${count} weighted pixels from a ${
     sampling.method || "central face oval"
-  } and rejected ${sampling.rejectedNonSkinPixels || 0} non-skin/background-like pixels.`;
+  } and rejected ${sampling.rejectedNonSkinPixels || 0} non-skin/background-like pixels. It also used ${
+    appearance.hairSampleCount || 0
+  } hair/eyebrow-region pixels for appearance contrast${whiteBalance.applied ? " after white-balance correction" : ""}.`;
 }
 
 function sampleFaceImage(image) {
@@ -301,6 +405,8 @@ function sampleFaceImage(image) {
   context.drawImage(image, dx, dy, drawWidth, drawHeight);
 
   const pixels = context.getImageData(0, 0, size, size).data;
+  const whiteBalance = estimateWhiteBalanceGains(pixels, size);
+  const gains = whiteBalance.gains;
   let samples = [];
   const skinSamples = [];
   const fallbackSamples = [];
@@ -321,14 +427,25 @@ function sampleFaceImage(image) {
       const b = pixels[index + 2];
       const alpha = pixels[index + 3];
       if (alpha < 200) continue;
-      const stats = pixelStats(r, g, b);
+      const corrected = applyRgbGains(r, g, b, gains);
+      const correctedR = corrected.r;
+      const correctedG = corrected.g;
+      const correctedB = corrected.b;
+      const stats = pixelStats(correctedR, correctedG, correctedB);
       if (stats.luma < 35 || stats.luma > 245) {
         rejectedExposure += 1;
         continue;
       }
-      const sample = { r, g, b, luma: stats.luma, range: stats.range, weight: 1 - normalized * 0.55 };
+      const sample = {
+        r: correctedR,
+        g: correctedG,
+        b: correctedB,
+        luma: stats.luma,
+        range: stats.range,
+        weight: 1 - normalized * 0.55,
+      };
       fallbackSamples.push(sample);
-      if (isSkinTonePixel(r, g, b, stats)) {
+      if (isSkinTonePixel(correctedR, correctedG, correctedB, stats)) {
         skinSamples.push(sample);
       } else {
         rejectedNonSkin += 1;
@@ -336,7 +453,16 @@ function sampleFaceImage(image) {
     }
   }
 
-  const usedSkinMask = skinSamples.length >= 30;
+  const usedSkinMask = skinSamples.length >= MIN_SKIN_SAMPLES_FOR_FACE;
+  const fallbackSkinRatio = fallbackSamples.length ? skinSamples.length / fallbackSamples.length : 0;
+  const noFaceDetected =
+    !usedSkinMask &&
+    (skinSamples.length < MIN_SKIN_SAMPLES_FOR_FACE || fallbackSkinRatio < MIN_SKIN_RATIO_FOR_FALLBACK);
+
+  if (noFaceDetected) {
+    throw new Error("No face detected. Upload a clear front-facing face photo.");
+  }
+
   samples = usedSkinMask ? skinSamples : fallbackSamples;
 
   if (!samples.length) {
@@ -355,16 +481,83 @@ function sampleFaceImage(image) {
   const variance = samples.reduce((sum, pixel) => sum + pixel.weight * (pixel.luma - avg.luma) ** 2, 0) / totalWeight;
   const lumaStd = Math.sqrt(variance);
 
+  const hairSamples = [];
+  for (let y = 0; y < size; y += 2) {
+    for (let x = 0; x < size; x += 2) {
+      const normalized = ((x - centerX) / radiusX) ** 2 + ((y - centerY) / radiusY) ** 2;
+      if (normalized <= 1.08) continue;
+
+      const inHairZone = y < size * 0.39 || (Math.abs(x - centerX) > radiusX * 0.95 && y < size * 0.76);
+      if (!inHairZone) continue;
+
+      const index = (y * size + x) * 4;
+      const r = pixels[index];
+      const g = pixels[index + 1];
+      const b = pixels[index + 2];
+      const alpha = pixels[index + 3];
+      if (alpha < 200) continue;
+
+      const corrected = applyRgbGains(r, g, b, gains);
+      const stats = pixelStats(corrected.r, corrected.g, corrected.b);
+      if (stats.luma > avg.luma - 14 && stats.luma > 118) continue;
+      if (stats.luma < 8 || stats.luma > 190) continue;
+      if (isSkinTonePixel(corrected.r, corrected.g, corrected.b, stats)) continue;
+
+      hairSamples.push({
+        r: corrected.r,
+        g: corrected.g,
+        b: corrected.b,
+        luma: stats.luma,
+        range: stats.range,
+        weight: 1,
+      });
+    }
+  }
+
+  const hairTotalWeight = hairSamples.reduce((sum, pixel) => sum + pixel.weight, 0);
+  const hairAvg = hairTotalWeight
+    ? {
+        r: hairSamples.reduce((sum, pixel) => sum + pixel.r * pixel.weight, 0) / hairTotalWeight,
+        g: hairSamples.reduce((sum, pixel) => sum + pixel.g * pixel.weight, 0) / hairTotalWeight,
+        b: hairSamples.reduce((sum, pixel) => sum + pixel.b * pixel.weight, 0) / hairTotalWeight,
+        luma: hairSamples.reduce((sum, pixel) => sum + pixel.luma * pixel.weight, 0) / hairTotalWeight,
+        saturation: hairSamples.reduce((sum, pixel) => sum + pixel.range * pixel.weight, 0) / hairTotalWeight / 255,
+      }
+    : null;
+  const skinTemperature = clamp((avg.r - avg.b - 42) / 42);
+  const skinValue = clamp((145 - avg.luma) / 85);
+  const skinChroma = clamp((avg.saturation - 0.27) / 0.24);
+  const localContrast = clamp((lumaStd - 34) / 28);
+  const hairReliability = clamp(hairSamples.length / 650, 0, 1);
+  const hairTemperature = hairAvg ? clamp((hairAvg.r - hairAvg.b - 12) / 52) : 0;
+  const hairValue = hairAvg ? clamp((138 - hairAvg.luma) / 96) : skinValue;
+  const rawAppearanceContrast = hairAvg ? clamp((avg.luma - hairAvg.luma - 34) / 72) : localContrast;
+  const appearanceContrast = localContrast * (1 - hairReliability) + rawAppearanceContrast * hairReliability;
+  const highContrastCoolBias =
+    hairReliability > 0.55 && rawAppearanceContrast > 0.72 && hairTemperature < 0.12 ? -0.48 : 0;
+  const hairValueWeight = 0.42 * hairReliability;
+
   return {
     count,
     sampleCount: count,
     axes: {
-      temperature: clamp((avg.r - avg.b) / 55),
-      value: clamp((145 - avg.luma) / 85),
-      chroma: clamp((avg.saturation - 0.24) / 0.22),
-      contrast: clamp((lumaStd - 34) / 28),
+      temperature: clamp(skinTemperature * 0.82 + hairTemperature * 0.18 * hairReliability + highContrastCoolBias),
+      value: clamp(skinValue * (1 - hairValueWeight) + hairValue * hairValueWeight),
+      chroma: skinChroma,
+      contrast: clamp(localContrast * 0.42 + appearanceContrast * 0.62),
     },
     average: avg,
+    appearance: {
+      hairSampleCount: hairSamples.length,
+      hairAverage: hairAvg,
+      hairReliability,
+      skinTemperature,
+      hairTemperature,
+      appearanceContrast,
+      rawAppearanceContrast,
+      localContrast,
+      highContrastCoolBias,
+    },
     sampling: {
       method: "skin-masked central face oval",
       usedSkinMask,
@@ -372,8 +565,9 @@ function sampleFaceImage(image) {
       fallbackSampleCount: fallbackSamples.length,
       rejectedNonSkinPixels: rejectedNonSkin,
       rejectedExposurePixels: rejectedExposure,
+      whiteBalance,
       note: usedSkinMask
-        ? "Sampled only skin-tone pixels inside the central face oval."
+        ? "Sampled skin-tone pixels, applied conservative white balance when possible, and blended hair/eyebrow contrast."
         : "Skin mask found too few pixels, so the scan used the central face oval fallback.",
     },
   };
@@ -482,9 +676,24 @@ async function analyzeFaceWithBackend(dataUrl) {
       body: JSON.stringify({ imageDataUrl: dataUrl }),
       signal: controller.signal,
     });
-    if (!response.ok) return null;
     const result = await response.json();
-    if (!result?.profile?.name || !Array.isArray(result.ranked)) return null;
+    if (!response.ok) {
+      throw new Error(String(result?.error || `Face analysis failed (${response.status}).`));
+    }
+    if (!result?.profile?.name || !Array.isArray(result.ranked)) {
+      throw new Error("Face analysis returned an incomplete result.");
+    }
+
+    const sampling = result.sampling || {};
+    const noFaceDetected =
+      !sampling.usedSkinMask &&
+      (sampling.skinSampleCount || 0) < MIN_SKIN_SAMPLES_FOR_FACE &&
+      (sampling.fallbackSampleCount || 0) > 0 &&
+      (sampling.skinSampleCount || 0) / (sampling.fallbackSampleCount || 1) < MIN_SKIN_RATIO_FOR_FALLBACK;
+    if (noFaceDetected) {
+      throw new Error("No face detected. Upload a clear front-facing face photo.");
+    }
+
     return result;
   } finally {
     window.clearTimeout(timeout);
@@ -510,6 +719,7 @@ function analyzeFaceInBrowser(dataUrl) {
 
 async function analyzeFaceDataUrl(dataUrl) {
   faceStatus.textContent = "Analysing face colour...";
+  let backendError = null;
 
   try {
     const backendResult = await analyzeFaceWithBackend(dataUrl);
@@ -518,19 +728,32 @@ async function analyzeFaceDataUrl(dataUrl) {
       return;
     }
   } catch (error) {
-    // Static hosting falls back here because it does not expose the demo API.
+    backendError = error instanceof Error ? error : new Error("Face analysis failed.");
+    if (backendError.message.includes("No face detected")) {
+      latestFaceResult = null;
+      faceStatus.textContent = backendError.message;
+      return;
+    }
   }
 
   try {
     const browserResult = await analyzeFaceInBrowser(dataUrl);
     renderFaceResult(browserResult);
   } catch (error) {
-    faceStatus.textContent = error.message;
+    latestFaceResult = null;
+    faceStatus.textContent = (error instanceof Error ? error.message : "Could not analyse face photo.") || backendError?.message || "";
   }
 }
 
 function handleFaceUpload(file) {
-  if (!file || !file.type.startsWith("image/")) return;
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    latestFaceResult = null;
+    faceStatus.textContent = "Please upload a valid image before scanning.";
+    return;
+  }
+
+  latestFaceResult = null;
   faceStatus.textContent = "Reading face photo...";
   const reader = new FileReader();
   reader.onload = () => {

@@ -95,9 +95,17 @@ SEASON_PROFILES: list[SeasonProfile] = [
     ),
 ]
 
+MIN_SKIN_SAMPLES_FOR_FACE = 24
+MIN_SKIN_RATIO_FOR_FALLBACK = 0.04
+WHITE_BALANCE_STRENGTH = 0.68
+
 
 def clamp(value: float, minimum: float = -1, maximum: float = 1) -> float:
     return max(minimum, min(maximum, value))
+
+
+def clamp_channel(value: float) -> int:
+    return round(max(0, min(255, value)))
 
 
 def axis_label(axis: str, value: float) -> str:
@@ -124,12 +132,46 @@ def profile_to_dict(profile: SeasonProfile, score: float | None = None) -> dict[
     return data
 
 
+def seasonal_family_adjustment(profile_name: str, axes: dict[str, float]) -> float:
+    temperature = axes["temperature"]
+    value = axes["value"]
+    chroma = axes["chroma"]
+    contrast = axes["contrast"]
+    adjustment = 0.0
+
+    if temperature <= 0.08 and chroma < -0.2 and contrast < 0.48 and value < 0.36:
+        if "Summer" in profile_name:
+            adjustment += 14
+        if "Autumn" in profile_name:
+            adjustment -= 7
+
+    if temperature <= -0.18 and contrast > 0.5:
+        if "Winter" in profile_name:
+            adjustment += 9
+        if "Autumn" in profile_name:
+            adjustment -= 5
+
+    if temperature >= 0.18 and value < 0.28 and contrast < 0.44:
+        if "Spring" in profile_name:
+            adjustment += 16
+        if "Autumn" in profile_name:
+            adjustment -= 10
+
+    if temperature >= 0.24 and value >= 0.28 and contrast >= 0.36:
+        if "Autumn" in profile_name:
+            adjustment += 6
+        if "Spring" in profile_name and chroma < 0.15:
+            adjustment -= 4
+
+    return adjustment
+
+
 def score_seasons(axes: dict[str, float]) -> list[dict[str, Any]]:
     weights = {"temperature": 1.25, "value": 0.85, "chroma": 1.05, "contrast": 0.82}
     ranked: list[dict[str, Any]] = []
     for profile in SEASON_PROFILES:
         distance = sum(weight * (axes[axis] - profile.axes[axis]) ** 2 for axis, weight in weights.items())
-        score = max(0, 100 - sqrt(distance) * 37)
+        score = max(0, 100 - sqrt(distance) * 37 + seasonal_family_adjustment(profile.name, axes))
         ranked.append(profile_to_dict(profile, score))
     return sorted(ranked, key=lambda item: item["score"], reverse=True)
 
@@ -140,6 +182,75 @@ def pixel_metrics(r: int, g: int, b: int) -> dict[str, float]:
     cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b
     cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b
     return {"luma": luma, "range": colour_range, "cb": cb, "cr": cr}
+
+
+def apply_rgb_gains(
+    r: int,
+    g: int,
+    b: int,
+    gains: dict[str, float],
+) -> tuple[int, int, int]:
+    return (
+        clamp_channel(r * gains["r"]),
+        clamp_channel(g * gains["g"]),
+        clamp_channel(b * gains["b"]),
+    )
+
+
+def estimate_white_balance_gains(image: Image.Image) -> dict[str, Any]:
+    size = image.width
+    pixels = image.load()
+    neutral_samples: list[tuple[int, int, int]] = []
+
+    for y in range(0, size, 4):
+        for x in range(0, size, 4):
+            is_border_reference = (
+                x < size * 0.18
+                or x > size * 0.82
+                or y < size * 0.14
+                or y > size * 0.9
+            )
+            if not is_border_reference:
+                continue
+            r, g, b, alpha = pixels[x, y]
+            if alpha < 200:
+                continue
+            metrics = pixel_metrics(r, g, b)
+            if metrics["luma"] < 78 or metrics["luma"] > 238:
+                continue
+            if metrics["range"] > 105:
+                continue
+            neutral_samples.append((r, g, b))
+
+    if len(neutral_samples) < 80:
+        return {
+            "applied": False,
+            "sampleCount": len(neutral_samples),
+            "gains": {"r": 1, "g": 1, "b": 1},
+            "note": "No stable neutral background reference was found.",
+        }
+
+    avg_r = sum(pixel[0] for pixel in neutral_samples) / len(neutral_samples)
+    avg_g = sum(pixel[1] for pixel in neutral_samples) / len(neutral_samples)
+    avg_b = sum(pixel[2] for pixel in neutral_samples) / len(neutral_samples)
+    target = (avg_r + avg_g + avg_b) / 3
+    raw_gains = {
+        "r": target / max(avg_r, 1),
+        "g": target / max(avg_g, 1),
+        "b": target / max(avg_b, 1),
+    }
+    gains = {
+        channel: clamp(1 + (gain - 1) * WHITE_BALANCE_STRENGTH, 0.78, 1.22)
+        for channel, gain in raw_gains.items()
+    }
+
+    return {
+        "applied": True,
+        "sampleCount": len(neutral_samples),
+        "referenceAverage": {"r": avg_r, "g": avg_g, "b": avg_b},
+        "gains": gains,
+        "note": "Applied conservative white-balance correction from neutral border/background pixels.",
+    }
 
 
 def is_skin_tone_pixel(r: int, g: int, b: int, metrics: dict[str, float]) -> bool:
@@ -177,6 +288,8 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
 
     size = image.width
     pixels = image.load()
+    white_balance = estimate_white_balance_gains(image)
+    gains = white_balance["gains"]
     samples: list[dict[str, float]] = []
     fallback_samples: list[dict[str, float]] = []
     center_x = size / 2
@@ -194,6 +307,7 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
             r, g, b, alpha = pixels[x, y]
             if alpha < 200:
                 continue
+            r, g, b = apply_rgb_gains(r, g, b, gains)
             metrics = pixel_metrics(r, g, b)
             if metrics["luma"] < 35 or metrics["luma"] > 245:
                 rejected_exposure += 1
@@ -213,7 +327,14 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
             else:
                 rejected_non_skin += 1
 
-    used_skin_mask = len(samples) >= 30
+    used_skin_mask = len(samples) >= MIN_SKIN_SAMPLES_FOR_FACE
+    fallback_skin_ratio = len(samples) / len(fallback_samples) if fallback_samples else 0
+    if (not used_skin_mask) and (
+        len(samples) < MIN_SKIN_SAMPLES_FOR_FACE
+        or fallback_skin_ratio < MIN_SKIN_RATIO_FOR_FALLBACK
+    ):
+        raise ValueError("No face detected. Upload a clear front-facing face photo.")
+
     if not used_skin_mask:
         samples = fallback_samples
 
@@ -232,17 +353,96 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
     variance = sum(pixel["weight"] * (pixel["luma"] - avg["luma"]) ** 2 for pixel in samples) / total_weight
     luma_std = sqrt(variance)
 
+    hair_samples: list[dict[str, float]] = []
+    for y in range(0, size, 2):
+        for x in range(0, size, 2):
+            normalized = ((x - center_x) / radius_x) ** 2 + ((y - center_y) / radius_y) ** 2
+            if normalized <= 1.08:
+                continue
+            in_hair_zone = (
+                y < size * 0.39
+                or (abs(x - center_x) > radius_x * 0.95 and y < size * 0.76)
+            )
+            if not in_hair_zone:
+                continue
+            r, g, b, alpha = pixels[x, y]
+            if alpha < 200:
+                continue
+            r, g, b = apply_rgb_gains(r, g, b, gains)
+            metrics = pixel_metrics(r, g, b)
+            if metrics["luma"] > avg["luma"] - 14 and metrics["luma"] > 118:
+                continue
+            if metrics["luma"] < 8 or metrics["luma"] > 190:
+                continue
+            if is_skin_tone_pixel(r, g, b, metrics):
+                continue
+            hair_samples.append(
+                {
+                    "r": r,
+                    "g": g,
+                    "b": b,
+                    "luma": metrics["luma"],
+                    "range": metrics["range"],
+                    "weight": 1,
+                }
+            )
+
+    hair_total_weight = sum(pixel["weight"] for pixel in hair_samples)
+    hair_avg = None
+    if hair_total_weight:
+        hair_avg = {
+            "r": sum(pixel["r"] * pixel["weight"] for pixel in hair_samples) / hair_total_weight,
+            "g": sum(pixel["g"] * pixel["weight"] for pixel in hair_samples) / hair_total_weight,
+            "b": sum(pixel["b"] * pixel["weight"] for pixel in hair_samples) / hair_total_weight,
+            "luma": sum(pixel["luma"] * pixel["weight"] for pixel in hair_samples) / hair_total_weight,
+            "saturation": sum(pixel["range"] * pixel["weight"] for pixel in hair_samples) / hair_total_weight / 255,
+        }
+
+    skin_temperature = clamp(((avg["r"] - avg["b"]) - 42) / 42)
+    skin_value = clamp((145 - avg["luma"]) / 85)
+    skin_chroma = clamp((avg["saturation"] - 0.27) / 0.24)
+    local_contrast = clamp((luma_std - 34) / 28)
+    hair_temperature = 0
+    hair_value = skin_value
+    hair_reliability = clamp(len(hair_samples) / 650, 0, 1)
+    raw_appearance_contrast = local_contrast
+    appearance_contrast = local_contrast
+
+    if hair_avg:
+        hair_temperature = clamp(((hair_avg["r"] - hair_avg["b"]) - 12) / 52)
+        hair_value = clamp((138 - hair_avg["luma"]) / 96)
+        raw_appearance_contrast = clamp((avg["luma"] - hair_avg["luma"] - 34) / 72)
+        appearance_contrast = local_contrast * (1 - hair_reliability) + raw_appearance_contrast * hair_reliability
+
+    high_contrast_cool_bias = (
+        -0.48
+        if hair_reliability > 0.55 and raw_appearance_contrast > 0.72 and hair_temperature < 0.12
+        else 0
+    )
+    hair_value_weight = 0.42 * hair_reliability
+
     axes = {
-        "temperature": clamp((avg["r"] - avg["b"]) / 55),
-        "value": clamp((145 - avg["luma"]) / 85),
-        "chroma": clamp((avg["saturation"] - 0.24) / 0.22),
-        "contrast": clamp((luma_std - 34) / 28),
+        "temperature": clamp(skin_temperature * 0.82 + hair_temperature * 0.18 * hair_reliability + high_contrast_cool_bias),
+        "value": clamp(skin_value * (1 - hair_value_weight) + hair_value * hair_value_weight),
+        "chroma": skin_chroma,
+        "contrast": clamp(local_contrast * 0.42 + appearance_contrast * 0.62),
     }
 
     return {
         "count": count,
         "axes": axes,
         "average": avg,
+        "appearance": {
+            "hairSampleCount": len(hair_samples),
+            "hairAverage": hair_avg,
+            "hairReliability": hair_reliability,
+            "skinTemperature": skin_temperature,
+            "hairTemperature": hair_temperature,
+            "appearanceContrast": appearance_contrast,
+            "rawAppearanceContrast": raw_appearance_contrast,
+            "localContrast": local_contrast,
+            "highContrastCoolBias": high_contrast_cool_bias,
+        },
         "sampling": {
             "method": "skin-masked central face oval",
             "usedSkinMask": used_skin_mask,
@@ -250,8 +450,9 @@ def sample_face_image(image_bytes: bytes) -> dict[str, Any]:
             "fallbackSampleCount": len(fallback_samples),
             "rejectedNonSkinPixels": rejected_non_skin,
             "rejectedExposurePixels": rejected_exposure,
+            "whiteBalance": white_balance,
             "note": (
-                "Sampled only skin-tone pixels inside the central face oval."
+                "Sampled skin-tone pixels, applied conservative white balance when possible, and blended hair/eyebrow contrast."
                 if used_skin_mask
                 else "Skin mask found too few pixels, so the script used the central face oval fallback."
             ),
@@ -265,6 +466,8 @@ def build_decision_explanation(result: dict[str, Any]) -> str:
     ranked = result["ranked"]
     runner_up = ranked[1] if len(ranked) > 1 else None
     sampling = result.get("sampling", {})
+    appearance = result.get("appearance", {})
+    white_balance = sampling.get("whiteBalance", {})
     axis_summary = [
         f"{axis_label('temperature', axes['temperature'])} undertone ({axes['temperature']:+.2f})",
         f"{axis_label('value', axes['value'])} value ({axes['value']:+.2f})",
@@ -280,7 +483,9 @@ def build_decision_explanation(result: dict[str, Any]) -> str:
         f"{', '.join(axis_summary)}. The closest profile match scored {round(top['score'])}%."
         f"{runner_text} The script used {result['sampleCount']} weighted pixels from a "
         f"{sampling.get('method', 'central face oval')} and rejected "
-        f"{sampling.get('rejectedNonSkinPixels', 0)} non-skin/background-like pixels."
+        f"{sampling.get('rejectedNonSkinPixels', 0)} non-skin/background-like pixels. "
+        f"It also used {appearance.get('hairSampleCount', 0)} hair/eyebrow-region pixels for appearance contrast"
+        f"{' after white-balance correction' if white_balance.get('applied') else ''}."
     )
 
 
@@ -328,6 +533,7 @@ def analyze_image_bytes(image_bytes: bytes) -> dict[str, Any]:
         "source": "python",
         "axes": sample["axes"],
         "average": sample["average"],
+        "appearance": sample["appearance"],
         "sampleCount": sample["count"],
         "sampling": sample["sampling"],
         "ranked": ranked,
