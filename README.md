@@ -2,9 +2,13 @@
 
 Premium landing page for IC_wearables.
 
-The primary landing-page CTA opens the hosted scan flow:
+The primary landing-page CTA opens the on-page scan flow:
 
-`https://schuwaong.github.io/IC_avatar/#capture`
+`https://schuwaong.github.io/IC_wearables/#face-lab`
+
+The women's landing page uses the same on-page scan and then opens:
+
+`https://schuwaong.github.io/IC_wearables/female/results.html`
 
 ## Face Colour Demo
 

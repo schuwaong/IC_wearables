@@ -26,7 +26,7 @@
         <a href="#shop">Shop</a>
       </nav>
 
-      <a class="header-cta" href="https://schuwaong.github.io/IC_avatar/?profile=female#capture">Scan face now</a>
+      <a class="header-cta" href="#face-lab">Scan face now</a>
     </header>
 
     <main id="top">
@@ -45,7 +45,7 @@
             A private style read for women: colour season, face-aware beauty notes, body-shape fit, and pieces you can find nearby.
           </p>
           <div class="hero-actions" aria-label="Landing page actions">
-            <a class="primary-link" href="https://schuwaong.github.io/IC_avatar/?profile=female#capture">Scan face now</a>
+            <a class="primary-link" href="#face-lab">Scan face now</a>
             <a class="secondary-link" href="#scan">See the flow</a>
           </div>
         </div>
@@ -66,6 +66,115 @@
             IC_wearables connects undertone, contrast, face shape, and wardrobe intent into one edit: the right near-face colour,
             the right silhouette, and the search terms to find it.
           </p>
+        </div>
+      </section>
+
+      <section class="face-lab female-face-lab" id="face-lab" aria-labelledby="face-lab-title">
+        <div class="face-lab-copy">
+          <p class="eyebrow">Face colour studio</p>
+          <h2 id="face-lab-title">Scan your face, choose the styling direction, then generate four looks.</h2>
+          <p>
+            Upload a clear face photo. The colour palette appears first, then the outfit generator uses your occasion,
+            background, fit, and style settings to build a four-look results page.
+          </p>
+        </div>
+
+        <div class="face-tool" aria-label="Female face scan and outfit generator">
+          <div class="face-upload-panel">
+            <label class="face-drop" for="faceUpload">
+              <input id="faceUpload" type="file" accept="image/*" />
+              <img id="facePreview" alt="Uploaded face preview" />
+              <span id="faceEmpty">
+                <strong>Upload face photo</strong>
+                Front-facing, natural light works best.
+              </span>
+            </label>
+            <p id="faceStatus">Waiting for upload</p>
+          </div>
+
+          <div class="face-result-panel">
+            <div class="face-result-top">
+              <div>
+                <span>Estimated season</span>
+                <h3 id="faceSeasonResult">No face uploaded</h3>
+              </div>
+              <strong id="faceConfidence">--</strong>
+            </div>
+            <p id="faceSeasonReason">Upload a clear face photo to generate the colour profile and palette.</p>
+            <div class="face-swatch-row" id="facePaletteSwatches" aria-label="Generated colour palette"></div>
+            <div class="season-candidates" id="seasonCandidates"></div>
+          </div>
+
+          <div class="generation-panel">
+            <div class="generation-panel-header">
+              <div>
+                <span>Outfit generator</span>
+                <strong>Style controls</strong>
+              </div>
+            </div>
+            <div class="generation-controls expanded-controls">
+              <label>
+                Occasion
+                <select id="styleOccasionSelect">
+                  <option value="business">Business</option>
+                  <option value="casual">Casual</option>
+                  <option value="date night">Date night</option>
+                  <option value="travel">Travel</option>
+                  <option value="event">Event</option>
+                </select>
+              </label>
+              <label>
+                Background
+                <select id="styleBackgroundSelect">
+                  <option value="premium boutique studio">Boutique studio</option>
+                  <option value="city street at golden hour">City street</option>
+                  <option value="modern office lobby">Office lobby</option>
+                  <option value="evening lounge">Evening lounge</option>
+                  <option value="minimal apartment wardrobe">Wardrobe room</option>
+                </select>
+              </label>
+              <label>
+                Style mood
+                <select id="styleMoodSelect">
+                  <option value="quiet luxury">Quiet luxury</option>
+                  <option value="soft feminine">Soft feminine</option>
+                  <option value="clean minimal">Clean minimal</option>
+                  <option value="bold editorial">Bold editorial</option>
+                  <option value="romantic polish">Romantic polish</option>
+                </select>
+              </label>
+              <label>
+                Fit goal
+                <select id="styleFitSelect">
+                  <option value="balanced proportions">Balanced proportions</option>
+                  <option value="elongated leg line">Elongated leg line</option>
+                  <option value="defined waist">Defined waist</option>
+                  <option value="soft drape">Soft drape</option>
+                  <option value="structured shoulder">Structured shoulder</option>
+                </select>
+              </label>
+              <label>
+                Image frame
+                <select id="styleFrameSelect">
+                  <option value="full body">Full body</option>
+                  <option value="half body">Half body</option>
+                </select>
+              </label>
+              <label>
+                Budget
+                <select id="styleBudgetSelect">
+                  <option value="mid premium">Mid premium</option>
+                  <option value="affordable">Affordable</option>
+                  <option value="investment piece">Investment piece</option>
+                </select>
+              </label>
+            </div>
+            <button class="generate-photo-button" id="generatePhotoButton" type="button">
+              <span class="wand-symbol" aria-hidden="true"></span>
+              Generate
+            </button>
+            <p id="generationStatus">Scan a face first, then generate four outfit ideas.</p>
+          </div>
         </div>
       </section>
 
@@ -226,7 +335,7 @@
             The final step becomes a concise shopping brief: exact colour family, fit tags, search phrases, price band,
             and nearby boutique handoff.
           </p>
-          <a class="text-link" href="https://schuwaong.github.io/IC_avatar/?profile=female#capture">Scan face now</a>
+          <a class="text-link" href="#face-lab">Scan face now</a>
         </div>
         <div class="shop-board" aria-label="Example women's shopping output">
           <article>
@@ -269,23 +378,21 @@
         <div class="access-copy">
           <p class="eyebrow">Face scan</p>
           <h2 id="access-title">Start with the scan, then generate the outfit.</h2>
-          <p>
-            Upload or scan a face, choose the occasion and background, then generate the style photo and shopping rack.
-          </p>
+          <p>Scan a face, choose the dropdown settings, then open the generated results page with four outfit ideas.</p>
         </div>
 
         <div class="access-form demo-card">
           <span class="demo-card-label">Hosted scan</span>
           <h3>Face scan workflow</h3>
-          <p>Use the hosted scan flow now; API keys can be added later for live backend generation and affiliate search.</p>
-          <a class="primary-button form-demo-link" href="https://schuwaong.github.io/IC_avatar/?profile=female#capture">Scan face now</a>
+          <p>The female landing page now runs the scan directly here and sends the outfit request to the results page.</p>
+          <a class="primary-button form-demo-link" href="#face-lab">Scan face now</a>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <span>IC_wearables</span>
-      <a href="https://schuwaong.github.io/IC_avatar/?profile=female#capture">Scan face now</a>
+      <a href="#face-lab">Scan face now</a>
     </footer>
   </body>
 </html>

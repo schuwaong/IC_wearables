@@ -14,9 +14,23 @@ const facePaletteSwatches = document.getElementById("facePaletteSwatches");
 const seasonCandidates = document.getElementById("seasonCandidates");
 const styleOccasionSelect = document.getElementById("styleOccasionSelect");
 const styleBackgroundSelect = document.getElementById("styleBackgroundSelect");
+const styleMoodSelect = document.getElementById("styleMoodSelect");
+const styleFitSelect = document.getElementById("styleFitSelect");
+const styleFrameSelect = document.getElementById("styleFrameSelect");
+const styleBudgetSelect = document.getElementById("styleBudgetSelect");
 const generatePhotoButton = document.getElementById("generatePhotoButton");
 const generationStatus = document.getElementById("generationStatus");
 const generatedStyleImage = document.getElementById("generatedStyleImage");
+const femaleLooksGrid = document.getElementById("femaleLooksGrid");
+const resultsSeason = document.getElementById("resultsSeason");
+const resultsConfidence = document.getElementById("resultsConfidence");
+const resultsPaletteSwatches = document.getElementById("resultsPaletteSwatches");
+const resultsStatus = document.getElementById("resultsStatus");
+
+const STYLE_RUN_STORAGE_KEY = "icWearablesFemaleStyleRun";
+const pathName = window.location.pathname.toLowerCase();
+const isFemalePath = pathName.includes("/female/");
+const isFemaleResultsPage = Boolean(femaleLooksGrid);
 
 let latestFaceResult = null;
 
@@ -92,6 +106,57 @@ const seasonProfiles = [
     axes: { temperature: -0.35, value: 0.15, chroma: 1, contrast: 0.95 },
     palette: ["#09090b", "#ffffff", "#ff006e", "#00c2ff", "#6dff8f", "#ffdd00"],
     wardrobe: "electric accents, black and white, icy blue, vivid fuchsia, clean green",
+  },
+];
+
+const femaleOutfitIdeas = [
+  {
+    title: "Boardroom polish",
+    tone: "tailored, intelligent, premium business styling",
+    description: "A composed work look with the strongest colour closest to the face and clean vertical lines.",
+    fallbackImage: "../assets/generated-results/female-look-boardroom.jpg",
+    pieces: [
+      { label: "Near-face blouse", search: "women silk satin blouse" },
+      { label: "Tailored blazer", search: "women tailored blazer" },
+      { label: "Wide-leg trouser", search: "women wide leg tailored trousers" },
+      { label: "Leather pump or loafer", search: "women leather pumps loafers" },
+    ],
+  },
+  {
+    title: "City casual",
+    tone: "relaxed city styling with elevated everyday textures",
+    description: "A soft but intentional daytime outfit built around palette-safe layers and comfortable movement.",
+    fallbackImage: "../assets/generated-results/female-look-city.jpg",
+    pieces: [
+      { label: "Fine knit top", search: "women fine knit top" },
+      { label: "Cropped jacket", search: "women cropped jacket" },
+      { label: "Straight denim or trouser", search: "women straight leg jeans trousers" },
+      { label: "Clean sneaker", search: "women minimal leather sneakers" },
+    ],
+  },
+  {
+    title: "Evening edit",
+    tone: "date night, elegant, face-brightening eveningwear",
+    description: "A more striking look that keeps the colour story flattering under evening lighting.",
+    fallbackImage: "../assets/generated-results/female-look-evening.jpg",
+    pieces: [
+      { label: "Statement top", search: "women evening top satin knit" },
+      { label: "Midi skirt or dress", search: "women midi skirt dress" },
+      { label: "Small shoulder bag", search: "women small shoulder bag" },
+      { label: "Jewellery accent", search: "women earrings necklace" },
+    ],
+  },
+  {
+    title: "Travel capsule",
+    tone: "comfortable, refined travel capsule with mixable pieces",
+    description: "A practical outfit that photographs well and stays easy to repeat with nearby shopping options.",
+    fallbackImage: "../assets/generated-results/female-look-travel.jpg",
+    pieces: [
+      { label: "Layering tank or tee", search: "women premium tank tee" },
+      { label: "Soft outer layer", search: "women cardigan trench lightweight jacket" },
+      { label: "Relaxed trouser", search: "women relaxed trousers" },
+      { label: "Crossbody bag", search: "women crossbody bag" },
+    ],
   },
 ];
 
@@ -255,6 +320,17 @@ function sampleFaceImage(image) {
   };
 }
 
+function currentStyleSelections() {
+  return {
+    occasion: styleOccasionSelect?.value || "business",
+    background: styleBackgroundSelect?.value || "premium boutique studio",
+    mood: styleMoodSelect?.value || "quiet luxury",
+    fit: styleFitSelect?.value || "balanced proportions",
+    frame: styleFrameSelect?.value || "full body",
+    budget: styleBudgetSelect?.value || "mid premium",
+  };
+}
+
 function buildStyleImagePrompt(result) {
   const palette = result.profile.palette.join(", ");
   const axisSummary = [
@@ -263,12 +339,13 @@ function buildStyleImagePrompt(result) {
     axisLabel("chroma", result.axes.chroma),
     axisLabel("contrast", result.axes.contrast),
   ].join(", ");
-  const occasion = styleOccasionSelect?.value || "business";
-  const background = styleBackgroundSelect?.value || "premium boutique studio";
+  const selections = currentStyleSelections();
 
   return [
     "High-end IC_wearables fashion editorial image.",
-    `Occasion: ${occasion}. Background: ${background}.`,
+    `Occasion: ${selections.occasion}. Background: ${selections.background}.`,
+    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
+    `Image frame: ${selections.frame}, show a clear face and complete outfit proportions when full body is selected.`,
     `Colour profile: ${result.profile.name}. Palette hex colours for clothing, shoes, and accessories only: ${palette}.`,
     `Visual read: ${axisSummary}. Wardrobe direction: ${result.profile.wardrobe}.`,
     "Show a clear full face, premium textures, tailored outfit, clean realistic lighting, photorealistic skin texture, no text, no logos, no watermark.",
@@ -325,7 +402,9 @@ function renderFaceResult(result) {
   });
 
   if (generationStatus) {
-    generationStatus.textContent = "Face scan ready. Select occasion and background, then generate the photo.";
+    generationStatus.textContent = isFemalePath
+      ? "Face scan ready. Select the dropdowns, then generate four outfit ideas."
+      : "Face scan ready. Select occasion and background, then generate the photo.";
   }
 }
 
@@ -401,14 +480,391 @@ function handleFaceUpload(file) {
   reader.readAsDataURL(file);
 }
 
-function generatedImageUrl(prompt) {
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=1000&nologo=true`;
+function generatedImageUrl(prompt, options = {}) {
+  const width = options.width || 800;
+  const height = options.height || 1000;
+  const seed = options.seed ? `&seed=${encodeURIComponent(String(options.seed))}` : "";
+  const explicitEndpoint =
+    window.IC_IMAGE_GENERATION_ENDPOINT ||
+    window.IC_IMAGE_ENDPOINT ||
+    safeStorageValue("icImageGenerationEndpoint") ||
+    safeStorageValue("icImageEndpoint") ||
+    "";
+
+  if (explicitEndpoint) {
+    const url = new URL(explicitEndpoint, window.location.href);
+    url.searchParams.set("prompt", prompt);
+    url.searchParams.set("width", String(width));
+    url.searchParams.set("height", String(height));
+    if (options.seed) url.searchParams.set("seed", String(options.seed));
+    return url.toString();
+  }
+
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&nologo=true${seed}`;
+}
+
+function hashText(value) {
+  return [...String(value)].reduce((hash, character) => {
+    return (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }, 17);
+}
+
+function defaultStyleSelections() {
+  return {
+    occasion: "business",
+    background: "premium boutique studio",
+    mood: "quiet luxury",
+    fit: "balanced proportions",
+    frame: "full body",
+    budget: "mid premium",
+  };
+}
+
+function compactProfile(profile) {
+  return {
+    name: profile.name,
+    axes: profile.axes,
+    palette: profile.palette,
+    wardrobe: profile.wardrobe,
+  };
+}
+
+function saveFemaleStyleRun(result) {
+  const payload = {
+    profile: compactProfile(result.profile),
+    confidence: result.confidence,
+    axes: result.axes,
+    ranked: result.ranked.slice(0, 3).map((profile) => ({
+      name: profile.name,
+      score: profile.score,
+      palette: profile.palette,
+    })),
+    selections: currentStyleSelections(),
+    createdAt: new Date().toISOString(),
+  };
+
+  sessionStorage.setItem(STYLE_RUN_STORAGE_KEY, JSON.stringify(payload));
+  return payload;
+}
+
+function openFemaleResultsPage() {
+  const url = new URL("results.html", window.location.href);
+  window.location.assign(url.toString());
+}
+
+function safeStorageValue(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function getMatchingEndpointConfig() {
+  const explicit =
+    window.IC_MATCHING_CLOTHES_ENDPOINT ||
+    window.IC_AFFILIATE_ENDPOINT ||
+    safeStorageValue("icMatchingClothesEndpoint") ||
+    safeStorageValue("icAffiliateEndpoint") ||
+    "";
+
+  return {
+    endpoint: explicit || "/api/fetch-matching-clothes",
+    isExplicit: Boolean(explicit),
+  };
+}
+
+function shouldSkipMatchingEndpoint(endpoint, isExplicit) {
+  if (isExplicit) return false;
+  if (!endpoint.startsWith("/api/")) return false;
+  const host = window.location.hostname;
+  return !host || host === "localhost" || host === "127.0.0.1" || host.endsWith("github.io");
+}
+
+async function fetchMatchingClothes(searchQuery, colorSeason) {
+  const { endpoint, isExplicit } = getMatchingEndpointConfig();
+  if (!window.fetch || shouldSkipMatchingEndpoint(endpoint, isExplicit)) return [];
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ searchQuery, colorSeason }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Affiliate product search failed.");
+  }
+
+  const payload = await response.json();
+  const products = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload.products)
+      ? payload.products
+      : Array.isArray(payload.data)
+        ? payload.data
+        : [];
+
+  return products
+    .map((product) => ({
+      productName: String(product.productName || product.name || "Matching product"),
+      brand: String(product.brand || product.merchant || "Retail partner"),
+      price: String(product.price || product.salePrice || "Live price"),
+      imageUrl: String(product.imageUrl || product.image || ""),
+      buyLink: String(product.buyLink || product.link || product.url || ""),
+    }))
+    .filter((product) => product.buyLink);
+}
+
+function shoppingSearchUrl(query) {
+  return `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query)}`;
+}
+
+function pieceSearchQuery(piece, run) {
+  const selections = { ...defaultStyleSelections(), ...(run.selections || {}) };
+  return [
+    piece.search,
+    run.profile?.name,
+    run.profile?.wardrobe,
+    selections.occasion,
+    selections.fit,
+    selections.budget,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function fallbackProduct(piece, query) {
+  return {
+    productName: piece.label,
+    brand: "Shopping search",
+    price: "Live price",
+    imageUrl: "",
+    buyLink: shoppingSearchUrl(query),
+  };
+}
+
+function defaultFemaleStyleRun() {
+  const profile = seasonProfiles.find((season) => season.name === "Soft Autumn") || seasonProfiles[0];
+  return {
+    profile: compactProfile(profile),
+    confidence: 72,
+    axes: profile.axes,
+    ranked: [{ name: profile.name, score: 72, palette: profile.palette }],
+    selections: defaultStyleSelections(),
+    sample: true,
+  };
+}
+
+function readFemaleStyleRun() {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(STYLE_RUN_STORAGE_KEY) || "null");
+    if (!stored?.profile?.name || !Array.isArray(stored.profile.palette)) return defaultFemaleStyleRun();
+    return {
+      ...defaultFemaleStyleRun(),
+      ...stored,
+      profile: { ...defaultFemaleStyleRun().profile, ...stored.profile },
+      selections: { ...defaultStyleSelections(), ...(stored.selections || {}) },
+      sample: false,
+    };
+  } catch (error) {
+    return defaultFemaleStyleRun();
+  }
+}
+
+function buildFemaleLookPrompt(run, idea, index) {
+  const selections = { ...defaultStyleSelections(), ...(run.selections || {}) };
+  const palette = run.profile.palette.join(", ");
+  const pieces = idea.pieces.map((piece) => piece.label).join(", ");
+  const frameInstruction =
+    selections.frame === "half body"
+      ? "Half body portrait crop with face, hair, neckline, upper outfit, and accessories clearly visible."
+      : "Full body head-to-toe fashion image with clear face, shoes, silhouette, and outfit proportions visible.";
+
+  return [
+    "Photorealistic high-end female fashion editorial for IC_wearables.",
+    `Look ${index + 1}: ${idea.title}. Direction: ${idea.tone}.`,
+    `Occasion: ${selections.occasion}. Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
+    `Background style: ${selections.background}. Do not use the colour palette for the background; use it only for clothing, shoes, bags, jewellery, and makeup harmony.`,
+    `Colour season: ${run.profile.name}. Palette hex colours: ${palette}. Wardrobe direction: ${run.profile.wardrobe}.`,
+    `Outfit pieces to show: ${pieces}. ${frameInstruction}`,
+    "Premium textures, realistic lighting, clear full face, elegant styling, no text, no logos, no watermark.",
+  ].join(" ");
+}
+
+function renderResultsSummary(run) {
+  if (resultsSeason) resultsSeason.textContent = run.profile.name;
+  if (resultsConfidence) resultsConfidence.textContent = run.sample ? "Sample" : `${run.confidence}%`;
+  if (resultsStatus) {
+    const endpointConfig = getMatchingEndpointConfig();
+    resultsStatus.textContent = endpointConfig.isExplicit
+      ? "Generating images and matching affiliate product links."
+      : "Generating images now. Product rows use shopping search until the affiliate backend endpoint is configured.";
+  }
+
+  if (!resultsPaletteSwatches) return;
+  resultsPaletteSwatches.innerHTML = "";
+  run.profile.palette.forEach((color) => {
+    const swatch = document.createElement("span");
+    swatch.style.setProperty("--swatch", color);
+    swatch.title = color;
+    resultsPaletteSwatches.appendChild(swatch);
+  });
+}
+
+function createProductRow(product, piece) {
+  const row = document.createElement("article");
+  row.className = "look-product-row";
+
+  if (product.imageUrl) {
+    const image = document.createElement("img");
+    image.src = product.imageUrl;
+    image.alt = product.productName;
+    image.loading = "lazy";
+    row.appendChild(image);
+  } else {
+    const marker = document.createElement("span");
+    marker.className = "product-marker";
+    marker.textContent = piece.label.slice(0, 1).toUpperCase();
+    row.appendChild(marker);
+  }
+
+  const copy = document.createElement("div");
+  const brand = document.createElement("span");
+  const title = document.createElement("strong");
+  const price = document.createElement("small");
+  brand.textContent = product.brand;
+  title.textContent = product.productName;
+  price.textContent = product.price;
+  copy.append(brand, title, price);
+
+  const link = document.createElement("a");
+  link.className = "look-product-action";
+  link.href = product.buyLink;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer sponsored";
+  link.textContent = "Shop";
+  link.setAttribute("aria-label", `Shop ${piece.label}`);
+
+  row.append(copy, link);
+  return row;
+}
+
+function renderFemaleLookCard(run, idea, index) {
+  const card = document.createElement("article");
+  card.className = "generated-look-card";
+
+  const media = document.createElement("div");
+  media.className = "generated-look-media";
+  const image = document.createElement("img");
+  const prompt = buildFemaleLookPrompt(run, idea, index);
+  const imageUrl = generatedImageUrl(prompt, {
+    width: 800,
+    height: 1000,
+    seed: hashText(`${run.profile.name}-${idea.title}-${JSON.stringify(run.selections)}`),
+  });
+  image.onerror = () => {
+    if (image.dataset.fallbackApplied === "true") return;
+    image.dataset.fallbackApplied = "true";
+    image.src = idea.fallbackImage;
+  };
+  image.src = imageUrl;
+  image.alt = `${idea.title} generated outfit for ${run.profile.name}`;
+  image.loading = index === 0 ? "eager" : "lazy";
+  media.appendChild(image);
+
+  const body = document.createElement("div");
+  body.className = "generated-look-body";
+
+  const top = document.createElement("div");
+  top.className = "generated-look-top";
+  const label = document.createElement("span");
+  const title = document.createElement("h2");
+  const description = document.createElement("p");
+  label.textContent = `Look 0${index + 1}`;
+  title.textContent = idea.title;
+  description.textContent = idea.description;
+  top.append(label, title, description);
+
+  const pieceList = document.createElement("div");
+  pieceList.className = "look-piece-list";
+  idea.pieces.forEach((piece) => {
+    const chip = document.createElement("span");
+    chip.textContent = piece.label;
+    pieceList.appendChild(chip);
+  });
+
+  const rackTitle = document.createElement("h3");
+  rackTitle.textContent = "Product links";
+
+  const productList = document.createElement("div");
+  productList.className = "look-product-list";
+  productList.setAttribute("aria-label", `${idea.title} product links`);
+  const loading = document.createElement("div");
+  loading.className = "look-product-loading";
+  loading.textContent = "Finding matching pieces...";
+  productList.appendChild(loading);
+
+  body.append(top, pieceList, rackTitle, productList);
+  card.append(media, body);
+  return { card, productList };
+}
+
+async function hydrateLookProducts(run, idea, productList) {
+  const rows = await Promise.all(
+    idea.pieces.map(async (piece) => {
+      const query = pieceSearchQuery(piece, run);
+      try {
+        const [product] = await fetchMatchingClothes(query, run.profile.name);
+        return { piece, product: product || fallbackProduct(piece, query) };
+      } catch (error) {
+        return { piece, product: fallbackProduct(piece, query) };
+      }
+    }),
+  );
+
+  productList.replaceChildren(...rows.map(({ product, piece }) => createProductRow(product, piece)));
+}
+
+function initFemaleResultsPage() {
+  if (!femaleLooksGrid) return;
+
+  const run = readFemaleStyleRun();
+  renderResultsSummary(run);
+  femaleLooksGrid.innerHTML = "";
+
+  const productJobs = femaleOutfitIdeas.map((idea, index) => {
+    const { card, productList } = renderFemaleLookCard(run, idea, index);
+    femaleLooksGrid.appendChild(card);
+    return hydrateLookProducts(run, idea, productList);
+  });
+
+  Promise.allSettled(productJobs).then(() => {
+    if (!resultsStatus) return;
+    resultsStatus.textContent = run.sample
+      ? "Sample looks are ready. Run a face scan to create a personalised set."
+      : "Four generated looks are ready with product links for each outfit piece.";
+  });
 }
 
 function generateStylePhoto() {
   if (!latestFaceResult) {
     if (generationStatus) generationStatus.textContent = "Scan or upload a face photo first.";
     faceUpload?.focus();
+    return;
+  }
+
+  if (isFemalePath && !isFemaleResultsPage) {
+    try {
+      saveFemaleStyleRun(latestFaceResult);
+      if (generationStatus) generationStatus.textContent = "Opening four-look results page...";
+      if (generatePhotoButton) generatePhotoButton.disabled = true;
+      window.setTimeout(openFemaleResultsPage, 120);
+    } catch (error) {
+      if (generationStatus) generationStatus.textContent = "Could not save this scan. Try again.";
+      if (generatePhotoButton) generatePhotoButton.disabled = false;
+    }
     return;
   }
 
@@ -440,5 +896,6 @@ updateHeader();
 initProgressObserver();
 initWaitlistForm();
 initFaceColourStudio();
+initFemaleResultsPage();
 
 window.addEventListener("scroll", updateHeader, { passive: true });
