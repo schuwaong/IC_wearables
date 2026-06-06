@@ -36,3 +36,15 @@ Run the analyser directly:
 ```powershell
 python colour_profile.py .\assets\mens-black-suit.jpg --pretty
 ```
+
+## Capsule Outfit Generator
+
+Build a static affiliate outfit rack from a CSV feed:
+
+```powershell
+python -m pip install requests beautifulsoup4 pandas
+python capsule_outfit_generator.py --feed .\feed.csv --season "True Autumn" --affiliate-id YOUR_ID --network involve_asia --output .\outfits_rack.html
+```
+
+The script can also scrape a product/category URL with `--url`, then writes
+downloaded product images into `images/` and renders shoppable outfit cards.
