@@ -822,6 +822,18 @@ h3 {
   height: 480px;
 }
 
+.outfit-board-media {
+  width: min(455px, 100%);
+  background: #fffaf2;
+}
+
+.outfit-board-media img {
+  height: auto;
+  object-fit: contain;
+  object-position: center top;
+  filter: saturate(0.98) contrast(1.02);
+}
+
 .media-caption {
   position: absolute;
   left: 14px;
@@ -1611,6 +1623,10 @@ h3 {
   .scene-media img,
   .scene-media-wide img {
     height: 430px;
+  }
+
+  .outfit-board-media img {
+    height: auto;
   }
 
   .mini-metrics {
