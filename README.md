@@ -48,3 +48,38 @@ python capsule_outfit_generator.py --feed .\feed.csv --season "True Autumn" --af
 
 The script can also scrape a product/category URL with `--url`, then writes
 downloaded product images into `images/` and renders shoppable outfit cards.
+
+## Affiliate Backend
+
+The shoppable outfit rows call a serverless endpoint:
+
+`/api/fetch-matching-clothes`
+
+For GitHub Pages, deploy this repo to Vercel and set the frontend endpoint to
+your Vercel API URL:
+
+```js
+localStorage.setItem(
+  "icMatchingClothesEndpoint",
+  "https://your-vercel-project.vercel.app/api/fetch-matching-clothes",
+);
+```
+
+Required Vercel environment variables for CJ:
+
+```text
+CJ_API_KEY=your_cj_personal_access_token
+CJ_WEBSITE_ID=your_cj_property_id
+```
+
+Optional HK/Involve Asia variables:
+
+```text
+INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT=your_involve_product_search_endpoint
+INVOLVE_ASIA_API_KEY=your_involve_api_key
+INVOLVE_ASIA_METHOD=GET
+INVOLVE_ASIA_AUTH_HEADER=Authorization
+```
+
+The backend returns a safe fallback retailer search if the affiliate API keys
+are not configured yet, so the product cards still open useful shopping pages.
