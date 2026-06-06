@@ -3,6 +3,8 @@ const CJ_PRODUCT_SEARCH_ENDPOINT =
 const INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT =
   process.env.INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT || process.env.INVOLVE_ASIA_API_ENDPOINT || "";
 const MAX_RESULTS = Math.max(1, Math.min(12, Number(process.env.AFFILIATE_MAX_RESULTS) || 4));
+const ALLOW_GENERIC_SEARCH_FALLBACK =
+  String(process.env.AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK || "").trim().toLowerCase() === "true";
 
 const COUNTRY_CURRENCY = {
   AU: "AUD",
@@ -173,6 +175,19 @@ function cjCompanyId() {
   );
 }
 
+function cjCredential() {
+  return (
+    process.env.CJ_PERSONAL_ACCESS_TOKEN ||
+    process.env.CJ_PAT ||
+    process.env.CJ_API_KEY ||
+    ""
+  ).trim();
+}
+
+function isLikelyPersonalAccessToken(value = "") {
+  return /^P[-_][A-Za-z0-9]/.test(String(value).trim());
+}
+
 function buildCjGraphqlPayload(searchQuery, colorSeason, market) {
   const companyId = cjCompanyId();
   if (!companyId) {
@@ -248,10 +263,16 @@ function bearerToken(value = "") {
 }
 
 async function searchCjProducts(searchQuery, colorSeason, market) {
-  const apiKey = process.env.CJ_API_KEY;
+  const apiKey = cjCredential();
   const websiteId = process.env.CJ_WEBSITE_ID;
   if (!apiKey || !websiteId) {
-    throw new Error("CJ_API_KEY and CJ_WEBSITE_ID must be configured");
+    throw new Error("CJ personal access token and CJ_WEBSITE_ID must be configured");
+  }
+
+  if (isCjGraphqlEndpoint() && !isLikelyPersonalAccessToken(apiKey)) {
+    throw new Error(
+      "CJ GraphQL product search requires a CJ Personal Access Token. Set CJ_PERSONAL_ACCESS_TOKEN or CJ_PAT instead of an old developer key.",
+    );
   }
 
   const controller = new AbortController();
@@ -632,14 +653,22 @@ function cleanProducts(products) {
   }));
 }
 
+function affiliateLookupFailed(message) {
+  const error = new Error(message);
+  error.status = 502;
+  return error;
+}
+
 async function processRequest(body, requestMeta = {}) {
   const { searchQuery, colorSeason } = validatePayload(body);
   const countryCode = detectCountryCode(requestMeta);
   const market = marketForCountry(countryCode);
+  const errors = [];
 
   try {
     return cleanProducts(await searchMarketProducts(searchQuery, colorSeason, market));
   } catch (marketError) {
+    errors.push(`${market.countryCode}: ${marketError.message}`);
     console.warn(`[affiliate] ${market.countryCode} lookup failed; trying global US fallback: ${marketError.message}`);
   }
 
@@ -647,8 +676,15 @@ async function processRequest(body, requestMeta = {}) {
   try {
     return cleanProducts(await searchMarketProducts(searchQuery, colorSeason, fallbackMarket));
   } catch (globalError) {
-    console.warn(`[affiliate] Global affiliate lookup failed; returning search fallback: ${globalError.message}`);
-    return buildRetailerSearchFallback(searchQuery, colorSeason, fallbackMarket);
+    errors.push(`GLOBAL: ${globalError.message}`);
+    if (ALLOW_GENERIC_SEARCH_FALLBACK) {
+      console.warn(`[affiliate] Global affiliate lookup failed; returning search fallback: ${globalError.message}`);
+      return buildRetailerSearchFallback(searchQuery, colorSeason, fallbackMarket);
+    }
+
+    throw affiliateLookupFailed(
+      `Affiliate provider lookup failed. ${errors.join(" | ")}. To restore the old generic-search fallback, set AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK=true.`,
+    );
   }
 }
 

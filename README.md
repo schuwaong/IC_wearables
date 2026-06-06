@@ -68,12 +68,16 @@ localStorage.setItem(
 Required Vercel environment variables for CJ:
 
 ```text
-CJ_API_KEY=your_cj_personal_access_token
+CJ_PERSONAL_ACCESS_TOKEN=your_cj_personal_access_token
+# optional alias:
+CJ_PAT=your_cj_personal_access_token
 CJ_WEBSITE_ID=your_cj_property_id
 CJ_COMPANY_ID=your_cj_company_id
 ```
 
 The backend uses CJ's current GraphQL product endpoint at `https://ads.api.cj.com/query`.
+Do not use an old CJ developer key with this GraphQL endpoint; use a Personal
+Access Token from the CJ Developer Portal.
 
 Optional HK/Involve Asia variables:
 
@@ -84,8 +88,14 @@ INVOLVE_ASIA_METHOD=GET
 INVOLVE_ASIA_AUTH_HEADER=Authorization
 ```
 
-The backend returns a safe fallback retailer search if the affiliate API keys
-are not configured yet, so the product cards still open useful shopping pages.
+Optional generic fallback:
+
+```text
+AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK=true
+```
+
+If this flag is not set, the backend returns a real error when CJ/Involve Asia
+fail instead of silently downgrading to generic retailer search cards.
 
 ## Image Generation Backend
 
