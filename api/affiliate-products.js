@@ -1,5 +1,5 @@
 const CJ_PRODUCT_SEARCH_ENDPOINT =
-  process.env.CJ_PRODUCT_SEARCH_ENDPOINT || "https://product-search.api.cj.com/v2/product-search";
+  process.env.CJ_PRODUCT_SEARCH_ENDPOINT || "https://ads.api.cj.com/query";
 const INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT =
   process.env.INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT || process.env.INVOLVE_ASIA_API_ENDPOINT || "";
 const MAX_RESULTS = Math.max(1, Math.min(12, Number(process.env.AFFILIATE_MAX_RESULTS) || 4));
@@ -148,7 +148,7 @@ function buildMarketKeywords(searchQuery, colorSeason, market) {
     .join(" ");
 }
 
-function buildCjProductSearchUrl(searchQuery, colorSeason, market) {
+function buildCjLegacyProductSearchUrl(searchQuery, colorSeason, market) {
   // CJ Product Search uses website-id to generate publisher-tracked buy URLs.
   const params = new URLSearchParams({
     "website-id": process.env.CJ_WEBSITE_ID,
@@ -162,6 +162,85 @@ function buildCjProductSearchUrl(searchQuery, colorSeason, market) {
   if (market.cjCurrency) params.set("currency", market.cjCurrency);
 
   return `${CJ_PRODUCT_SEARCH_ENDPOINT}?${params.toString()}`;
+}
+
+function cjCompanyId() {
+  return (
+    process.env.CJ_COMPANY_ID ||
+    process.env.CJ_CID ||
+    process.env.CJ_PUBLISHER_ID ||
+    ""
+  );
+}
+
+function buildCjGraphqlPayload(searchQuery, colorSeason, market) {
+  const companyId = cjCompanyId();
+  if (!companyId) {
+    throw new Error("CJ_COMPANY_ID must be configured for CJ GraphQL product search");
+  }
+
+  const keywords = [searchQuery, colorSeason, "fashion", "clothing"].filter(Boolean);
+  const query = `
+    query ShoppingProducts(
+      $companyId: ID!
+      $keywords: [String!]
+      $partnerStatus: PartnerStatus
+      $limit: Int
+      $currency: String
+      $advertiserCountries: [String!]
+    ) {
+      shoppingProducts(
+        companyId: $companyId
+        keywords: $keywords
+        partnerStatus: $partnerStatus
+        limit: $limit
+        currency: $currency
+        advertiserCountries: $advertiserCountries
+      ) {
+        count
+        totalCount
+        resultList {
+          id
+          title
+          advertiserName
+          brand
+          imageLink
+          price {
+            amount
+            currency
+          }
+          salePrice {
+            amount
+            currency
+          }
+          linkCode(pid: "${process.env.CJ_WEBSITE_ID}") {
+            clickUrl
+            imageUrl
+          }
+          color
+          gender
+          material
+          size
+        }
+      }
+    }
+  `;
+
+  return {
+    query,
+    variables: {
+      companyId,
+      keywords,
+      partnerStatus: "JOINED",
+      limit: MAX_RESULTS,
+      currency: market.cjCurrency,
+      advertiserCountries: [market.countryCode],
+    },
+  };
+}
+
+function isCjGraphqlEndpoint() {
+  return /ads\.api\.cj\.com\/query/i.test(CJ_PRODUCT_SEARCH_ENDPOINT);
 }
 
 function bearerToken(value = "") {
@@ -179,14 +258,34 @@ async function searchCjProducts(searchQuery, colorSeason, market) {
   const timeout = setTimeout(() => controller.abort(), Number(process.env.CJ_TIMEOUT_MS || 9000));
 
   try {
-    const response = await fetch(buildCjProductSearchUrl(searchQuery, colorSeason, market), {
-      method: "GET",
-      headers: {
-        Authorization: bearerToken(apiKey),
-        Accept: "application/xml, text/xml, application/json",
-      },
-      signal: controller.signal,
-    });
+    const request =
+      isCjGraphqlEndpoint()
+        ? {
+            url: CJ_PRODUCT_SEARCH_ENDPOINT,
+            options: {
+              method: "POST",
+              headers: {
+                Authorization: bearerToken(apiKey),
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(buildCjGraphqlPayload(searchQuery, colorSeason, market)),
+              signal: controller.signal,
+            },
+          }
+        : {
+            url: buildCjLegacyProductSearchUrl(searchQuery, colorSeason, market),
+            options: {
+              method: "GET",
+              headers: {
+                Authorization: bearerToken(apiKey),
+                Accept: "application/xml, text/xml, application/json",
+              },
+              signal: controller.signal,
+            },
+          };
+
+    const response = await fetch(request.url, request.options);
 
     const raw = await response.text();
     if (!response.ok) {
@@ -397,6 +496,7 @@ function normalizeProduct(item, context) {
     "tracking_link",
     "affiliateLink",
     "affiliate_link",
+    "linkCode.clickUrl",
     "link",
     "productUrl",
     "product_url",

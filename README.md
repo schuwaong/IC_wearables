@@ -70,7 +70,10 @@ Required Vercel environment variables for CJ:
 ```text
 CJ_API_KEY=your_cj_personal_access_token
 CJ_WEBSITE_ID=your_cj_property_id
+CJ_COMPANY_ID=your_cj_company_id
 ```
+
+The backend uses CJ's current GraphQL product endpoint at `https://ads.api.cj.com/query`.
 
 Optional HK/Involve Asia variables:
 
