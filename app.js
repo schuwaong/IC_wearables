@@ -33,6 +33,8 @@ const isFemalePath = pathName.includes("/female/");
 const isFemaleResultsPage = Boolean(femaleLooksGrid);
 
 let latestFaceResult = null;
+let latestFaceDataUrl = "";
+let latestFaceReferenceDataUrl = "";
 const MIN_SKIN_SAMPLES_FOR_FACE = 24;
 const MIN_SKIN_RATIO_FOR_FALLBACK = 0.04;
 const WHITE_BALANCE_STRENGTH = 0.68;
@@ -769,22 +771,53 @@ function handleFaceUpload(file) {
   if (!file) return;
   if (!file.type.startsWith("image/")) {
     latestFaceResult = null;
+    latestFaceDataUrl = "";
+    latestFaceReferenceDataUrl = "";
     faceStatus.textContent = "Please upload a valid image before scanning.";
     if (generationStatus) generationStatus.textContent = FACE_SCAN_REQUIRED_MESSAGE;
     return;
   }
 
   latestFaceResult = null;
+  latestFaceDataUrl = "";
+  latestFaceReferenceDataUrl = "";
   faceStatus.textContent = "Reading face photo...";
   if (generationStatus) generationStatus.textContent = "Preparing the face scan...";
   const reader = new FileReader();
   reader.onload = () => {
     const dataUrl = String(reader.result || "");
+    latestFaceDataUrl = dataUrl;
     facePreview.src = dataUrl;
     faceDrop.classList.add("has-image");
+    resizeImageDataUrl(dataUrl).then((referenceDataUrl) => {
+      if (latestFaceDataUrl === dataUrl) latestFaceReferenceDataUrl = referenceDataUrl;
+    });
     analyzeFaceDataUrl(dataUrl);
   };
   reader.readAsDataURL(file);
+}
+
+function resizeImageDataUrl(dataUrl, maxSide = 960, quality = 0.86) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      try {
+        const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+        const width = Math.max(1, Math.round(image.naturalWidth * scale));
+        const height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = width;
+        canvas.height = height;
+        context.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    image.onerror = () => reject(new Error("Could not prepare face reference image."));
+    image.src = dataUrl;
+  });
 }
 
 function generatedImageUrl(prompt, options = {}) {
@@ -837,7 +870,14 @@ function compactProfile(profile) {
   };
 }
 
-function saveFemaleStyleRun(result) {
+async function faceReferenceDataUrl() {
+  if (latestFaceReferenceDataUrl) return latestFaceReferenceDataUrl;
+  if (!latestFaceDataUrl) return "";
+  latestFaceReferenceDataUrl = await resizeImageDataUrl(latestFaceDataUrl);
+  return latestFaceReferenceDataUrl;
+}
+
+function saveFemaleStyleRun(result, faceReference = "") {
   const payload = {
     profile: compactProfile(result.profile),
     confidence: result.confidence,
@@ -848,6 +888,7 @@ function saveFemaleStyleRun(result) {
       palette: profile.palette,
     })),
     selections: currentStyleSelections(),
+    faceReferenceDataUrl: faceReference,
     createdAt: new Date().toISOString(),
   };
 
@@ -950,8 +991,8 @@ function normalizeAffiliateProducts(payload) {
       price: String(product.price || product.salePrice || "Live price"),
       imageUrl: String(product.imageUrl || product.image || ""),
       buyLink: String(product.buyLink || product.link || product.url || ""),
-      isFallback: false,
-      actionLabel: "Shop",
+      isFallback: Boolean(product.isFallback || product.source === "generic-search"),
+      actionLabel: String(product.actionLabel || (product.isFallback ? "Search" : "Shop")),
     }))
     .filter((product) => product.buyLink);
 }
@@ -1008,10 +1049,11 @@ async function fetchMatchingClothes(searchQuery, colorSeason) {
       };
     }
 
+    const hasLiveProducts = products.some((product) => !product.isFallback);
     return {
       products,
-      usedAffiliate: true,
-      reason: "",
+      usedAffiliate: hasLiveProducts,
+      reason: hasLiveProducts ? "" : affiliateFallbackMessage("unavailable"),
     };
   } catch (error) {
     return {
@@ -1062,6 +1104,7 @@ function defaultFemaleStyleRun() {
     axes: profile.axes,
     ranked: [{ name: profile.name, score: 72, palette: profile.palette }],
     selections: defaultStyleSelections(),
+    faceReferenceDataUrl: "",
     sample: true,
   };
 }
@@ -1100,6 +1143,25 @@ function buildFemaleLookPrompt(run, idea, index) {
     `Outfit pieces to show: ${pieces}. ${frameInstruction}`,
     "Premium textures, realistic lighting, clear full face, elegant styling, no text, no logos, no watermark.",
   ].join(" ");
+}
+
+function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
+  const productSummary = rows
+    .map(({ piece, product }) => `${piece.label}: ${product.productName} from ${product.brand}`)
+    .join("; ");
+  const productImageCount = rows.filter(({ product }) => product.imageUrl).length;
+
+  return [
+    buildFemaleLookPrompt(run, idea, index),
+    "Use Image 1 as the identity reference. Preserve the same person's face, facial structure, hair, skin tone, and expression as closely as possible.",
+    productImageCount
+      ? "Use the later reference images as clothing and accessory references. Dress the person in those product-inspired pieces while keeping a natural, realistic full outfit."
+      : "Affiliate product image references are unavailable for this look, so style the person using the product names and colour-season guidance.",
+    productSummary ? `Product references: ${productSummary}.` : "",
+    "Do not change identity. Do not create a different model. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function renderResultsSummary(run) {
@@ -1171,6 +1233,118 @@ function createProductNotice(message) {
   return notice;
 }
 
+async function generatedReferenceImage(prompt, options = {}) {
+  const width = options.width || 800;
+  const height = options.height || 1000;
+  const referenceImages = Array.isArray(options.referenceImages) ? options.referenceImages.filter(Boolean).slice(0, 3) : [];
+  const explicitEndpoint =
+    window.IC_IMAGE_GENERATION_ENDPOINT ||
+    window.IC_IMAGE_ENDPOINT ||
+    safeStorageValue("icImageGenerationEndpoint") ||
+    safeStorageValue("icImageEndpoint") ||
+    "";
+  const { endpoint, isExplicit } = endpointConfig("/api/generate-style-image", explicitEndpoint);
+
+  if (!window.fetch || shouldSkipApiEndpoint(endpoint, isExplicit)) {
+    return {
+      imageUrl: generatedImageUrl(prompt, options),
+      provider: "text-fallback",
+      usedReferences: false,
+    };
+  }
+
+  if (!referenceImages.length) {
+    return {
+      imageUrl: generatedImageUrl(prompt, options),
+      provider: "text-fallback",
+      usedReferences: false,
+    };
+  }
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt,
+      width,
+      height,
+      seed: options.seed,
+      referenceImages,
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String(payload?.detail || payload?.error || "Reference image generation failed."));
+  }
+
+  const imageUrl = payload.imageUrl || payload.imageDataUrl;
+  if (!imageUrl) throw new Error("Reference image generation returned no image.");
+  return {
+    imageUrl,
+    provider: payload.provider || "reference-generation",
+    usedReferences: true,
+  };
+}
+
+function setLookImageStatus(statusElement, message) {
+  if (!statusElement) return;
+  statusElement.textContent = message;
+}
+
+async function hydrateLookImage(run, idea, index, image, statusElement, rows) {
+  const seed = hashText(`${run.profile.name}-${idea.title}-${JSON.stringify(run.selections)}`);
+  const productImageUrls = rows
+    .map(({ product }) => product.imageUrl)
+    .filter((url) => /^https?:\/\//i.test(url))
+    .slice(0, 2);
+  const referenceImages = [run.faceReferenceDataUrl, ...productImageUrls].filter(Boolean).slice(0, 3);
+  const prompt = buildReferencedFemaleLookPrompt(run, idea, index, rows);
+
+  setLookImageStatus(
+    statusElement,
+    run.faceReferenceDataUrl
+      ? "Generating with scanned face reference..."
+      : "Generating from colour profile...",
+  );
+
+  try {
+    const result = await generatedReferenceImage(prompt, {
+      width: 800,
+      height: 1000,
+      seed,
+      referenceImages,
+    });
+    image.onload = () => {
+      setLookImageStatus(
+        statusElement,
+        result.usedReferences
+          ? productImageUrls.length
+            ? "Generated from face and product references."
+            : "Generated from scanned face and product text."
+          : "Generated from styling prompt.",
+      );
+    };
+    image.onerror = () => {
+      image.src = idea.fallbackImage;
+      setLookImageStatus(statusElement, "Reference generation failed. Showing fallback look.");
+    };
+    image.src = result.imageUrl;
+    return {
+      imageUsedReferences: result.usedReferences,
+      productReferenceCount: productImageUrls.length,
+      imageProvider: result.provider,
+    };
+  } catch (error) {
+    image.src = idea.fallbackImage;
+    setLookImageStatus(statusElement, "Reference generation failed. Showing fallback look.");
+    return {
+      imageUsedReferences: false,
+      productReferenceCount: productImageUrls.length,
+      imageProvider: "fallback",
+    };
+  }
+}
+
 function renderFemaleLookCard(run, idea, index) {
   const card = document.createElement("article");
   card.className = "generated-look-card";
@@ -1178,21 +1352,19 @@ function renderFemaleLookCard(run, idea, index) {
   const media = document.createElement("div");
   media.className = "generated-look-media";
   const image = document.createElement("img");
-  const prompt = buildFemaleLookPrompt(run, idea, index);
-  const imageUrl = generatedImageUrl(prompt, {
-    width: 800,
-    height: 1000,
-    seed: hashText(`${run.profile.name}-${idea.title}-${JSON.stringify(run.selections)}`),
-  });
+  const imageStatus = document.createElement("span");
+  imageStatus.className = "generated-look-image-status";
+  imageStatus.textContent = run.sample ? "Sample look image." : "Preparing AI try-on image...";
   image.onerror = () => {
     if (image.dataset.fallbackApplied === "true") return;
     image.dataset.fallbackApplied = "true";
     image.src = idea.fallbackImage;
+    imageStatus.textContent = "Reference generation failed. Showing fallback look.";
   };
-  image.src = imageUrl;
+  if (run.sample) image.src = idea.fallbackImage;
   image.alt = `${idea.title} generated outfit for ${run.profile.name}`;
   image.loading = index === 0 ? "eager" : "lazy";
-  media.appendChild(image);
+  media.append(image, imageStatus);
 
   const body = document.createElement("div");
   body.className = "generated-look-body";
@@ -1228,7 +1400,7 @@ function renderFemaleLookCard(run, idea, index) {
 
   body.append(top, pieceList, rackTitle, productList);
   card.append(media, body);
-  return { card, productList };
+  return { card, productList, image, imageStatus };
 }
 
 async function hydrateLookProducts(run, idea, productList) {
@@ -1240,7 +1412,7 @@ async function hydrateLookProducts(run, idea, productList) {
       return {
         piece,
         product,
-        usedAffiliate: Boolean(lookup.products[0]),
+        usedAffiliate: Boolean(lookup.products[0] && !product.isFallback),
         reason: lookup.reason,
       };
     }),
@@ -1261,7 +1433,7 @@ async function hydrateLookProducts(run, idea, productList) {
 
   children.push(...rows.map(({ product, piece }) => createProductRow(product, piece)));
   productList.replaceChildren(...children);
-  return { affiliateCount, fallbackCount, totalCount: rows.length };
+  return { affiliateCount, fallbackCount, totalCount: rows.length, rows };
 }
 
 function initFemaleResultsPage() {
@@ -1271,10 +1443,14 @@ function initFemaleResultsPage() {
   renderResultsSummary(run);
   femaleLooksGrid.innerHTML = "";
 
-  const productJobs = femaleOutfitIdeas.map((idea, index) => {
-    const { card, productList } = renderFemaleLookCard(run, idea, index);
+  const productJobs = femaleOutfitIdeas.map(async (idea, index) => {
+    const { card, productList, image, imageStatus } = renderFemaleLookCard(run, idea, index);
     femaleLooksGrid.appendChild(card);
-    return hydrateLookProducts(run, idea, productList);
+    const productStats = await hydrateLookProducts(run, idea, productList);
+    const imageStats = run.sample
+      ? { imageUsedReferences: false, productReferenceCount: 0, imageProvider: "sample" }
+      : await hydrateLookImage(run, idea, index, image, imageStatus, productStats.rows);
+    return { ...productStats, ...imageStats };
   });
 
   Promise.allSettled(productJobs).then((outcomes) => {
@@ -1307,7 +1483,7 @@ function initFemaleResultsPage() {
   });
 }
 
-function generateStylePhoto() {
+async function generateStylePhoto() {
   if (!latestFaceResult) {
     if (generationStatus) generationStatus.textContent = FACE_SCAN_REQUIRED_MESSAGE;
     faceUpload?.focus();
@@ -1316,9 +1492,11 @@ function generateStylePhoto() {
 
   if (isFemalePath && !isFemaleResultsPage) {
     try {
-      saveFemaleStyleRun(latestFaceResult);
-      if (generationStatus) generationStatus.textContent = "Opening four-look results page...";
       if (generatePhotoButton) generatePhotoButton.disabled = true;
+      if (generationStatus) generationStatus.textContent = "Saving face reference for AI try-on...";
+      const faceReference = await faceReferenceDataUrl();
+      saveFemaleStyleRun(latestFaceResult, faceReference);
+      if (generationStatus) generationStatus.textContent = "Opening four-look results page...";
       window.setTimeout(openFemaleResultsPage, 120);
     } catch (error) {
       if (generationStatus) generationStatus.textContent = "Could not save this scan. Try again.";

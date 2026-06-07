@@ -23,6 +23,31 @@ function getSeed(req) {
   return Number.isInteger(value) && value >= 0 ? value : undefined;
 }
 
+function parseBody(rawBody) {
+  if (!rawBody) return {};
+  if (typeof rawBody === "object") return rawBody;
+  return JSON.parse(rawBody);
+}
+
+function cleanReferenceImages(value) {
+  const images = Array.isArray(value) ? value : [];
+  return images
+    .map((image) => String(image || "").trim())
+    .filter((image) => /^data:image\/[a-z0-9.+-]+;base64,/i.test(image) || /^https?:\/\//i.test(image))
+    .slice(0, 3);
+}
+
+function getPostPayload(req) {
+  const body = parseBody(req.body);
+  return {
+    prompt: String(body.prompt || "").trim(),
+    width: Number.isFinite(Number(body.width)) ? Number(body.width) : 800,
+    height: Number.isFinite(Number(body.height)) ? Number(body.height) : 1000,
+    seed: Number.isInteger(Number(body.seed)) && Number(body.seed) >= 0 ? Number(body.seed) : undefined,
+    referenceImages: cleanReferenceImages(body.referenceImages),
+  };
+}
+
 function normalizedSize(width, height) {
   const safeWidth = Math.max(512, Math.min(2048, Math.round(width / 8) * 8));
   const safeHeight = Math.max(512, Math.min(2048, Math.round(height / 8) * 8));
@@ -57,12 +82,16 @@ function pollinationsUrl(prompt, width, height, seed) {
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&nologo=true${seedQuery}`;
 }
 
-async function callDashScope(prompt, width, height, seed) {
+async function callDashScope(prompt, width, height, seed, referenceImages = []) {
   const apiKey = process.env.DASHSCOPE_API_KEY || process.env.ALIBABA_DASHSCOPE_API_KEY;
   if (!apiKey) throw new Error("DASHSCOPE_API_KEY is not configured");
 
   const baseUrl = (process.env.DASHSCOPE_BASE_URL || "https://dashscope.aliyuncs.com/api/v1").replace(/\/$/, "");
   const model = process.env.DASHSCOPE_IMAGE_MODEL || "qwen-image-2.0-pro";
+  const content = [
+    ...referenceImages.map((image) => ({ image })),
+    { text: prompt },
+  ];
   const response = await fetch(`${baseUrl}/services/aigc/multimodal-generation/generation`, {
     method: "POST",
     headers: {
@@ -75,7 +104,7 @@ async function callDashScope(prompt, width, height, seed) {
         messages: [
           {
             role: "user",
-            content: [{ text: prompt }],
+            content,
           },
         ],
       },
@@ -139,14 +168,16 @@ async function callCloudflare(prompt, width, height) {
   return { type: "buffer", buffer, contentType, provider: "cloudflare" };
 }
 
-async function generateImage(prompt, width, height, seed) {
+async function generateImage(prompt, width, height, seed, referenceImages = []) {
   const errors = [];
+  const hasReferenceImages = referenceImages.length > 0;
 
   for (const provider of providerOrder()) {
     try {
       if (provider === "dashscope" || provider === "alibaba") {
-        return await callDashScope(prompt, width, height, seed);
+        return await callDashScope(prompt, width, height, seed, referenceImages);
       }
+      if (hasReferenceImages) continue;
       if (provider === "cloudflare") {
         return await callCloudflare(prompt, width, height);
       }
@@ -163,7 +194,7 @@ async function generateImage(prompt, width, height, seed) {
 
 function setCommonHeaders(res, provider) {
   res.setHeader("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN || "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=900");
   if (provider) res.setHeader("X-IC-Image-Provider", provider);
@@ -172,14 +203,41 @@ function setCommonHeaders(res, provider) {
 export default async function handler(req, res) {
   setCommonHeaders(res);
   if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "GET" && req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const prompt = getPrompt(req);
+  const payload =
+    req.method === "POST"
+      ? getPostPayload(req)
+      : {
+          prompt: getPrompt(req),
+          width: getNumber(req, "width", 800),
+          height: getNumber(req, "height", 1000),
+          seed: getSeed(req),
+          referenceImages: [],
+        };
+  const prompt = payload.prompt;
   if (!prompt) return res.status(400).json({ error: "prompt is required" });
 
   try {
-    const result = await generateImage(prompt, getNumber(req, "width", 800), getNumber(req, "height", 1000), getSeed(req));
+    const result = await generateImage(
+      prompt,
+      payload.width,
+      payload.height,
+      payload.seed,
+      payload.referenceImages,
+    );
     setCommonHeaders(res, result.provider);
+
+    if (req.method === "POST") {
+      if (result.type === "redirect") {
+        return res.status(200).json({ imageUrl: result.url, provider: result.provider });
+      }
+
+      return res.status(200).json({
+        imageDataUrl: `data:${result.contentType || "image/png"};base64,${result.buffer.toString("base64")}`,
+        provider: result.provider,
+      });
+    }
 
     if (result.type === "redirect") {
       res.setHeader("Location", result.url);

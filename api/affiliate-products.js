@@ -729,6 +729,9 @@ function buildRetailerSearchFallback(searchQuery, colorSeason, market) {
       price: `${market.currency} price on site`,
       imageUrl: "",
       buyLink: appendAffiliateTracking(buyLink, { searchQuery, colorSeason, market }),
+      isFallback: true,
+      actionLabel: "Search",
+      source: "generic-search",
     };
   });
 }
@@ -744,6 +747,9 @@ function cleanProducts(products) {
     price: product.price,
     imageUrl: product.imageUrl,
     buyLink: product.buyLink,
+    isFallback: Boolean(product.isFallback),
+    actionLabel: product.actionLabel,
+    source: product.source,
   }));
 }
 
