@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check app.js && node --check api/affiliate-products.js && node --check api/fetch-matching-clothes.js && node --check api/generate-style-image.js"
+    "check": "node --check app.js && node --check api/affiliate-products.js && node --check api/colour-profile.js && node --check api/fetch-matching-clothes.js && node --check api/generate-style-image.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
   }
 }

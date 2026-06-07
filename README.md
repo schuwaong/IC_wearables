@@ -37,6 +37,43 @@ Run the analyser directly:
 python colour_profile.py .\assets\mens-black-suit.jpg --pretty
 ```
 
+The deployed serverless backend also exposes:
+
+`/api/colour-profile`
+
+It accepts JSON:
+
+```json
+{ "imageDataUrl": "data:image/jpeg;base64,..." }
+```
+
+The Node endpoint uses `sharp` to decode the uploaded image and returns the
+same profile shape that the browser fallback expects.
+
+## GitHub Pages + Backend
+
+GitHub Pages only serves static files. It does not run files under `api/`.
+Deploy this repo to Vercel for the backend routes, then set the GitHub Pages
+frontend backend base in `config.js`:
+
+```js
+window.IC_BACKEND_BASE_URL = "https://your-vercel-project.vercel.app";
+```
+
+That one base URL powers:
+
+```text
+/api/colour-profile
+/api/generate-style-image
+/api/fetch-matching-clothes
+```
+
+For temporary testing without editing `config.js`, set it in the browser:
+
+```js
+localStorage.setItem("icBackendBaseUrl", "https://your-vercel-project.vercel.app");
+```
+
 ## Capsule Outfit Generator
 
 Build a static affiliate outfit rack from a CSV feed:
@@ -54,16 +91,6 @@ downloaded product images into `images/` and renders shoppable outfit cards.
 The shoppable outfit rows call a serverless endpoint:
 
 `/api/fetch-matching-clothes`
-
-For GitHub Pages, deploy this repo to Vercel and set the frontend endpoint to
-your Vercel API URL:
-
-```js
-localStorage.setItem(
-  "icMatchingClothesEndpoint",
-  "https://your-vercel-project.vercel.app/api/fetch-matching-clothes",
-);
-```
 
 Required Vercel environment variables for CJ:
 
@@ -143,10 +170,7 @@ DASHSCOPE_PROMPT_EXTEND=true
 For GitHub Pages, point the frontend at the deployed Vercel endpoint:
 
 ```js
-localStorage.setItem(
-  "icImageGenerationEndpoint",
-  "https://your-vercel-project.vercel.app/api/generate-style-image",
-);
+window.IC_BACKEND_BASE_URL = "https://your-vercel-project.vercel.app";
 ```
 
 When served directly from Vercel, the frontend uses `/api/generate-style-image`

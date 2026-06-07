@@ -1353,6 +1353,17 @@ h3 {
   font-weight: 800;
 }
 
+.look-product-notice {
+  padding: 14px 16px;
+  border: 1px solid rgba(224, 182, 101, 0.28);
+  border-radius: var(--radius);
+  background: rgba(224, 182, 101, 0.08);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
 .look-product-row {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr) auto;
@@ -1363,6 +1374,10 @@ h3 {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(8, 8, 7, 0.34);
+}
+
+.look-product-row.is-fallback {
+  background: rgba(224, 182, 101, 0.05);
 }
 
 .look-product-row img,

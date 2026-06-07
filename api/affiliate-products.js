@@ -5,6 +5,24 @@ const INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT =
 const MAX_RESULTS = Math.max(1, Math.min(12, Number(process.env.AFFILIATE_MAX_RESULTS) || 4));
 const ALLOW_GENERIC_SEARCH_FALLBACK =
   String(process.env.AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK || "").trim().toLowerCase() === "true";
+const USE_INVOLVE_ASIA_FALLBACK_FOR_GLOBAL =
+  String(
+    process.env.INVOLVE_ASIA_FALLBACK_FOR_GLOBAL || process.env.INVOLVE_ASIA_GLOBAL_FALLBACK || "true",
+  )
+    .trim()
+    .toLowerCase() === "true";
+const INVOLVE_ASIA_SEARCH_PARAM = process.env.INVOLVE_ASIA_SEARCH_PARAM || "keyword";
+const INVOLVE_ASIA_SEARCH_BODY_PARAM = process.env.INVOLVE_ASIA_SEARCH_BODY_PARAM || INVOLVE_ASIA_SEARCH_PARAM;
+const INVOLVE_ASIA_TRACKING_PARAM = process.env.INVOLVE_ASIA_TRACKING_PARAM || "sid";
+const INVOLVE_ASIA_TRACKING_VALUE =
+  process.env.INVOLVE_ASIA_TRACKING_VALUE || process.env.INVOLVE_ASIA_AFFILIATE_ID || "icw";
+
+function isInvolveAsiaConfigured() {
+  return Boolean(
+    INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT &&
+      (process.env.INVOLVE_ASIA_API_KEY || process.env.INVOLVE_ASIA_TOKEN),
+  );
+}
 
 const COUNTRY_CURRENCY = {
   AU: "AUD",
@@ -321,10 +339,11 @@ async function searchCjProducts(searchQuery, colorSeason, market) {
 
 function buildInvolveAsiaUrl(searchQuery, colorSeason, market) {
   const url = new URL(INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT);
-  url.searchParams.set("keyword", buildMarketKeywords(searchQuery, colorSeason, market));
+  url.searchParams.set(INVOLVE_ASIA_SEARCH_PARAM, buildMarketKeywords(searchQuery, colorSeason, market));
   url.searchParams.set("limit", String(MAX_RESULTS));
   url.searchParams.set("country", market.countryCode);
   url.searchParams.set("currency", market.currency);
+  url.searchParams.set("retailers", market.retailerKeywords.join(","));
   return url.toString();
 }
 
@@ -361,7 +380,13 @@ async function searchInvolveAsiaProducts(searchQuery, colorSeason, market) {
     const response = await fetch(url, {
       method,
       headers,
-      body: method === "GET" ? undefined : JSON.stringify(buildInvolveAsiaPayload(searchQuery, colorSeason, market)),
+      body:
+        method === "GET"
+          ? undefined
+          : JSON.stringify({
+              ...buildInvolveAsiaPayload(searchQuery, colorSeason, market),
+              [INVOLVE_ASIA_SEARCH_BODY_PARAM]: buildMarketKeywords(searchQuery, colorSeason, market),
+            }),
       signal: controller.signal,
     });
 
@@ -376,34 +401,48 @@ async function searchInvolveAsiaProducts(searchQuery, colorSeason, market) {
   }
 }
 
-async function searchHongKongProducts(searchQuery, colorSeason, market) {
-  const attempts = [];
+function marketSearchProviders(market) {
+  const providers = [];
 
-  if (INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT) {
-    attempts.push(() => searchInvolveAsiaProducts(searchQuery, colorSeason, market));
-  }
-  attempts.push(() => searchCjProducts(searchQuery, colorSeason, market));
-
-  for (const attempt of attempts) {
-    try {
-      const products = preferMarketRetailers(await attempt(), market);
-      if (products.length) return products;
-    } catch (error) {
-      console.warn(`[affiliate] HK market lookup failed: ${error.message}`);
-    }
+  if (market.countryCode === "HK") {
+    if (isInvolveAsiaConfigured()) providers.push("involve-asia");
+    providers.push("cj");
+    return providers;
   }
 
-  throw new Error("HK market lookup failed");
+  providers.push("cj");
+  if (USE_INVOLVE_ASIA_FALLBACK_FOR_GLOBAL && isInvolveAsiaConfigured()) {
+    providers.push("involve-asia");
+  }
+  return providers;
 }
 
 async function searchMarketProducts(searchQuery, colorSeason, market) {
-  if (market.countryCode === "HK") {
-    return searchHongKongProducts(searchQuery, colorSeason, market);
+  const attempts = marketSearchProviders(market);
+  const providerFailures = [];
+
+  if (!attempts.length) {
+    throw new Error(`${market.countryCode} market has no configured providers`);
   }
 
-  const products = preferMarketRetailers(await searchCjProducts(searchQuery, colorSeason, market), market);
-  if (products.length) return products;
-  throw new Error("Global CJ lookup returned no products");
+  for (const provider of attempts) {
+    try {
+      const results =
+        provider === "involve-asia"
+          ? preferMarketRetailers(await searchInvolveAsiaProducts(searchQuery, colorSeason, market), market)
+          : preferMarketRetailers(await searchCjProducts(searchQuery, colorSeason, market), market);
+      if (results.length) return results;
+      providerFailures.push(`${provider}: no products`);
+      console.warn(`[affiliate] ${market.countryCode} ${provider} returned no products`);
+    } catch (error) {
+      providerFailures.push(`${provider}: ${error.message}`);
+      console.warn(`[affiliate] ${market.countryCode} ${provider} lookup failed: ${error.message}`);
+    }
+  }
+
+  const error = new Error(`Affiliate providers unavailable for ${market.countryCode}`);
+  error.details = providerFailures;
+  throw error;
 }
 
 function normalizeProducts(raw, context) {
@@ -432,7 +471,10 @@ function normalizeJsonProducts(payload, context) {
     "data.shoppingProducts.products",
   );
 
-  return products.slice(0, MAX_RESULTS).map((item) => normalizeProduct(item, context)).filter(Boolean);
+  return products
+    .slice(0, MAX_RESULTS)
+    .map((item) => normalizeProduct(item, context))
+    .filter(Boolean);
 }
 
 function normalizeXmlProducts(xml, context) {
@@ -472,7 +514,8 @@ function firstValue(item, keys) {
 }
 
 function normalizeProduct(item, context) {
-  const { market } = context;
+  const { market, searchQuery, colorSeason } = context;
+  const source = context?.source || "unknown";
   const productName = firstValue(item, [
     "productName",
     "product_name",
@@ -531,7 +574,12 @@ function normalizeProduct(item, context) {
     brand: String(brand),
     price,
     imageUrl: String(imageUrl || ""),
-    buyLink: appendAffiliateTracking(String(rawBuyLink), context),
+    buyLink: appendAffiliateTracking(String(rawBuyLink), {
+      searchQuery,
+      colorSeason,
+      market,
+      source,
+    }),
   };
 }
 
@@ -565,7 +613,7 @@ function decodeXml(value) {
     .replace(/&gt;/g, ">");
 }
 
-function formatPrice(price, currency, market) {
+function legacyFormatPrice(price, currency, market) {
   const fallbackCurrency = normalizeCurrency(currency, market.currency);
   if (price === undefined || price === null || price === "") return `${fallbackCurrency} price on site`;
 
@@ -585,14 +633,14 @@ function formatPrice(price, currency, market) {
   return cleaned ? `${detectedCurrency} ${cleaned}` : `${detectedCurrency} price on site`;
 }
 
-function normalizeCurrency(value, fallback = "USD") {
+function legacyNormalizeCurrency(value, fallback = "USD") {
   const currency = String(value || "").trim().toUpperCase();
   if (currency === "HK$") return "HKD";
   if (currency === "US$") return "USD";
   return /^[A-Z]{3}$/.test(currency) ? currency : fallback;
 }
 
-function currencyFromText(text) {
+function legacyCurrencyFromText(text) {
   if (/HK\$|\bHKD\b/i.test(text)) return "HKD";
   if (/US\$|\bUSD\b/i.test(text)) return "USD";
   if (/\bGBP\b|£/i.test(text)) return "GBP";
@@ -603,9 +651,55 @@ function currencyFromText(text) {
   return "";
 }
 
-function appendAffiliateTracking(rawUrl, { searchQuery, colorSeason, market }) {
+function formatPrice(price, currency, market) {
+  const fallbackCurrency = normalizeCurrency(currency, market.currency);
+  if (price === undefined || price === null || price === "") return `${fallbackCurrency} price on site`;
+
+  const text = String(price).trim();
+  if (!text) return `${fallbackCurrency} price on site`;
+  if (/price on site/i.test(text)) return `${fallbackCurrency} price on site`;
+
+  const detectedCurrency = currencyFromText(text) || fallbackCurrency;
+  const cleaned = text
+    .replace(/HK\$/gi, "")
+    .replace(/US\$/gi, "")
+    .replace(/\b(HKD|USD|GBP|EUR|CAD|AUD|SGD)\b/gi, "")
+    .replace(/[\$\u20ac\u00a3]/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return cleaned ? `${detectedCurrency} ${cleaned}` : `${detectedCurrency} price on site`;
+}
+
+function normalizeCurrency(value, fallback = "USD") {
+  const currency = String(value || "").trim().toUpperCase();
+  if (currency === "HK$") return "HKD";
+  if (currency === "US$") return "USD";
+  return /^[A-Z]{3}$/.test(currency) ? currency : fallback;
+}
+
+function currencyFromText(text) {
+  if (/HK\$|\bHKD\b/i.test(text)) return "HKD";
+  if (/US\$|\bUSD\b/i.test(text)) return "USD";
+  if (/\bGBP\b|\u00a3/i.test(text)) return "GBP";
+  if (/\bEUR\b|\u20ac/i.test(text)) return "EUR";
+  if (/\bCAD\b/i.test(text)) return "CAD";
+  if (/\bAUD\b/i.test(text)) return "AUD";
+  if (/\bSGD\b/i.test(text)) return "SGD";
+  return "";
+}
+
+function appendAffiliateTracking(rawUrl, { searchQuery, colorSeason, market, source }) {
   try {
     const url = new URL(rawUrl);
+    if (source === "involve-asia" && !url.searchParams.has(INVOLVE_ASIA_TRACKING_PARAM)) {
+      url.searchParams.set(
+        INVOLVE_ASIA_TRACKING_PARAM,
+        `${INVOLVE_ASIA_TRACKING_VALUE}-${trackingId(searchQuery, colorSeason, market)}`,
+      );
+      return url.toString();
+    }
+
     if (!url.searchParams.has("sid")) {
       url.searchParams.set("sid", trackingId(searchQuery, colorSeason, market));
     }
@@ -669,7 +763,11 @@ async function processRequest(body, requestMeta = {}) {
     return cleanProducts(await searchMarketProducts(searchQuery, colorSeason, market));
   } catch (marketError) {
     errors.push(`${market.countryCode}: ${marketError.message}`);
-    console.warn(`[affiliate] ${market.countryCode} lookup failed; trying global US fallback: ${marketError.message}`);
+    console.warn(
+      `[affiliate] ${market.countryCode} lookup failed; trying global US fallback: ${marketError.message}${
+        marketError.details?.length ? ` | ${marketError.details.join(" | ")}` : ""
+      }`,
+    );
   }
 
   const fallbackMarket = globalMarket();
@@ -682,9 +780,12 @@ async function processRequest(body, requestMeta = {}) {
       return buildRetailerSearchFallback(searchQuery, colorSeason, fallbackMarket);
     }
 
-    throw affiliateLookupFailed(
-      `Affiliate provider lookup failed. ${errors.join(" | ")}. To restore the old generic-search fallback, set AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK=true.`,
+    console.warn(
+      `[affiliate] Global fallback failed: ${globalError.message}${
+        globalError.details?.length ? ` | ${globalError.details.join(" | ")}` : ""
+      }`,
     );
+    throw affiliateLookupFailed("Live affiliate products are temporarily unavailable for this region.");
   }
 }
 
