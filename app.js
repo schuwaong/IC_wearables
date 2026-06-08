@@ -61,6 +61,10 @@ const RESULTS_IMAGE_FALLBACK_MESSAGE = "Some look images are unavailable. Check 
 const RESULTS_COMBINED_FALLBACK_MESSAGE =
   "Some look images are unavailable or product matches are partial. Check the generation trace for per-look details.";
 const IMAGE_REQUEST_TIMEOUT_MS = 45000;
+const IMAGE_REFERENCE_MAX_COUNT = Math.max(
+  1,
+  Math.min(8, Number(window.IC_IMAGE_REFERENCE_MAX_COUNT || safeStorageValue("icImageReferenceMaxCount") || 5) || 5),
+);
 const IMAGE_REQUEST_MAX_CONCURRENCY = Math.max(
   1,
   Number(
@@ -1578,6 +1582,7 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
       `${piece.label}: ${product.productName} from ${product.brand}${product.price ? ` (${product.price})` : ""}`,
     )
     .join("; ");
+  const productImageCount = liveRows.filter(({ product }) => product.imageUrl).length;
   const budgetRange = rows.map(({ product }) => product.budgetRange).find(Boolean) || "";
   const hasFaceReference = Boolean(run.faceReferenceDataUrl);
 
@@ -1586,7 +1591,9 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
     hasFaceReference
       ? "Use Image 1 as the only visual identity reference. Match the exact same woman's face and current expression with very high fidelity."
       : "There is no face reference image for this render, so do not invent a stylised or exaggerated face.",
-    "Style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance. Do not treat any product or catalogue model as the person.",
+    productImageCount
+      ? "Use Images 2 and later only as garment, shoe, bag, and accessory references. Copy clothing silhouette, fabric texture, colour blocking, and styling details from those product images. Ignore and do not copy any catalogue model face, body, pose, skin, hair, or identity from product images."
+      : "Style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance. Do not treat any product or catalogue model as the person.",
     productSummary ? `Product references: ${productSummary}.` : "",
     budgetRange ? `Budget target for the shopper's region: ${budgetRange}. Keep the outfit realistically within that range.` : "",
     "Do not change identity, do not create a different model, do not change expression, and do not add a smile. Preserve natural skin texture and facial asymmetry from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
@@ -1754,7 +1761,10 @@ function initialiseFemaleRunlog() {
 async function generatedReferenceImage(prompt, options = {}) {
   const width = options.width || 800;
   const height = options.height || 1000;
-  const referenceImages = Array.isArray(options.referenceImages) ? options.referenceImages.filter(Boolean).slice(0, 3) : [];
+  const maxReferenceImages = Math.max(1, Math.min(8, Number(options.maxReferenceImages) || IMAGE_REFERENCE_MAX_COUNT));
+  const referenceImages = Array.isArray(options.referenceImages)
+    ? options.referenceImages.filter(Boolean).slice(0, maxReferenceImages)
+    : [];
   const allowTextFallback = options.allowTextFallback ?? referenceImages.length === 0;
   const explicitEndpoint =
     window.IC_IMAGE_GENERATION_ENDPOINT ||
@@ -1920,8 +1930,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       imageProvider: "error",
     };
   }
-  const referenceImages = [run.faceReferenceDataUrl, ...productImageUrls].filter(Boolean).slice(0, 3);
-  const identityReferenceImages = [run.faceReferenceDataUrl].filter(Boolean);
+  const referenceImages = [run.faceReferenceDataUrl, ...productImageUrls].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
 
   setLookImageStatus(
@@ -1934,7 +1943,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     idea.title,
     "rendering",
     productImageUrls.length
-      ? `Rendering with the scanned face and ${productImageUrls.length} product reference described in text.`
+      ? `Rendering with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
       : "Rendering with the scanned face and product text only.",
   );
 
@@ -1958,14 +1967,15 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         idea.title,
         "rendering",
         productImageUrls.length
-          ? `Rendering now with the scanned face and ${productImageUrls.length} product reference described in text.`
+          ? `Rendering now with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
           : "Rendering now with the scanned face and product text only.",
       );
       return generatedReferenceImage(prompt, {
         width: 800,
         height: 1000,
         seed,
-        referenceImages: identityReferenceImages,
+        referenceImages,
+        maxReferenceImages: IMAGE_REFERENCE_MAX_COUNT,
         allowTextFallback: false,
         disallowLocalTemplate: false,
       });
@@ -1981,7 +1991,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         statusElement,
         result.usedReferences
           ? productImageUrls.length
-            ? "Generated from scanned face and product text."
+            ? "Generated from scanned face and garment references."
             : "Generated from scanned face and product text."
           : "Generated from styling prompt.",
       );
@@ -1989,7 +1999,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         idea.title,
         "success",
         result.usedReferences
-          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and product text" : ""}.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`
+          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and garment references" : ""}.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`
           : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`,
       );
     };

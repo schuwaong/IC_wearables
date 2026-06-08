@@ -5,3 +5,5 @@ node_modules/
 npm-debug.log*
 /.vercel-dev.*.log
 __pycache__/
+/data/product-library.json
+/data/product-images/

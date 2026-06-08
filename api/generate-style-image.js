@@ -18,6 +18,7 @@ const MAX_REFERENCE_IMAGE_BYTES = Math.max(
   512000,
   Math.min(8_000_000, Number(process.env.IMAGE_REFERENCE_MAX_BYTES) || 4_000_000),
 );
+const MAX_REFERENCE_IMAGES = Math.max(1, Math.min(8, Number(process.env.IMAGE_REFERENCE_MAX_COUNT) || 5));
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(MODULE_DIR, "..");
 const LOCAL_DEFAULT_PALETTE = ["#f0d28d", "#7a1f2b", "#1d2d44", "#f8f1e6"];
@@ -99,7 +100,7 @@ function cleanReferenceImages(value) {
   return images
     .map((image) => String(image || "").trim())
     .filter((image) => /^data:image\/[a-z0-9.+-]+;base64,/i.test(image) || /^https?:\/\//i.test(image))
-    .slice(0, 3);
+    .slice(0, MAX_REFERENCE_IMAGES);
 }
 
 function getPostPayload(req) {

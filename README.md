@@ -192,8 +192,30 @@ Optional generic fallback:
 AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK=true
 ```
 
-If this flag is not set, the backend returns a real error when CJ/Involve Asia
-fail instead of silently downgrading to generic retailer search cards.
+Generic fallback returns retailer search links when CJ/Involve Asia/feed lookups
+fail. Exact direct product pages still require working affiliate credentials or
+approved product feed URLs.
+
+## Product Library
+
+Build a season/look/piece product manifest from the affiliate backend:
+
+```powershell
+node scripts/build-product-library.mjs
+```
+
+This writes `data/product-library.json` locally with:
+
+- season and palette category
+- look category
+- outfit piece
+- product name, brand, price, affiliate link, image URL
+- exact-vs-fallback status
+
+The generated JSON and any downloaded product images are ignored by Git by
+default. Commit product image files only when the affiliate programme or product
+feed terms explicitly allow local hosting. Otherwise, use the remote image URLs
+from the manifest at runtime.
 
 ## Image Generation Backend
 
@@ -287,12 +309,19 @@ IMAGE_PROVIDER_ORDER=dashscope,vertex,gemini,cloudflare,pollinations,local-templ
 IMAGE_NEGATIVE_PROMPT=low quality, distorted face, warped face, changed identity, different face in each panel, changed expression, added smile, grin, text, logo, watermark
 DASHSCOPE_PROMPT_EXTEND=false
 VERTEX_AI_TIMEOUT_MS=30000
+IMAGE_REFERENCE_MAX_COUNT=5
 ```
 
 For face-preserving generations, keep a reference-capable provider such as
 DashScope or Gemini enabled. The frontend now refuses text-only fallbacks when
 the scanned face reference is required, because those fallbacks can change
 identity or expression.
+
+The female generated-look flow sends Image 1 as the scanned face identity
+reference, then can send product images as Images 2+ for garments, shoes, bags,
+and accessories. The default cap is 5 total reference images, configurable with
+`IMAGE_REFERENCE_MAX_COUNT` on the backend and `window.IC_IMAGE_REFERENCE_MAX_COUNT`
+on the frontend.
 
 The men's composite generator depends on that same reference lock because the
 same face has to stay consistent across all five looks in one image.
