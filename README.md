@@ -217,6 +217,33 @@ default. Commit product image files only when the affiliate programme or product
 feed terms explicitly allow local hosting. Otherwise, use the remote image URLs
 from the manifest at runtime.
 
+To build the same manifest and cache product images locally, enable the opt-in
+download flag:
+
+```powershell
+$env:PRODUCT_LIBRARY_CACHE_IMAGES='true'
+node scripts/build-product-library.mjs
+```
+
+By default, the cache only downloads exact product image URLs from affiliate
+feeds and skips generic fallback search results. The script records
+`localImagePath`, `imageCacheStatus`, `imageCacheError`, `imageContentType`, and
+`imageBytes` for every product so you can see exactly what happened.
+
+Useful cache controls:
+
+```text
+PRODUCT_LIBRARY_IMAGE_OUTPUT_DIR=data/product-images
+PRODUCT_LIBRARY_IMAGE_PUBLIC_BASE_PATH=data/product-images
+PRODUCT_LIBRARY_IMAGE_MAX_BYTES=6000000
+PRODUCT_LIBRARY_IMAGE_TIMEOUT_MS=15000
+PRODUCT_LIBRARY_IMAGE_OVERWRITE=false
+PRODUCT_LIBRARY_CACHE_FALLBACK_IMAGES=false
+```
+
+Keep `PRODUCT_LIBRARY_CACHE_FALLBACK_IMAGES=false` unless the fallback provider
+is returning real product image URLs that you are allowed to cache.
+
 ## Image Generation Backend
 
 The outfit images can be generated through:

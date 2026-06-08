@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import crypto from "node:crypto";
 import path from "node:path";
 
 const BACKEND_BASE_URL = (process.env.IC_BACKEND_BASE_URL || "https://ic-wearables.vercel.app").replace(/\/$/, "");
@@ -9,6 +10,20 @@ const ALLOW_SEARCH_FALLBACK = process.env.PRODUCT_LIBRARY_ALLOW_SEARCH_FALLBACK 
 const MAX_PRODUCTS_PER_PIECE = Math.max(1, Math.min(8, Number(process.env.PRODUCT_LIBRARY_MAX_PRODUCTS) || 2));
 const MAX_LOOKUPS = Math.max(1, Number(process.env.PRODUCT_LIBRARY_MAX_LOOKUPS) || 80);
 const REQUEST_TIMEOUT_MS = Math.max(3000, Number(process.env.PRODUCT_LIBRARY_TIMEOUT_MS) || 15000);
+const CACHE_IMAGES = process.env.PRODUCT_LIBRARY_CACHE_IMAGES === "true";
+const CACHE_FALLBACK_IMAGES = process.env.PRODUCT_LIBRARY_CACHE_FALLBACK_IMAGES === "true";
+const IMAGE_OUTPUT_DIR = process.env.PRODUCT_LIBRARY_IMAGE_OUTPUT_DIR || "data/product-images";
+const IMAGE_PUBLIC_BASE_PATH = (process.env.PRODUCT_LIBRARY_IMAGE_PUBLIC_BASE_PATH || IMAGE_OUTPUT_DIR).replace(/\\/g, "/").replace(/\/$/, "");
+const IMAGE_TIMEOUT_MS = Math.max(3000, Number(process.env.PRODUCT_LIBRARY_IMAGE_TIMEOUT_MS) || REQUEST_TIMEOUT_MS);
+const IMAGE_MAX_BYTES = Math.max(100000, Number(process.env.PRODUCT_LIBRARY_IMAGE_MAX_BYTES) || 6000000);
+const IMAGE_OVERWRITE = process.env.PRODUCT_LIBRARY_IMAGE_OVERWRITE === "true";
+const IMAGE_CONTENT_TYPES = new Map([
+  ["image/jpeg", "jpg"],
+  ["image/jpg", "jpg"],
+  ["image/png", "png"],
+  ["image/webp", "webp"],
+  ["image/avif", "avif"],
+]);
 
 const seasons = [
   { name: "Light Spring", palette: ["#f8e7b8", "#f5bc6b", "#ff9d89", "#91d2bd", "#83abd7", "#fff4dc"] },
@@ -85,6 +100,149 @@ function slug(value) {
     .replace(/(^-|-$)/g, "");
 }
 
+function portablePath(value) {
+  return String(value || "").replace(/\\/g, "/");
+}
+
+function hash(value) {
+  return crypto.createHash("sha256").update(String(value || "")).digest("hex").slice(0, 14);
+}
+
+function extensionFromImageResponse(contentType, imageUrl) {
+  const mime = String(contentType || "").split(";")[0].trim().toLowerCase();
+  if (IMAGE_CONTENT_TYPES.has(mime)) return IMAGE_CONTENT_TYPES.get(mime);
+
+  try {
+    const ext = path.extname(new URL(imageUrl).pathname).replace(".", "").toLowerCase();
+    if (ext === "jpeg") return "jpg";
+    if (["jpg", "png", "webp", "avif"].includes(ext)) return ext;
+  } catch {
+    // Fall through to unsupported type.
+  }
+  return "";
+}
+
+function imageCachePath(product, extension) {
+  const folder = path.join(
+    IMAGE_OUTPUT_DIR,
+    slug(product.countryCode || COUNTRY_CODE),
+    slug(product.season),
+    slug(product.look)
+  );
+  const baseName = [
+    slug(product.piece),
+    slug(product.brand),
+    slug(product.productName),
+    hash(`${product.id}|${product.imageUrl}`),
+  ]
+    .filter(Boolean)
+    .join("__")
+    .slice(0, 170);
+
+  const filename = `${baseName || hash(product.imageUrl)}.${extension}`;
+  const absolutePath = path.join(folder, filename);
+  const localImagePath = portablePath(path.join(IMAGE_PUBLIC_BASE_PATH, slug(product.countryCode || COUNTRY_CODE), slug(product.season), slug(product.look), filename));
+  return { absolutePath, localImagePath };
+}
+
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function emptyImageCache(status, error = "") {
+  return {
+    localImagePath: "",
+    imageCacheStatus: status,
+    imageCacheError: error,
+    imageContentType: "",
+    imageBytes: 0,
+  };
+}
+
+async function cacheProductImage(product) {
+  if (!CACHE_IMAGES) return emptyImageCache("disabled");
+  if (!product.imageUrl) return emptyImageCache("skipped:no-image-url");
+  if (product.isFallback && !CACHE_FALLBACK_IMAGES) return emptyImageCache("skipped:fallback-product");
+
+  let imageUrl;
+  try {
+    imageUrl = new URL(product.imageUrl);
+  } catch {
+    return emptyImageCache("skipped:invalid-url", "imageUrl is not a valid URL");
+  }
+
+  if (!["http:", "https:"].includes(imageUrl.protocol)) {
+    return emptyImageCache("skipped:invalid-url", "imageUrl must use http or https");
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), IMAGE_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(imageUrl, {
+      headers: {
+        Accept: "image/avif,image/webp,image/png,image/jpeg;q=0.9,*/*;q=0.1",
+        "User-Agent": "IC-wearables-product-library/1.0",
+      },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    return emptyImageCache(
+      "failed:request",
+      error?.name === "AbortError" ? `image download timed out after ${IMAGE_TIMEOUT_MS}ms` : error.message
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!response.ok) {
+    return emptyImageCache("failed:http", `image request failed with ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  const extension = extensionFromImageResponse(contentType, imageUrl.href);
+  if (!extension) {
+    return emptyImageCache("skipped:unsupported-type", `unsupported content-type: ${contentType || "unknown"}`);
+  }
+
+  const contentLength = Number(response.headers.get("content-length")) || 0;
+  if (contentLength > IMAGE_MAX_BYTES) {
+    return emptyImageCache("skipped:too-large", `content-length ${contentLength} exceeds ${IMAGE_MAX_BYTES}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.byteLength > IMAGE_MAX_BYTES) {
+    return emptyImageCache("skipped:too-large", `downloaded ${buffer.byteLength} bytes exceeds ${IMAGE_MAX_BYTES}`);
+  }
+
+  const { absolutePath, localImagePath } = imageCachePath(product, extension);
+  if (!IMAGE_OVERWRITE && (await fileExists(absolutePath))) {
+    return {
+      localImagePath,
+      imageCacheStatus: "cached:existing",
+      imageCacheError: "",
+      imageContentType: contentType,
+      imageBytes: buffer.byteLength,
+    };
+  }
+
+  await fs.mkdir(path.dirname(absolutePath), { recursive: true });
+  await fs.writeFile(absolutePath, buffer);
+  return {
+    localImagePath,
+    imageCacheStatus: "cached",
+    imageCacheError: "",
+    imageContentType: contentType,
+    imageBytes: buffer.byteLength,
+  };
+}
+
 async function fetchProducts({ season, look, piece }) {
   const searchQuery = [piece.search, season.name, look.occasion].join(" ");
   const controller = new AbortController();
@@ -157,10 +315,43 @@ function normalizeProduct(product, context, index) {
     budgetRange: product.budgetRange || context.budget?.rangeLabel || "",
     affiliateLink: product.buyLink || "",
     imageUrl: product.imageUrl || "",
+    localImagePath: "",
+    imageCacheStatus: "not-attempted",
+    imageCacheError: "",
+    imageContentType: "",
+    imageBytes: 0,
     isFallback: Boolean(product.isFallback),
     source: product.source || "",
     actionLabel: product.actionLabel || (product.buyLink ? "Shop" : "Unavailable"),
   };
+}
+
+async function attachImageCache(products) {
+  const summary = {
+    enabled: CACHE_IMAGES,
+    outputDir: portablePath(IMAGE_OUTPUT_DIR),
+    publicBasePath: IMAGE_PUBLIC_BASE_PATH,
+    fallbackImagesEnabled: CACHE_FALLBACK_IMAGES,
+    maxBytes: IMAGE_MAX_BYTES,
+    cached: 0,
+    existing: 0,
+    skipped: 0,
+    failed: 0,
+    disabled: 0,
+  };
+
+  for (const product of products) {
+    const result = await cacheProductImage(product);
+    Object.assign(product, result);
+
+    if (result.imageCacheStatus === "cached") summary.cached += 1;
+    else if (result.imageCacheStatus === "cached:existing") summary.existing += 1;
+    else if (result.imageCacheStatus === "disabled") summary.disabled += 1;
+    else if (result.imageCacheStatus.startsWith("failed:")) summary.failed += 1;
+    else summary.skipped += 1;
+  }
+
+  return summary;
 }
 
 async function main() {
@@ -197,6 +388,7 @@ async function main() {
 
   const exactCount = products.filter((product) => !product.isFallback).length;
   const fallbackCount = products.length - exactCount;
+  const imageCache = await attachImageCache(products);
   const library = {
     generatedAt,
     backendBaseUrl: BACKEND_BASE_URL,
@@ -212,9 +404,12 @@ async function main() {
       exactProducts: exactCount,
       fallbackSearchLinks: fallbackCount,
       failures: failures.length,
+      cachedImages: imageCache.cached + imageCache.existing,
+      imageCacheFailures: imageCache.failed,
     },
+    imageCache,
     usageNote:
-      "This library stores affiliate links and remote product image URLs. Download and commit product photos only when the affiliate programme/feed terms allow local hosting.",
+      "This library stores affiliate links, remote product image URLs, and optional local image cache paths. Download and commit product photos only when the affiliate programme/feed terms allow local hosting.",
     products,
     failures,
   };
