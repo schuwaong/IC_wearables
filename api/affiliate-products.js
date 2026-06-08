@@ -10,7 +10,7 @@ const MAX_RESULTS = Math.max(1, Math.min(12, Number(process.env.AFFILIATE_MAX_RE
 const FEED_MAX_ROWS = Math.max(25, Math.min(5000, Number(process.env.AFFILIATE_FEED_MAX_ROWS) || 1200));
 const FEED_CACHE_MS = Math.max(60000, Number(process.env.AFFILIATE_FEED_CACHE_MS) || 1000 * 60 * 30);
 const ALLOW_GENERIC_SEARCH_FALLBACK =
-  String(process.env.AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK || "").trim().toLowerCase() === "true";
+  String(process.env.AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK || "true").trim().toLowerCase() !== "false";
 const USE_INVOLVE_ASIA_FALLBACK_FOR_GLOBAL =
   String(
     process.env.INVOLVE_ASIA_FALLBACK_FOR_GLOBAL || process.env.INVOLVE_ASIA_GLOBAL_FALLBACK || "true",

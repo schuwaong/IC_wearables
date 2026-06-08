@@ -1426,8 +1426,8 @@ async function fetchMatchingClothes(searchQuery, colorSeason, options = {}) {
           colorSeason,
           budget: budgetSelection,
           countryCode,
-          allowSearchFallback: false,
-          requireProductPages: true,
+          allowSearchFallback: true,
+          requireProductPages: false,
         }),
         ...(controller ? { signal: controller.signal } : {}),
       });
@@ -1451,7 +1451,7 @@ async function fetchMatchingClothes(searchQuery, colorSeason, options = {}) {
       };
     }
 
-    const products = normalizeAffiliateProducts(payload).filter((product) => product.exactProductPage);
+    const products = normalizeAffiliateProducts(payload).filter((product) => product.exactProductPage || product.isFallback);
     const budgetRange = extractAffiliateBudgetRange(payload, budgetSelection, countryCode);
     if (!products.length) {
       return {
@@ -1575,21 +1575,18 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
       `${piece.label}: ${product.productName} from ${product.brand}${product.price ? ` (${product.price})` : ""}`,
     )
     .join("; ");
-  const productImageCount = liveRows.filter(({ product }) => product.imageUrl).length;
   const budgetRange = rows.map(({ product }) => product.budgetRange).find(Boolean) || "";
   const hasFaceReference = Boolean(run.faceReferenceDataUrl);
 
   return [
     buildFemaleLookPrompt(run, idea, index),
     hasFaceReference
-      ? "Use Image 1 as the identity reference. Match the exact same woman's face and current expression with very high fidelity."
+      ? "Use Image 1 as the only visual identity reference. Match the exact same woman's face and current expression with very high fidelity."
       : "There is no face reference image for this render, so do not invent a stylised or exaggerated face.",
-    productImageCount
-      ? "Use the later reference images as clothing and accessory references. Match the garment silhouette, textures, colour blocking, and styling details to those products as closely as possible while keeping a natural, realistic full outfit."
-      : "Affiliate product image references are unavailable for this look, so style the person using the matched product names and colour-season guidance.",
+    "Style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance. Do not treat any product or catalogue model as the person.",
     productSummary ? `Product references: ${productSummary}.` : "",
     budgetRange ? `Budget target for the shopper's region: ${budgetRange}. Keep the outfit realistically within that range.` : "",
-    "Do not change identity, do not create a different model, do not change expression, and do not add a smile. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
+    "Do not change identity, do not create a different model, do not change expression, and do not add a smile. Preserve natural skin texture and facial asymmetry from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
   ]
     .filter(Boolean)
     .join(" ");
@@ -1921,6 +1918,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     };
   }
   const referenceImages = [run.faceReferenceDataUrl, ...productImageUrls].filter(Boolean).slice(0, 3);
+  const identityReferenceImages = [run.faceReferenceDataUrl].filter(Boolean);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
 
   setLookImageStatus(
@@ -1933,7 +1931,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     idea.title,
     "rendering",
     productImageUrls.length
-      ? `Rendering with the scanned face plus ${productImageUrls.length} product reference image${productImageUrls.length === 1 ? "" : "s"}.`
+      ? `Rendering with the scanned face and ${productImageUrls.length} product reference described in text.`
       : "Rendering with the scanned face and product text only.",
   );
 
@@ -1957,16 +1955,16 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         idea.title,
         "rendering",
         productImageUrls.length
-          ? `Rendering now with the scanned face plus ${productImageUrls.length} product reference image${productImageUrls.length === 1 ? "" : "s"}.`
+          ? `Rendering now with the scanned face and ${productImageUrls.length} product reference described in text.`
           : "Rendering now with the scanned face and product text only.",
       );
       return generatedReferenceImage(prompt, {
         width: 800,
         height: 1000,
         seed,
-        referenceImages,
+        referenceImages: identityReferenceImages,
         allowTextFallback: false,
-        disallowLocalTemplate: true,
+        disallowLocalTemplate: false,
       });
     });
     image.onload = () => {
@@ -1980,7 +1978,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         statusElement,
         result.usedReferences
           ? productImageUrls.length
-            ? "Generated from face and product references."
+            ? "Generated from scanned face and product text."
             : "Generated from scanned face and product text."
           : "Generated from styling prompt.",
       );
@@ -1988,7 +1986,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         idea.title,
         "success",
         result.usedReferences
-          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and product references" : ""}.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`
+          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and product text" : ""}.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`
           : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`,
       );
     };

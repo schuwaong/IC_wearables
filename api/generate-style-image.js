@@ -120,7 +120,7 @@ function normalizedSize(width, height) {
 }
 
 function dashScopeSize(width, height) {
-  const model = process.env.DASHSCOPE_IMAGE_MODEL || "qwen-image-2.0-pro";
+  const model = process.env.DASHSCOPE_IMAGE_MODEL || "qwen-image-2.0";
   if (process.env.DASHSCOPE_IMAGE_SIZE) return process.env.DASHSCOPE_IMAGE_SIZE;
 
   if (model.includes("qwen-image-2.0")) {
@@ -140,6 +140,26 @@ function providerOrder() {
     .split(",")
     .map((provider) => provider.trim().toLowerCase())
     .filter(Boolean);
+}
+
+function debugEnabled(req) {
+  const url = new URL(req.url || "", "https://ic-wearables.local");
+  const queryValue = String(url.searchParams.get("debug") || "").trim().toLowerCase();
+  return (
+    ["1", "true", "yes"].includes(queryValue) ||
+    String(process.env.IMAGE_DEBUG_RESPONSE || "").trim().toLowerCase() === "true"
+  );
+}
+
+function promptDebugPayload(prompt, referenceImages = []) {
+  const lockedPrompt = promptWithReferenceLock(prompt, referenceImages);
+  return {
+    prompt,
+    dashscopePrompt: lockedPrompt,
+    referenceImageCount: referenceImages.length,
+    promptLength: String(prompt || "").length,
+    dashscopePromptLength: lockedPrompt.length,
+  };
 }
 
 function pollinationsApiKey() {
@@ -835,7 +855,7 @@ async function callDashScope(prompt, width, height, seed, referenceImages = []) 
   if (!apiKey) throw new Error("DASHSCOPE_API_KEY is not configured");
 
   const baseUrl = (process.env.DASHSCOPE_BASE_URL || "https://dashscope.aliyuncs.com/api/v1").replace(/\/$/, "");
-  const model = process.env.DASHSCOPE_IMAGE_MODEL || "qwen-image-2.0-pro";
+  const model = process.env.DASHSCOPE_IMAGE_MODEL || "qwen-image-2.0";
   const lockedPrompt = promptWithReferenceLock(prompt, referenceImages);
   const content = [
     ...referenceImages.map((image) => ({ image })),
@@ -1221,6 +1241,7 @@ export default async function handler(req, res) {
   setCommonHeaders(res);
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "GET" && req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  let debug = null;
 
   try {
     const payload =
@@ -1235,6 +1256,8 @@ export default async function handler(req, res) {
           };
     const prompt = payload.prompt;
     if (!prompt) return res.status(400).json({ error: "prompt is required" });
+    const includeDebug = req.method === "POST" && debugEnabled(req);
+    debug = includeDebug ? promptDebugPayload(prompt, payload.referenceImages) : null;
 
     const result = await generateImage(
       prompt,
@@ -1252,6 +1275,7 @@ export default async function handler(req, res) {
           imageUrl: result.url,
           provider: result.provider,
           attempts: result.attempts || [],
+          ...(debug ? { debug } : {}),
         });
       }
 
@@ -1259,6 +1283,7 @@ export default async function handler(req, res) {
         imageDataUrl: `data:${result.contentType || "image/png"};base64,${result.buffer.toString("base64")}`,
         provider: result.provider,
         attempts: result.attempts || [],
+        ...(debug ? { debug } : {}),
       });
     }
 
@@ -1281,6 +1306,7 @@ export default async function handler(req, res) {
       error: "Image generation failed",
       detail: error.message,
       attempts: Array.isArray(error?.attempts) ? error.attempts : [],
+      ...(debug ? { debug } : {}),
     });
   }
 }
