@@ -1610,8 +1610,8 @@ function renderResultsSummary(run) {
 
   if (resultsRunlogSummary) {
     resultsRunlogSummary.textContent = run.sample
-      ? "This sample run keeps the 5-look layout visible so you can preview business formal, smart casual, city casual, athleisure, and quiet luxury cards."
-      : "Each look runs separately so you can verify business formal, smart casual, city casual, athleisure, and quiet luxury generation one by one.";
+      ? "This sample run keeps the 5-look green-screen layout visible so you can preview business formal, smart casual, city casual, athleisure, and quiet luxury cards."
+      : "Each look runs separately on chroma green so you can crop the subject, replace the background, and verify each style one by one.";
   }
 
   if (!resultsPaletteSwatches) return;
