@@ -1814,6 +1814,12 @@ h3 {
   color: rgba(248, 241, 230, 0.74);
 }
 
+.look-product-actions {
+  display: grid;
+  gap: 8px;
+  justify-items: stretch;
+}
+
 .look-product-action {
   display: inline-flex;
   align-items: center;
@@ -1845,6 +1851,49 @@ h3 {
   background: rgba(248, 241, 230, 0.06);
 }
 
+.look-product-nearby {
+  border-color: rgba(248, 241, 230, 0.18);
+  background: rgba(248, 241, 230, 0.06);
+  color: var(--cream);
+}
+
+.location-settings-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  margin: 28px auto;
+  padding: 24px;
+  width: min(1180px, calc(100% - 40px));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 8% 18%, rgba(224, 182, 101, 0.16), transparent 34%),
+    rgba(8, 8, 7, 0.32);
+}
+
+.location-settings-panel h2 {
+  margin: 0 0 10px;
+  font-size: clamp(30px, 4vw, 54px);
+}
+
+.location-settings-panel p {
+  max-width: 760px;
+  color: var(--muted);
+  font-weight: 760;
+  line-height: 1.6;
+}
+
+.location-enable-button {
+  min-height: 52px;
+  padding: 0 20px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: #0b0908;
+  font-weight: 950;
+}
+
 @media (max-width: 1100px) {
   h1 {
     font-size: 92px;
@@ -1859,7 +1908,8 @@ h3 {
   .scene-section,
   .scene-section-reverse,
   .search-band,
-  .access-band {
+  .access-band,
+  .location-settings-panel {
     grid-template-columns: 1fr;
   }
 

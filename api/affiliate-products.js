@@ -6,7 +6,9 @@ const RAKUTEN_PRODUCT_SEARCH_ENDPOINT =
   process.env.RAKUTEN_PRODUCT_SEARCH_ENDPOINT || "https://api.linksynergy.com/productsearch/1.0";
 const EBAY_BROWSE_SEARCH_ENDPOINT =
   process.env.EBAY_BROWSE_SEARCH_ENDPOINT || "https://api.ebay.com/buy/browse/v1/item_summary/search";
-const MAX_RESULTS = Math.max(1, Math.min(12, Number(process.env.AFFILIATE_MAX_RESULTS) || 4));
+const DEFAULT_MAX_RESULTS = Number(process.env.AFFILIATE_MAX_RESULTS) || 4;
+const HK_MAX_RESULTS = Number(process.env.HK_AFFILIATE_MAX_RESULTS) || Math.max(DEFAULT_MAX_RESULTS, 8);
+const MAX_RESULTS = Math.max(1, Math.min(12, DEFAULT_MAX_RESULTS));
 const FEED_MAX_ROWS = Math.max(25, Math.min(5000, Number(process.env.AFFILIATE_FEED_MAX_ROWS) || 1200));
 const FEED_CACHE_MS = Math.max(60000, Number(process.env.AFFILIATE_FEED_CACHE_MS) || 1000 * 60 * 30);
 const ALLOW_GENERIC_SEARCH_FALLBACK =
@@ -273,6 +275,14 @@ const MARKET_CONFIG = {
       "ITeSHOP HK",
       "ASOS HK",
       "Lane Crawford",
+      "ZARA Hong Kong",
+      "H&M Hong Kong",
+      "UNIQLO Hong Kong",
+      "COS Hong Kong",
+      "HBX Hong Kong",
+      "Kapok Hong Kong",
+      "6ixty8ight Hong Kong",
+      "Marks & Spencer Hong Kong",
       "NET-A-PORTER HK",
       "MR PORTER HK",
       "Farfetch HK",
@@ -285,6 +295,14 @@ const MARKET_CONFIG = {
     fallbackRetailers: [
       { brand: "Zalora HK", url: "https://www.zalora.com.hk/catalog/?q=" },
       { brand: "ITeSHOP HK", url: "https://www.iteshop.com/hk/search?q=" },
+      { brand: "ZARA HK", url: "https://www.zara.com/hk/en/search?searchTerm=" },
+      { brand: "H&M HK", url: "https://www2.hm.com/en_hk/search-results.html?q=" },
+      { brand: "UNIQLO HK", url: "https://www.uniqlo.com.hk/en/search?q=" },
+      { brand: "COS HK", url: "https://www.cos.com/en-hk/search?query=" },
+      { brand: "HBX HK", url: "https://hbx.com/women/search?q=" },
+      { brand: "Kapok HK", url: "https://ka-pok.com/search?q=" },
+      { brand: "6ixty8ight HK", url: "https://www.6ixty8ight.com/hk/search?q=" },
+      { brand: "Marks & Spencer HK", url: "https://www.marksandspencer.com/hk/search?q=" },
       { brand: "ASOS HK", url: "https://www.asos.com/search/?q=" },
       { brand: "Lane Crawford", url: "https://www.lanecrawford.com/search/?text=" },
       { brand: "FARFETCH HK", url: "https://www.farfetch.com/hk/shopping/search/items.aspx?q=" },
@@ -309,6 +327,22 @@ const MARKET_CONFIG = {
     ],
   },
 };
+
+const HK_STORE_LOCATORS = [
+  { match: /zalora/i, url: "https://www.zalora.com.hk/", mode: "map" },
+  { match: /iteshop|i\.t/i, url: "https://www.iteshop.com/hk/", mode: "map" },
+  { match: /zara/i, url: "https://www.zara.com/hk/en/z-stores-st1404.html", mode: "locator" },
+  { match: /h&m|hennes/i, url: "https://www2.hm.com/en_hk/customer-service/shopping-at-hm/store-locator.html", mode: "locator" },
+  { match: /uniqlo/i, url: "https://www.uniqlo.com.hk/en/stores", mode: "locator" },
+  { match: /\bcos\b/i, url: "https://www.cos.com/en-hk/customer-service/store-locator.html", mode: "locator" },
+  { match: /hbx/i, url: "https://hbx.com/", mode: "map" },
+  { match: /kapok/i, url: "https://ka-pok.com/pages/stores", mode: "locator" },
+  { match: /6ixty8ight/i, url: "https://www.6ixty8ight.com/hk/store-locator", mode: "locator" },
+  { match: /marks\s*&?\s*spencer|m&s/i, url: "https://www.marksandspencer.com/hk/store-locator", mode: "locator" },
+  { match: /asos|farfetch|net-a-porter|mr porter|ebay/i, url: "", mode: "online" },
+  { match: /lane crawford/i, url: "https://www.lanecrawford.com.hk/store-locator/", mode: "locator" },
+  { match: /harvey nichols/i, url: "https://www.harveynichols.com.hk/store-locator/", mode: "locator" },
+];
 
 // Serverless-safe endpoint for Vercel/Netlify/AWS Lambda style runtimes.
 // Keep affiliate API keys in deployment environment variables, never in GitHub Pages.
@@ -1504,8 +1538,9 @@ function trackingId(searchQuery, colorSeason, market) {
 
 function buildRetailerSearchFallback(searchQuery, colorSeason, market, budgetRange) {
   const query = [searchQuery, colorSeason].filter(Boolean).join(" ");
-  return market.fallbackRetailers.slice(0, MAX_RESULTS).map((retailer) => {
+  return market.fallbackRetailers.slice(0, maxResultsForMarket(market)).map((retailer) => {
     const buyLink = `${retailer.url}${encodeURIComponent(query)}`;
+    const nearby = nearbyStoreForRetailer(retailer.brand, market);
     return {
       productName: `${query} search results`,
       brand: retailer.brand,
@@ -1516,20 +1551,44 @@ function buildRetailerSearchFallback(searchQuery, colorSeason, market, budgetRan
       isFallback: true,
       actionLabel: "Search",
       source: "generic-search",
+      nearbyStoreUrl: nearby.url,
+      nearbyStoreMode: nearby.mode,
+      nearbyStoreLabel: nearby.label,
     };
   });
 }
 
 function buildSearchFallbackProducts(searchQuery, colorSeason, market, budgetRange, fallbackMarket) {
   const primary = buildRetailerSearchFallback(searchQuery, colorSeason, market, budgetRange);
-  if (!fallbackMarket || fallbackMarket.countryCode === market.countryCode || primary.length >= MAX_RESULTS) {
-    return primary.slice(0, MAX_RESULTS);
+  const maxResults = maxResultsForMarket(market);
+  if (!fallbackMarket || fallbackMarket.countryCode === market.countryCode || primary.length >= maxResults) {
+    return primary.slice(0, maxResults);
   }
 
   const secondary = buildRetailerSearchFallback(searchQuery, colorSeason, fallbackMarket, budgetRange).filter(
     (product) => !primary.some((existing) => existing.brand === product.brand && existing.buyLink === product.buyLink),
   );
-  return [...primary, ...secondary].slice(0, MAX_RESULTS);
+  return [...primary, ...secondary].slice(0, maxResults);
+}
+
+function maxResultsForMarket(market) {
+  return Math.max(1, Math.min(12, market?.countryCode === "HK" ? HK_MAX_RESULTS : MAX_RESULTS));
+}
+
+function nearbyStoreForRetailer(brand, market) {
+  if (market?.countryCode !== "HK") return { url: "", mode: "online", label: "" };
+  const entry = HK_STORE_LOCATORS.find((locator) => locator.match.test(String(brand || "")));
+  if (!entry) return { url: "", mode: "map", label: "" };
+  return {
+    url: entry.url,
+    mode: entry.mode,
+    label:
+      entry.mode === "online"
+        ? "Online only"
+        : entry.mode === "locator"
+          ? "Store locator"
+          : "Nearby stores",
+  };
 }
 
 function slug(value) {
@@ -1537,7 +1596,7 @@ function slug(value) {
 }
 
 function cleanProducts(products) {
-  return products.slice(0, MAX_RESULTS).map((product) => ({
+  return products.slice(0, 12).map((product) => ({
     productName: product.productName,
     brand: product.brand,
     price: product.price,
@@ -1547,6 +1606,9 @@ function cleanProducts(products) {
     isFallback: Boolean(product.isFallback),
     actionLabel: product.actionLabel,
     source: product.source,
+    nearbyStoreUrl: product.nearbyStoreUrl || "",
+    nearbyStoreMode: product.nearbyStoreMode || "",
+    nearbyStoreLabel: product.nearbyStoreLabel || "",
   }));
 }
 

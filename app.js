@@ -29,6 +29,8 @@ const resultsRunlog = document.getElementById("resultsRunlog");
 const resultsRunlogSummary = document.getElementById("resultsRunlogSummary");
 const productLibrarySummary = document.getElementById("productLibrarySummary");
 const productLibraryList = document.getElementById("productLibraryList");
+const locationStatus = document.getElementById("locationStatus");
+const enableLocationButton = document.getElementById("enableLocationButton");
 
 const STYLE_RUN_STORAGE_KEY = "icWearablesFemaleStyleRun";
 const pathName = window.location.pathname.toLowerCase();
@@ -39,6 +41,7 @@ let latestFaceResult = null;
 let latestFaceDataUrl = "";
 let latestFaceReferenceDataUrl = "";
 let styleImageRenderNonce = 0;
+let shopperLocation = null;
 const MIN_SKIN_SAMPLES_FOR_FACE = 24;
 const MIN_SKIN_RATIO_FOR_FALLBACK = 0.04;
 const WHITE_BALANCE_STRENGTH = 0.68;
@@ -52,16 +55,16 @@ const IMAGE_SUCCESS_MESSAGE = "Five-look image generated with the scanned face r
 const IMAGE_ERROR_MESSAGE = "Face-preserving image generation is temporarily unavailable. Try again.";
 const RESULTS_LIVE_MESSAGE = "Five generated looks are ready with live product links for each outfit piece.";
 const RESULTS_PARTIAL_FALLBACK_MESSAGE =
-  "Some exact product pages are unavailable right now. The available links still go to specific matched products.";
+  "Some exact product pages are unavailable right now. Search links are available for the remaining pieces.";
 const RESULTS_FALLBACK_MESSAGE =
-  "Exact product-page matches are temporarily unavailable. Refresh to retry.";
+  "Exact product-page matches are temporarily unavailable. Showing colour-matched HK search links instead.";
 const RESULTS_UNCONFIGURED_MESSAGE =
   "Live product links are not connected on this site yet.";
 const RESULTS_SAMPLE_MESSAGE = "Showing sample looks. Run a new face scan for a personalised results set.";
 const RESULTS_PROGRESS_MESSAGE = "Preparing 5 total looks and checking live product links.";
 const RESULTS_IMAGE_FALLBACK_MESSAGE = "Some look images are unavailable. Check the generation trace for per-look provider failures.";
 const RESULTS_COMBINED_FALLBACK_MESSAGE =
-  "Some look images are unavailable or product matches are partial. Check the generation trace for per-look details.";
+  "Some look images are unavailable or product matches are search-link fallbacks. Check the generation trace for per-look details.";
 const IMAGE_REQUEST_TIMEOUT_MS = 45000;
 const IMAGE_REFERENCE_MAX_COUNT = Math.max(
   1,
@@ -88,6 +91,7 @@ const LOOK_REFERENCE_WAIT_MS = 1500;
 const PRODUCT_LIBRARY_URL = window.IC_PRODUCT_LIBRARY_URL || "../assets/product-library.json";
 const PRODUCT_COMBINATION_MANIFEST_URL =
   window.IC_PRODUCT_COMBINATION_MANIFEST_URL || "../assets/outfit-combinations/manifest.json";
+const LOCATION_STORAGE_KEY = "icWearablesShopperLocation";
 const LOOK_LOG_PHASE_LABELS = {
   queued: "Queued",
   products: "Products",
@@ -1285,10 +1289,130 @@ function inferredCountryCode() {
   }
 }
 
+function readStoredLocation() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(LOCATION_STORAGE_KEY) || "null");
+    if (!Number.isFinite(stored?.latitude) || !Number.isFinite(stored?.longitude)) return null;
+    if (stored.expiresAt && Date.now() > stored.expiresAt) return null;
+    return {
+      latitude: stored.latitude,
+      longitude: stored.longitude,
+      accuracy: stored.accuracy || 0,
+      enabledAt: stored.enabledAt || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveShopperLocation(position) {
+  const coords = position?.coords || {};
+  if (!Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) return null;
+  const value = {
+    latitude: Number(coords.latitude),
+    longitude: Number(coords.longitude),
+    accuracy: Number(coords.accuracy) || 0,
+    enabledAt: new Date().toISOString(),
+    expiresAt: Date.now() + 1000 * 60 * 60 * 6,
+  };
+  try {
+    localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // The current page can still use the location even if storage is unavailable.
+  }
+  shopperLocation = value;
+  return value;
+}
+
+function locationSummary(location = shopperLocation) {
+  if (!location) return "Location off. Enable nearby stores to open map searches around you.";
+  const accuracy = location.accuracy ? ` within about ${Math.round(location.accuracy)}m` : "";
+  return `Nearby stores enabled${accuracy}. Coordinates stay in this browser and are only used to open map/store links.`;
+}
+
+function setLocationStatus(message = locationSummary()) {
+  if (locationStatus) locationStatus.textContent = message;
+  if (enableLocationButton) {
+    enableLocationButton.textContent = shopperLocation ? "Refresh nearby stores" : "Enable nearby stores";
+  }
+}
+
+function mapsNearbySearchUrl(product, piece, location = shopperLocation) {
+  if (!location) return "";
+  const query = [product.brand, piece?.label, "near me"].filter(Boolean).join(" ");
+  const url = new URL("https://www.google.com/maps/search/");
+  url.searchParams.set("api", "1");
+  url.searchParams.set("query", query);
+  url.searchParams.set("center", `${location.latitude},${location.longitude}`);
+  return url.toString();
+}
+
+function nearbyStoreUrl(product, piece, location = shopperLocation) {
+  const mode = String(product.nearbyStoreMode || "").toLowerCase();
+  if (location && mode !== "online") return mapsNearbySearchUrl(product, piece, location);
+  return product.nearbyStoreUrl || "";
+}
+
+function nearbyStoreLabel(product, location = shopperLocation) {
+  if (String(product.nearbyStoreMode || "").toLowerCase() === "online") return "Online only";
+  if (location) return "Find nearby";
+  return product.nearbyStoreLabel || "Store locator";
+}
+
+function applyNearbyLinks(root = document) {
+  root.querySelectorAll("[data-nearby-product]").forEach((link) => {
+    const product = {
+      brand: link.dataset.nearbyBrand || "",
+      nearbyStoreUrl: link.dataset.nearbyStoreUrl || "",
+      nearbyStoreMode: link.dataset.nearbyStoreMode || "",
+      nearbyStoreLabel: link.dataset.nearbyStoreLabel || "",
+    };
+    const piece = { label: link.dataset.nearbyPiece || "" };
+    const href = nearbyStoreUrl(product, piece);
+    if (href) {
+      link.href = href;
+      link.classList.remove("is-disabled");
+      link.removeAttribute("aria-disabled");
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    } else {
+      link.removeAttribute("href");
+      link.classList.add("is-disabled");
+      link.setAttribute("aria-disabled", "true");
+    }
+    link.textContent = nearbyStoreLabel(product);
+  });
+}
+
+function enableNearbyStores() {
+  if (!navigator.geolocation) {
+    setLocationStatus("This browser does not support location. Store locator links are still available.");
+    return;
+  }
+
+  setLocationStatus("Requesting location permission...");
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      saveShopperLocation(position);
+      setLocationStatus();
+      applyNearbyLinks();
+    },
+    (error) => {
+      const denied = error?.code === error?.PERMISSION_DENIED;
+      setLocationStatus(
+        denied
+          ? "Location permission was not allowed. Store locator links are still available."
+          : "Could not read location. Store locator links are still available.",
+      );
+    },
+    { enableHighAccuracy: false, timeout: 9000, maximumAge: 1000 * 60 * 10 },
+  );
+}
+
 function productOptionsPerPiece(countryCode) {
   switch (countryCode) {
     case "HK":
-      return 2;
+      return 3;
     default:
       return 1;
   }
@@ -1395,6 +1519,9 @@ function normalizeAffiliateProducts(payload) {
       buyLink: String(product.buyLink || product.link || product.url || ""),
       isFallback: Boolean(product.isFallback || product.source === "generic-search"),
       actionLabel: String(product.actionLabel || (product.isFallback ? "Search" : "Shop")),
+      nearbyStoreUrl: String(product.nearbyStoreUrl || product.storeLocatorUrl || product.storeUrl || ""),
+      nearbyStoreMode: String(product.nearbyStoreMode || ""),
+      nearbyStoreLabel: String(product.nearbyStoreLabel || ""),
     }))
     .map((product) => ({
       ...product,
@@ -1682,6 +1809,9 @@ function createProductRow(product, piece) {
     copy.append(pieceLabel, brand, title, price);
   }
 
+  const actions = document.createElement("div");
+  actions.className = "look-product-actions";
+
   const action = product.buyLink ? document.createElement("a") : document.createElement("span");
   action.className = "look-product-action";
   if (product.buyLink) {
@@ -1695,7 +1825,19 @@ function createProductRow(product, piece) {
   }
   action.textContent = product.actionLabel || (product.buyLink ? "Shop" : "Unavailable");
 
-  row.append(copy, action);
+  const nearbyAction = document.createElement("a");
+  nearbyAction.className = "look-product-action look-product-nearby";
+  nearbyAction.dataset.nearbyProduct = "true";
+  nearbyAction.dataset.nearbyBrand = product.brand || "";
+  nearbyAction.dataset.nearbyPiece = piece.label || "";
+  nearbyAction.dataset.nearbyStoreUrl = product.nearbyStoreUrl || "";
+  nearbyAction.dataset.nearbyStoreMode = product.nearbyStoreMode || "";
+  nearbyAction.dataset.nearbyStoreLabel = product.nearbyStoreLabel || "";
+  nearbyAction.setAttribute("aria-label", `Find nearby stores for ${product.brand || piece.label}`);
+  actions.append(action, nearbyAction);
+
+  row.append(copy, actions);
+  applyNearbyLinks(row);
   return row;
 }
 
@@ -2529,10 +2671,18 @@ function initFaceColourStudio() {
   generatePhotoButton?.addEventListener("click", generateStylePhoto);
 }
 
+function initLocationSettings() {
+  shopperLocation = readStoredLocation();
+  setLocationStatus();
+  applyNearbyLinks();
+  enableLocationButton?.addEventListener("click", enableNearbyStores);
+}
+
 updateHeader();
 initProgressObserver();
 initWaitlistForm();
 initFaceColourStudio();
+initLocationSettings();
 initFemaleResultsPage();
 
 window.addEventListener("scroll", updateHeader, { passive: true });

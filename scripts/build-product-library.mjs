@@ -401,6 +401,9 @@ function normalizeProduct(product, context, index) {
     isFallback: Boolean(product.isFallback),
     source: product.source || "",
     actionLabel: product.actionLabel || (product.buyLink ? "Shop" : "Unavailable"),
+    nearbyStoreUrl: product.nearbyStoreUrl || "",
+    nearbyStoreMode: product.nearbyStoreMode || "",
+    nearbyStoreLabel: product.nearbyStoreLabel || "",
   };
 }
 

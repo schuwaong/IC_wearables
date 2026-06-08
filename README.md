@@ -141,10 +141,11 @@ INVOLVE_ASIA_AUTH_HEADER=Authorization
 ```
 
 The HK market config now expands retailer hints and fallback search coverage for
-Zalora HK, ITeSHOP, ASOS, Lane Crawford, FARFETCH HK, NET-A-PORTER HK,
-MR PORTER HK, Harvey Nichols, and eBay HK. On the women's results page, Hong
-Kong now shows up to two matched product options per outfit piece instead of
-only the first match.
+Zalora HK, ITeSHOP, ZARA HK, H&M HK, UNIQLO HK, COS HK, HBX HK, Kapok HK,
+6ixty8ight HK, Marks & Spencer HK, ASOS, Lane Crawford, FARFETCH HK,
+NET-A-PORTER HK, MR PORTER HK, Harvey Nichols, and eBay HK. The backend/library
+can return up to eight HK retailer options per query, while the women's results
+page shows up to three per outfit piece to keep the page readable.
 
 Additional product-library providers:
 
@@ -155,6 +156,7 @@ AFFILIATE_PROVIDER_ORDER=feed,cj,rakuten,ebay,involve-asia
 # Optional market-specific override. Useful when Hong Kong should prefer local
 # fashion feeds before global networks.
 HK_AFFILIATE_PROVIDER_ORDER=feed,involve-asia,cj,rakuten,ebay
+HK_AFFILIATE_MAX_RESULTS=8
 
 # Product feed ingestion for Awin, Impact, Rakuten feeds, Skimlinks/Sovrn,
 # or direct merchant CSV/TSV/JSON/XML feeds.
@@ -195,6 +197,11 @@ AFFILIATE_ALLOW_GENERIC_SEARCH_FALLBACK=true
 Generic fallback returns retailer search links when CJ/Involve Asia/feed lookups
 fail. Exact direct product pages still require working affiliate credentials or
 approved product feed URLs.
+
+Nearby-store links are opt-in on the results page. The browser asks for location
+only after the shopper clicks **Enable nearby stores**. Coordinates are stored
+in the browser for a short session and used only to open Google Maps or retailer
+store-locator links; they are not sent to the IC_wearables backend.
 
 ## Product Library
 
@@ -297,6 +304,40 @@ After valid assets are captured, rebuild the board images:
 ```powershell
 node scripts/build-product-combinations.mjs
 ```
+
+Generate cleaner palette-aware outfit crop boards:
+
+```powershell
+npm run generate:outfits
+```
+
+This reads `data/product-library.json`, crops garment/product areas from
+`data/product-images/`, scores candidate crops against the product's seasonal
+colour palette and piece type, then writes one combined Image 2 reference board
+per season/look:
+
+```text
+data/outfit-combination-crops/manifest.json
+data/outfit-combination-crops/boards/{season}/{season}__{look}.png
+data/outfit-combination-crops/crops/{season}/{look}/{piece}.png
+```
+
+Useful controls:
+
+```text
+OUTFIT_COMBO_INPUT=data/product-library.json
+OUTFIT_COMBO_OUTPUT_DIR=data/outfit-combination-crops
+OUTFIT_COMBO_GROUP_BY=season
+OUTFIT_COMBO_MAX_PRODUCTS=4
+OUTFIT_COMBO_LABELS=false
+OUTFIT_COMBO_ALLOW_REMOTE_IMAGES=false
+```
+
+Use these generated boards as the second image sent to the image model:
+`Image 1 = scanned face`, `Image 2 = combined outfit board`. The crop boards
+are better for image-to-image generation than raw search-page screenshots, but
+they should remain local unless your retailer/affiliate terms allow hosting
+cropped product imagery.
 
 ## Image Generation Backend
 
