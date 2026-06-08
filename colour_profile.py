@@ -511,6 +511,7 @@ def build_creator_prompt(result: dict[str, Any]) -> str:
             "",
             "Identity preservation rules:",
             "- Keep the exact same face identity, face shape, head shape, jawline, cheekbones, forehead, eye shape, eye spacing, nose shape, mouth shape, ears, hairline, hairstyle, facial hair, skin tone, age, and expression.",
+            "- If the reference face is neutral or not smiling, do not add a smile, grin, visible teeth, or any new expression.",
             "- Do not beautify, slim, widen, age, de-age, change ethnicity, change eye colour, change hairstyle, change facial hair, or alter the natural face proportions.",
             "- Keep the face angle, camera perspective, and head size close to the reference photo. Do not stretch, warp, liquify, smooth too much, or make the face look like a different person.",
             "- Only change styling elements: outfit, background, lighting, colour palette, accessories, and overall fashion mood.",
@@ -519,7 +520,7 @@ def build_creator_prompt(result: dict[str, Any]) -> str:
             "A realistic high-end men's style editorial portrait. Tailored fit, clean collar, season-safe near-face colour, subtle luxury styling, natural skin texture, sharp but believable lighting, premium boutique or evening lounge background. Photorealistic, no logos, no text, no watermark.",
             "",
             "Negative prompt:",
-            "warped face, changed identity, different person, altered facial structure, distorted eyes, uneven eyes, changed nose, changed lips, changed jawline, plastic skin, over-smoothed face, exaggerated muscles, cartoon, low detail, blurry face, extra fingers, bad hands, watermark, text.",
+            "warped face, changed identity, different person, changed expression, added smile, visible teeth, altered facial structure, distorted eyes, uneven eyes, changed nose, changed lips, changed jawline, plastic skin, over-smoothed face, exaggerated muscles, cartoon, low detail, blurry face, extra fingers, bad hands, watermark, text.",
         ]
     )
 

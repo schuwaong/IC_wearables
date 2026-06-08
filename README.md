@@ -6,9 +6,34 @@ The primary landing-page CTA opens the on-page scan flow:
 
 `https://schuwaong.github.io/IC_wearables/#face-lab`
 
+The men's landing page now generates one locked five-look composite image:
+
+- business formal
+- smart casual
+- city casual
+- athleisure
+- quiet luxury
+
+The look categories are fixed, but the male page includes pre-generated
+background-set directions that can be changed before regenerating. One
+generation must include all five looks in the same image while keeping the
+uploaded face unchanged.
+
 The women's landing page uses the same on-page scan and then opens:
 
 `https://schuwaong.github.io/IC_wearables/female/results.html`
+
+The women's generator now always produces five fixed looks:
+
+- business formal
+- smart casual
+- city casual
+- athleisure
+- quiet luxury
+
+Occasion and background are no longer user-selectable in that flow; each look
+has its own locked category/background pairing so the five generated results
+cover the full set automatically.
 
 ## Face Colour Demo
 
@@ -115,6 +140,52 @@ INVOLVE_ASIA_METHOD=GET
 INVOLVE_ASIA_AUTH_HEADER=Authorization
 ```
 
+The HK market config now expands retailer hints and fallback search coverage for
+Zalora HK, ITeSHOP, ASOS, Lane Crawford, FARFETCH HK, NET-A-PORTER HK,
+MR PORTER HK, Harvey Nichols, and eBay HK. On the women's results page, Hong
+Kong now shows up to two matched product options per outfit piece instead of
+only the first match.
+
+Additional product-library providers:
+
+```text
+# Search order. SEA markets default to feed,involve-asia,cj,rakuten,ebay.
+AFFILIATE_PROVIDER_ORDER=feed,cj,rakuten,ebay,involve-asia
+
+# Optional market-specific override. Useful when Hong Kong should prefer local
+# fashion feeds before global networks.
+HK_AFFILIATE_PROVIDER_ORDER=feed,involve-asia,cj,rakuten,ebay
+
+# Product feed ingestion for Awin, Impact, Rakuten feeds, Skimlinks/Sovrn,
+# or direct merchant CSV/TSV/JSON/XML feeds.
+AFFILIATE_PRODUCT_FEED_URLS=awin-retailer|https://example.com/products.csv;impact-retailer|https://example.com/products.json
+DIRECT_PRODUCT_FEED_URLS=merchant-direct|https://example.com/merchant-feed.csv
+AFFILIATE_FEED_MAX_ROWS=1200
+AFFILIATE_FEED_CACHE_MS=1800000
+
+# Hong Kong-specific fashion feeds. These are checked before the global feed
+# list for HK requests, so you can wire HK clothing merchants without affecting
+# other markets.
+HK_AFFILIATE_PRODUCT_FEED_URLS=hk-fashion|https://example.com/hk-fashion.csv
+HK_DIRECT_PRODUCT_FEED_URLS=hk-merchant|https://example.com/hk-merchant-feed.csv
+HK_AWIN_PRODUCT_FEED_URLS=hk-awin|https://example.com/hk-awin.csv
+HK_IMPACT_PRODUCT_FEED_URLS=hk-impact|https://example.com/hk-impact.json
+HK_SKIMLINKS_PRODUCT_FEED_URLS=hk-skimlinks|https://example.com/hk-skimlinks.csv
+HK_SOVRN_PRODUCT_FEED_URLS=hk-sovrn|https://example.com/hk-sovrn.csv
+
+# Rakuten Advertising Product Search.
+RAKUTEN_BEARER_TOKEN=your_rakuten_token
+RAKUTEN_ADVERTISER_MIDS=optional_comma_or_space_filtered_mids
+
+# eBay Partner Network via Browse API.
+EBAY_ACCESS_TOKEN=your_ebay_oauth_token
+EBAY_CAMPAIGN_ID=your_epn_campaign_id
+EBAY_MARKETPLACE_ID=optional_marketplace_override
+```
+
+See `affiliate-programmes.md` for the country-by-country programme table and
+the fastest signup order.
+
 Optional generic fallback:
 
 ```text
@@ -133,12 +204,15 @@ The outfit images can be generated through:
 Provider order defaults to:
 
 ```text
-dashscope,cloudflare,pollinations
+dashscope,vertex,gemini,cloudflare,pollinations,local-template
 ```
 
-This avoids OpenAI and Google image APIs. Alibaba DashScope/Qwen Image is tried
-first, Cloudflare Workers AI is the free-tier fallback, and Pollinations remains
-the no-key fallback.
+Alibaba DashScope/Qwen Image is tried first, Gemini can be enabled as a
+higher-quality reference-image fallback, Vertex AI can be enabled as a second
+Google-hosted fallback for face-preserving renders, Cloudflare Workers AI
+remains the free-tier text-only fallback, Pollinations can be used through its
+current key-based API, and `local-template` is the built-in zero-key safety
+net that still returns an on-brand image when remote providers fail.
 
 Alibaba DashScope / Qwen Image env vars:
 
@@ -159,13 +233,74 @@ CLOUDFLARE_API_TOKEN=your_workers_ai_api_token
 CLOUDFLARE_IMAGE_MODEL=@cf/stabilityai/stable-diffusion-xl-base-1.0
 ```
 
+Gemini image fallback env vars:
+
+```text
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_IMAGE_MODEL=gemini-2.5-flash-image
+```
+
+Vertex AI image fallback env vars:
+
+```text
+VERTEX_AI_PROJECT_ID=your_gcp_project_id
+VERTEX_AI_LOCATION=global
+VERTEX_AI_IMAGE_MODEL=gemini-2.5-flash-image
+VERTEX_AI_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"...","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"...","client_id":"...","token_uri":"https://oauth2.googleapis.com/token"}
+```
+
+Alternative Vertex auth options:
+
+```text
+VERTEX_AI_ACCESS_TOKEN=ya29.your_short_lived_token
+GOOGLE_APPLICATION_CREDENTIALS=/absolute/path/to/service-account.json
+```
+
+For local development, the backend also accepts the standard Google ADC file
+created by:
+
+```text
+gcloud auth application-default login
+```
+
+`gemini-2.5-flash-image` is the safe documented default for Vertex image
+generation in this backend. If Google enables a newer image-capable Gemini
+model in your project, set `VERTEX_AI_IMAGE_MODEL` to that model id without
+changing code.
+
+Pollinations image fallback env vars:
+
+```text
+POLLINATIONS_API_KEY=your_pollinations_key
+POLLINATIONS_BASE_URL=https://gen.pollinations.ai
+POLLINATIONS_IMAGE_MODELS=flux,qwen-image,zimage
+```
+
+The backend can also try provider aliases such as
+`pollinations-flux,pollinations-qwen,pollinations-zimage` in
+`IMAGE_PROVIDER_ORDER` if you want to force a specific Pollinations model.
+
 Optional controls:
 
 ```text
-IMAGE_PROVIDER_ORDER=dashscope,cloudflare,pollinations
-IMAGE_NEGATIVE_PROMPT=low quality, distorted face, text, logo, watermark
-DASHSCOPE_PROMPT_EXTEND=true
+IMAGE_PROVIDER_ORDER=dashscope,vertex,gemini,cloudflare,pollinations,local-template
+IMAGE_NEGATIVE_PROMPT=low quality, distorted face, warped face, changed identity, different face in each panel, changed expression, added smile, grin, text, logo, watermark
+DASHSCOPE_PROMPT_EXTEND=false
+VERTEX_AI_TIMEOUT_MS=30000
 ```
+
+For face-preserving generations, keep a reference-capable provider such as
+DashScope or Gemini enabled. The frontend now refuses text-only fallbacks when
+the scanned face reference is required, because those fallbacks can change
+identity or expression.
+
+The men's composite generator depends on that same reference lock because the
+same face has to stay consistent across all five looks in one image.
+
+If every remote provider fails, `local-template` generates a deterministic
+fallback image locally with `sharp`. When a face reference is present, it keeps
+the exact uploaded face and builds a branded editorial board around it instead
+of failing the request.
 
 For GitHub Pages, point the frontend at the deployed Vercel endpoint:
 

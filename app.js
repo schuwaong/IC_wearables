@@ -12,12 +12,11 @@ const faceConfidence = document.getElementById("faceConfidence");
 const faceSeasonReason = document.getElementById("faceSeasonReason");
 const facePaletteSwatches = document.getElementById("facePaletteSwatches");
 const seasonCandidates = document.getElementById("seasonCandidates");
-const styleOccasionSelect = document.getElementById("styleOccasionSelect");
-const styleBackgroundSelect = document.getElementById("styleBackgroundSelect");
 const styleMoodSelect = document.getElementById("styleMoodSelect");
 const styleFitSelect = document.getElementById("styleFitSelect");
 const styleFrameSelect = document.getElementById("styleFrameSelect");
 const styleBudgetSelect = document.getElementById("styleBudgetSelect");
+const styleBackgroundSelect = document.getElementById("styleBackgroundSelect");
 const generatePhotoButton = document.getElementById("generatePhotoButton");
 const generationStatus = document.getElementById("generationStatus");
 const generatedStyleImage = document.getElementById("generatedStyleImage");
@@ -26,6 +25,8 @@ const resultsSeason = document.getElementById("resultsSeason");
 const resultsConfidence = document.getElementById("resultsConfidence");
 const resultsPaletteSwatches = document.getElementById("resultsPaletteSwatches");
 const resultsStatus = document.getElementById("resultsStatus");
+const resultsRunlog = document.getElementById("resultsRunlog");
+const resultsRunlogSummary = document.getElementById("resultsRunlogSummary");
 
 const STYLE_RUN_STORAGE_KEY = "icWearablesFemaleStyleRun";
 const pathName = window.location.pathname.toLowerCase();
@@ -35,24 +36,62 @@ const isFemaleResultsPage = Boolean(femaleLooksGrid);
 let latestFaceResult = null;
 let latestFaceDataUrl = "";
 let latestFaceReferenceDataUrl = "";
+let styleImageRenderNonce = 0;
 const MIN_SKIN_SAMPLES_FOR_FACE = 24;
 const MIN_SKIN_RATIO_FOR_FALLBACK = 0.04;
 const WHITE_BALANCE_STRENGTH = 0.68;
-const FACE_SCAN_READY_MESSAGE = "Face scan ready. Adjust the styling controls, then generate the look.";
-const FACE_SCAN_READY_FEMALE_MESSAGE = "Face scan ready. Adjust the styling controls, then generate four outfit ideas.";
+const FACE_SCAN_READY_MESSAGE = "Face scan ready. Generate the locked five-look image.";
+const FACE_SCAN_READY_FEMALE_MESSAGE =
+  "Face scan ready. Adjust mood, fit, frame, and budget, then generate five fixed outfit looks.";
 const FACE_SCAN_REQUIRED_MESSAGE = "Scan or upload a clear front-facing face photo first.";
 const FACE_SCAN_ERROR_MESSAGE = "Face scan could not be completed. Upload a clear front-facing face photo and try again.";
-const IMAGE_GENERATING_MESSAGE = "Generating look...";
-const IMAGE_SUCCESS_MESSAGE = "Look generated. Adjust the controls to try another direction.";
-const IMAGE_ERROR_MESSAGE = "Image generation is temporarily unavailable. Try again.";
-const RESULTS_LIVE_MESSAGE = "Four generated looks are ready with live product links for each outfit piece.";
+const IMAGE_GENERATING_MESSAGE = "Generating a face-preserving five-look image...";
+const IMAGE_SUCCESS_MESSAGE = "Five-look image generated with the scanned face reference.";
+const IMAGE_ERROR_MESSAGE = "Face-preserving image generation is temporarily unavailable. Try again.";
+const RESULTS_LIVE_MESSAGE = "Five generated looks are ready with live product links for each outfit piece.";
 const RESULTS_PARTIAL_FALLBACK_MESSAGE =
-  "Some live product links are unavailable right now. Showing shopping-search fallback links for the remaining pieces.";
+  "Some exact product pages are unavailable right now. The available links still go to specific matched products.";
 const RESULTS_FALLBACK_MESSAGE =
-  "Live product links are temporarily unavailable. Showing shopping-search fallback links. Refresh to retry.";
+  "Exact product-page matches are temporarily unavailable. Refresh to retry.";
 const RESULTS_UNCONFIGURED_MESSAGE =
-  "Live product links are not connected on this site yet. Showing shopping-search fallback links until the backend endpoint is set.";
+  "Live product links are not connected on this site yet.";
 const RESULTS_SAMPLE_MESSAGE = "Showing sample looks. Run a new face scan for a personalised results set.";
+const RESULTS_PROGRESS_MESSAGE = "Preparing 5 total looks and checking live product links.";
+const RESULTS_IMAGE_FALLBACK_MESSAGE = "Some look images are unavailable. Check the generation trace for per-look provider failures.";
+const RESULTS_COMBINED_FALLBACK_MESSAGE =
+  "Some look images are unavailable or product matches are partial. Check the generation trace for per-look details.";
+const IMAGE_REQUEST_TIMEOUT_MS = 45000;
+const IMAGE_REQUEST_MAX_CONCURRENCY = Math.max(
+  1,
+  Number(
+    window.IC_FEMALE_IMAGE_MAX_CONCURRENCY ||
+      safeStorageValue("icFemaleImageMaxConcurrency") ||
+      2,
+  ) || 2,
+);
+const PRODUCT_REQUEST_TIMEOUT_MS = 12000;
+const LOOK_REFERENCE_WAIT_MS = 1500;
+const LOOK_LOG_PHASE_LABELS = {
+  queued: "Queued",
+  products: "Products",
+  rendering: "Rendering",
+  success: "Ready",
+  fallback: "Fallback",
+  sample: "Sample",
+  error: "Error",
+};
+const LOOK_LOG_PHASE_PRIORITY = {
+  queued: 0,
+  products: 1,
+  rendering: 2,
+  success: 3,
+  fallback: 3,
+  sample: 3,
+  error: 3,
+};
+let activeImageGenerationJobs = 0;
+const pendingImageGenerationJobs = [];
+const femaleLookCardState = new Map();
 
 const seasonProfiles = [
   {
@@ -129,55 +168,152 @@ const seasonProfiles = [
   },
 ];
 
-const femaleOutfitIdeas = [
+const femaleRunlogRows = new Map();
+
+const mensBackgroundSets = {
+  metropolitan: {
+    label: "Metropolitan editorial",
+    description: "glass towers, warm stone lobbies, clean storefronts, premium gym architecture, and private-club interiors",
+    scenes: [
+      "financial district boardroom with a long stone table, glass skyline, and disciplined daylight",
+      "modern gallery cafe with warm timber, cream walls, and soft window light",
+      "golden-hour city street with clean storefronts, polished pavement, and subtle motion",
+      "architectural wellness studio with concrete, chrome, soft towels, and morning light",
+      "quiet private members' lounge with travertine, walnut, linen curtains, and low natural light",
+    ],
+  },
+  hotel: {
+    label: "Luxury hotel circuit",
+    description: "hotel lobby, terrace, city arrival, spa corridor, and suite settings",
+    scenes: [
+      "luxury hotel business lounge with marble columns, leather club chairs, and city views",
+      "hotel terrace breakfast setting with clean stone, greenery, and relaxed daylight",
+      "city hotel entrance with a tailored doorman awning, black car arrival, and evening pavement",
+      "premium hotel gym corridor with glass, brushed steel, and soft indirect light",
+      "minimal hotel suite with linen sofa, stone console, and warm residential light",
+    ],
+  },
+  studio: {
+    label: "Minimal studio",
+    description: "controlled studio backgrounds that keep attention on face, colour, and silhouette",
+    scenes: [
+      "warm grey fashion studio with a low plinth, softbox light, and subtle business-office props",
+      "cream studio corner with a single lounge chair, side table, and natural daylight",
+      "charcoal studio street-set with concrete texture, soft shadows, and editorial floor marks",
+      "clean performance studio with matte floor, minimal equipment, and crisp side light",
+      "limestone-toned studio set with a sculptural chair, wool rug, and soft quiet-luxury shadows",
+    ],
+  },
+};
+
+const fixedStyleLooks = [
   {
-    title: "Boardroom polish",
-    tone: "tailored, intelligent, premium business styling",
-    description: "A composed work look with the strongest colour closest to the face and clean vertical lines.",
+    title: "Business formal",
+    occasion: "business formal",
+    tone: "sharp formal tailoring, executive polish, strongest near-face colour, disciplined proportions",
+    description: "A formal work look with crisp structure, authority, and the strongest colour close to the face.",
     fallbackImage: "../assets/generated-results/female-look-boardroom.jpg",
-    pieces: [
-      { label: "Near-face blouse", search: "women silk satin blouse" },
+    mensPieces: [
+      { label: "Tailored suit", search: "men tailored suit" },
+      { label: "Dress shirt", search: "men dress shirt" },
+      { label: "Silk tie or pocket square", search: "men silk tie pocket square" },
+      { label: "Oxford or derby shoe", search: "men oxford derby shoes" },
+    ],
+    femalePieces: [
       { label: "Tailored blazer", search: "women tailored blazer" },
-      { label: "Wide-leg trouser", search: "women wide leg tailored trousers" },
+      { label: "Near-face blouse", search: "women silk satin blouse" },
+      { label: "Tailored trouser or skirt", search: "women tailored trousers pencil skirt" },
       { label: "Leather pump or loafer", search: "women leather pumps loafers" },
     ],
   },
   {
-    title: "City casual",
-    tone: "relaxed city styling with elevated everyday textures",
-    description: "A soft but intentional daytime outfit built around palette-safe layers and comfortable movement.",
-    fallbackImage: "../assets/generated-results/female-look-city.jpg",
-    pieces: [
+    title: "Smart casual",
+    occasion: "smart casual",
+    tone: "refined off-duty polish, relaxed tailoring, tactile layers, clean but not corporate",
+    description: "An elevated daily look that feels easy but still intentional enough for dinner or meetings.",
+    fallbackImage: "../assets/generated-results/female-look-travel.jpg",
+    mensPieces: [
+      { label: "Unstructured blazer", search: "men unstructured blazer" },
+      { label: "Fine knit polo", search: "men fine knit polo" },
+      { label: "Tailored chino", search: "men tailored chinos" },
+      { label: "Suede loafer", search: "men suede loafers" },
+    ],
+    femalePieces: [
+      { label: "Soft blazer", search: "women relaxed blazer" },
       { label: "Fine knit top", search: "women fine knit top" },
+      { label: "Tailored denim or trouser", search: "women tailored jeans trousers" },
+      { label: "Loafer or slingback", search: "women loafers slingback shoes" },
+    ],
+  },
+  {
+    title: "City casual",
+    occasion: "city casual",
+    tone: "relaxed city styling with elevated everyday textures and comfortable movement",
+    description: "A clean street-ready outfit built around palette-safe layers and everyday movement.",
+    fallbackImage: "../assets/generated-results/female-look-city.jpg",
+    mensPieces: [
+      { label: "Overshirt or jacket", search: "men overshirt casual jacket" },
+      { label: "Premium tee", search: "men premium t shirt" },
+      { label: "Straight denim or trouser", search: "men straight jeans trousers" },
+      { label: "Minimal sneaker", search: "men minimal leather sneakers" },
+    ],
+    femalePieces: [
       { label: "Cropped jacket", search: "women cropped jacket" },
+      { label: "Premium tee or knit", search: "women premium t shirt fine knit" },
       { label: "Straight denim or trouser", search: "women straight leg jeans trousers" },
       { label: "Clean sneaker", search: "women minimal leather sneakers" },
     ],
   },
   {
-    title: "Evening edit",
-    tone: "date night, elegant, face-brightening eveningwear",
-    description: "A more striking look that keeps the colour story flattering under evening lighting.",
-    fallbackImage: "../assets/generated-results/female-look-evening.jpg",
-    pieces: [
-      { label: "Statement top", search: "women evening top satin knit" },
-      { label: "Midi skirt or dress", search: "women midi skirt dress" },
-      { label: "Small shoulder bag", search: "women small shoulder bag" },
-      { label: "Jewellery accent", search: "women earrings necklace" },
+    title: "Athleisure",
+    occasion: "athleisure",
+    tone: "premium performance styling, clean technical layers, athletic ease, sharp colour blocking",
+    description: "A polished active look that can move from travel, gym, errands, and coffee without looking sloppy.",
+    fallbackImage: "../assets/generated-results/female-look-city.jpg",
+    mensPieces: [
+      { label: "Technical jacket", search: "men technical jacket" },
+      { label: "Performance tee", search: "men performance t shirt" },
+      { label: "Tailored jogger", search: "men tailored joggers" },
+      { label: "Training sneaker", search: "men premium training sneakers" },
+    ],
+    femalePieces: [
+      { label: "Technical jacket", search: "women technical jacket" },
+      { label: "Performance tank or tee", search: "women performance tank t shirt" },
+      { label: "Tailored legging or jogger", search: "women premium leggings joggers" },
+      { label: "Training sneaker", search: "women premium training sneakers" },
     ],
   },
   {
-    title: "Travel capsule",
-    tone: "comfortable, refined travel capsule with mixable pieces",
-    description: "A practical outfit that photographs well and stays easy to repeat with nearby shopping options.",
-    fallbackImage: "../assets/generated-results/female-look-travel.jpg",
-    pieces: [
-      { label: "Layering tank or tee", search: "women premium tank tee" },
-      { label: "Soft outer layer", search: "women cardigan trench lightweight jacket" },
-      { label: "Relaxed trouser", search: "women relaxed trousers" },
-      { label: "Crossbody bag", search: "women crossbody bag" },
+    title: "Quiet luxury",
+    occasion: "quiet luxury",
+    tone: "understated luxury, fluid premium fabrics, tonal restraint, expensive but unbranded styling",
+    description: "A restrained premium look focused on fabric, proportion, and subtle colour harmony.",
+    fallbackImage: "../assets/generated-results/female-look-evening.jpg",
+    mensPieces: [
+      { label: "Cashmere knit", search: "men cashmere knit sweater" },
+      { label: "Wool coat", search: "men wool overcoat" },
+      { label: "Fluid trouser", search: "men wool pleated trousers" },
+      { label: "Leather loafer", search: "men leather loafers" },
+    ],
+    femalePieces: [
+      { label: "Cashmere knit", search: "women cashmere knit sweater" },
+      { label: "Wool coat", search: "women wool coat" },
+      { label: "Fluid trouser", search: "women fluid wool trousers" },
+      { label: "Leather tote or loafer", search: "women leather tote loafers" },
     ],
   },
+];
+
+const femaleOutfitIdeas = [
+  ...fixedStyleLooks.map((look, index) => ({
+    title: look.title,
+    occasion: look.occasion,
+    background: mensBackgroundSets.metropolitan.scenes[index],
+    tone: look.tone,
+    description: look.description,
+    fallbackImage: look.fallbackImage,
+    pieces: look.femalePieces,
+  })),
 ];
 
 function updateHeader() {
@@ -593,12 +729,11 @@ function sampleFaceImage(image) {
 
 function currentStyleSelections() {
   return {
-    occasion: styleOccasionSelect?.value || "business",
-    background: styleBackgroundSelect?.value || "premium boutique studio",
     mood: styleMoodSelect?.value || "quiet luxury",
     fit: styleFitSelect?.value || "balanced proportions",
     frame: styleFrameSelect?.value || "full body",
     budget: styleBudgetSelect?.value || "mid premium",
+    backgroundSet: styleBackgroundSelect?.value || "metropolitan",
   };
 }
 
@@ -611,15 +746,30 @@ function buildStyleImagePrompt(result) {
     axisLabel("contrast", result.axes.contrast),
   ].join(", ");
   const selections = currentStyleSelections();
+  const backgroundSet = mensBackgroundSets[selections.backgroundSet] || mensBackgroundSets.metropolitan;
+  const panelLines = fixedStyleLooks.map((look, index) => {
+    const pieces = look.mensPieces.map((piece) => piece.label).join(", ");
+    const background = backgroundSet.scenes[index] || backgroundSet.scenes[0];
+    return `Panel ${index + 1}: ${look.title} look in ${background}. Styling direction: ${look.tone}. Outfit pieces: ${pieces}.`;
+  });
 
   return [
-    "High-end IC_wearables fashion editorial image.",
-    `Occasion: ${selections.occasion}. Background: ${selections.background}.`,
+    "High-end IC_wearables menswear editorial composite in one final image.",
+    "Use Image 1 as the identity reference for the exact same man in every scene.",
+    "Create one polished five-panel composite with the same man repeated consistently across all panels.",
+    "Use a magazine contact-sheet layout: two panels on the top row, three panels on the bottom row, all inside one final image.",
+    ...panelLines,
+    `Background set: ${backgroundSet.label}. Background direction: ${backgroundSet.description}.`,
+    "All five panels must be present in the same image. Do not collapse them into one background and do not omit any look.",
     `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
-    `Image frame: ${selections.frame}, show a clear face and complete outfit proportions when full body is selected.`,
+    `Image frame: ${selections.frame}. In every panel, show a clear face and believable outfit proportions.`,
     `Colour profile: ${result.profile.name}. Palette hex colours for clothing, shoes, and accessories only: ${palette}.`,
     `Visual read: ${axisSummary}. Wardrobe direction: ${result.profile.wardrobe}.`,
-    "Show a clear full face, premium textures, tailored outfit, clean realistic lighting, photorealistic skin texture, no text, no logos, no watermark.",
+    "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairstyle, hairline, facial hair, and expression as the reference photo in every panel.",
+    "If the reference face is neutral or not smiling, keep it neutral in every panel. Do not add a smile, grin, visible teeth, or any new expression.",
+    "Do not beautify, retouch, slim, age, de-age, change ethnicity, stretch, warp, liquify, face-swap, or replace the face with a different model.",
+    "Do not create five different men. It must be the same person with the same natural face in all five looks.",
+    "Use realistic head size, camera perspective, and skin texture. No text, no logos, no watermark.",
   ].join(" ");
 }
 
@@ -852,8 +1002,6 @@ function hashText(value) {
 
 function defaultStyleSelections() {
   return {
-    occasion: "business",
-    background: "premium boutique studio",
     mood: "quiet luxury",
     fit: "balanced proportions",
     frame: "full body",
@@ -928,6 +1076,238 @@ function configuredBackendBaseUrl() {
   );
 }
 
+const TIMEZONE_COUNTRY_HINTS = {
+  "Asia/Hong_Kong": "HK",
+  "Asia/Singapore": "SG",
+  "Asia/Tokyo": "JP",
+  "Asia/Seoul": "KR",
+  "Asia/Taipei": "TW",
+  "Australia/Sydney": "AU",
+  "Australia/Melbourne": "AU",
+  "Europe/London": "GB",
+  "Europe/Paris": "FR",
+  "Europe/Berlin": "DE",
+  "America/New_York": "US",
+  "America/Los_Angeles": "US",
+  "America/Toronto": "CA",
+};
+
+const COUNTRY_CURRENCY = {
+  AE: "AED",
+  AU: "AUD",
+  BR: "BRL",
+  CA: "CAD",
+  CH: "CHF",
+  CN: "CNY",
+  DE: "EUR",
+  ES: "EUR",
+  FR: "EUR",
+  GB: "GBP",
+  HK: "HKD",
+  ID: "IDR",
+  IN: "INR",
+  IT: "EUR",
+  JP: "JPY",
+  KR: "KRW",
+  MX: "MXN",
+  MY: "MYR",
+  NL: "EUR",
+  NZ: "NZD",
+  PH: "PHP",
+  SA: "SAR",
+  SE: "SEK",
+  SG: "SGD",
+  TH: "THB",
+  TW: "TWD",
+  US: "USD",
+};
+
+const CLIENT_BUDGET_RANGES = {
+  AED: {
+    affordable: [150, 450],
+    "mid premium": [450, 1100],
+    "investment piece": [1100, 3200],
+  },
+  AUD: {
+    affordable: [70, 180],
+    "mid premium": [180, 420],
+    "investment piece": [420, 1250],
+  },
+  BRL: {
+    affordable: [220, 650],
+    "mid premium": [650, 1500],
+    "investment piece": [1500, 4500],
+  },
+  CAD: {
+    affordable: [60, 160],
+    "mid premium": [160, 380],
+    "investment piece": [380, 1100],
+  },
+  CHF: {
+    affordable: [40, 110],
+    "mid premium": [110, 260],
+    "investment piece": [260, 780],
+  },
+  CNY: {
+    affordable: [280, 850],
+    "mid premium": [850, 2200],
+    "investment piece": [2200, 6500],
+  },
+  EUR: {
+    affordable: [40, 110],
+    "mid premium": [110, 260],
+    "investment piece": [260, 780],
+  },
+  GBP: {
+    affordable: [35, 95],
+    "mid premium": [95, 220],
+    "investment piece": [220, 650],
+  },
+  HKD: {
+    affordable: [300, 850],
+    "mid premium": [850, 2200],
+    "investment piece": [2200, 6500],
+  },
+  IDR: {
+    affordable: [650000, 1800000],
+    "mid premium": [1800000, 4200000],
+    "investment piece": [4200000, 12500000],
+  },
+  INR: {
+    affordable: [3200, 9000],
+    "mid premium": [9000, 22000],
+    "investment piece": [22000, 65000],
+  },
+  JPY: {
+    affordable: [6000, 17000],
+    "mid premium": [17000, 42000],
+    "investment piece": [42000, 125000],
+  },
+  KRW: {
+    affordable: [55000, 150000],
+    "mid premium": [150000, 360000],
+    "investment piece": [360000, 1050000],
+  },
+  MXN: {
+    affordable: [700, 1900],
+    "mid premium": [1900, 4600],
+    "investment piece": [4600, 13500],
+  },
+  MYR: {
+    affordable: [180, 520],
+    "mid premium": [520, 1300],
+    "investment piece": [1300, 3800],
+  },
+  NZD: {
+    affordable: [80, 200],
+    "mid premium": [200, 460],
+    "investment piece": [460, 1350],
+  },
+  PHP: {
+    affordable: [2300, 6500],
+    "mid premium": [6500, 16000],
+    "investment piece": [16000, 47000],
+  },
+  SAR: {
+    affordable: [150, 450],
+    "mid premium": [450, 1100],
+    "investment piece": [1100, 3200],
+  },
+  SEK: {
+    affordable: [420, 1150],
+    "mid premium": [1150, 2700],
+    "investment piece": [2700, 8000],
+  },
+  SGD: {
+    affordable: [55, 150],
+    "mid premium": [150, 360],
+    "investment piece": [360, 1050],
+  },
+  THB: {
+    affordable: [1500, 4200],
+    "mid premium": [4200, 10000],
+    "investment piece": [10000, 30000],
+  },
+  TWD: {
+    affordable: [1400, 3900],
+    "mid premium": [3900, 9400],
+    "investment piece": [9400, 28000],
+  },
+  USD: {
+    affordable: [40, 120],
+    "mid premium": [120, 280],
+    "investment piece": [280, 850],
+  },
+};
+
+function regionFromLocale(locale) {
+  const match = String(locale || "").trim().match(/[-_]([A-Za-z]{2})$/);
+  return match?.[1] ? match[1].toUpperCase() : "";
+}
+
+function inferredCountryCode() {
+  const direct =
+    String(window.IC_COUNTRY_CODE || "").trim().toUpperCase() ||
+    String(safeStorageValue("icCountryCode") || "").trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(direct)) return direct;
+
+  const localeCandidates = [navigator.language, ...(navigator.languages || [])];
+  for (const locale of localeCandidates) {
+    const region = regionFromLocale(locale);
+    if (region) return region;
+  }
+
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    return TIMEZONE_COUNTRY_HINTS[timezone] || "";
+  } catch {
+    return "";
+  }
+}
+
+function productOptionsPerPiece(countryCode) {
+  switch (countryCode) {
+    case "HK":
+      return 2;
+    default:
+      return 1;
+  }
+}
+
+function inferredCurrency(countryCode) {
+  return COUNTRY_CURRENCY[countryCode] || "USD";
+}
+
+function formatCurrencyAmount(amount, currency) {
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: amount >= 1000 ? 0 : 2,
+  }).format(amount);
+}
+
+function localBudgetRange(selection, countryCode) {
+  const normalizedSelection = String(selection || "mid premium").trim().toLowerCase();
+  const currency = inferredCurrency(countryCode);
+  const ranges = CLIENT_BUDGET_RANGES[currency] || CLIENT_BUDGET_RANGES.USD;
+  const [min, max] = ranges[normalizedSelection] || ranges["mid premium"];
+  return `${formatCurrencyAmount(min, currency)} - ${formatCurrencyAmount(max, currency)}`;
+}
+
+function looksLikeSpecificProductPage(rawUrl) {
+  try {
+    const url = new URL(rawUrl, window.location.href);
+    const host = url.hostname.toLowerCase();
+    const path = url.pathname.toLowerCase();
+    if (host.includes("google.") && url.searchParams.get("tbm") === "shop") return false;
+    if (["q", "query", "keyword", "search", "term"].some((key) => url.searchParams.has(key))) return false;
+    if (/\/(search|sr|catalog)\b/.test(path)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function backendUrl(path) {
   const baseUrl = configuredBackendBaseUrl();
   if (!baseUrl) return "";
@@ -986,15 +1366,27 @@ function normalizeAffiliateProducts(payload) {
 
   return products
     .map((product) => ({
+      rawBuyLink: String(product.buyLink || product.link || product.url || ""),
       productName: String(product.productName || product.name || "Matching product"),
       brand: String(product.brand || product.merchant || "Retail partner"),
       price: String(product.price || product.salePrice || "Live price"),
       imageUrl: String(product.imageUrl || product.image || ""),
+      budgetRange: String(product.budgetRange || ""),
       buyLink: String(product.buyLink || product.link || product.url || ""),
       isFallback: Boolean(product.isFallback || product.source === "generic-search"),
       actionLabel: String(product.actionLabel || (product.isFallback ? "Search" : "Shop")),
     }))
-    .filter((product) => product.buyLink);
+    .map((product) => ({
+      ...product,
+      exactProductPage: !product.isFallback && looksLikeSpecificProductPage(product.rawBuyLink),
+    }));
+}
+
+function extractAffiliateBudgetRange(payload, fallbackSelection = "mid premium", countryCode = inferredCountryCode()) {
+  return (
+    String(payload?.budget?.rangeLabel || payload?.budgetRange || "").trim() ||
+    localBudgetRange(fallbackSelection, countryCode)
+  );
 }
 
 function affiliateFallbackMessage(kind) {
@@ -1002,28 +1394,46 @@ function affiliateFallbackMessage(kind) {
     case "not-configured":
       return RESULTS_UNCONFIGURED_MESSAGE;
     case "no-products":
-      return "No live product matches were returned for this look. Showing shopping-search fallback links.";
+      return "No exact product-page matches were returned for this look yet.";
     default:
       return RESULTS_FALLBACK_MESSAGE;
   }
 }
 
-async function fetchMatchingClothes(searchQuery, colorSeason) {
+async function fetchMatchingClothes(searchQuery, colorSeason, options = {}) {
   const { endpoint, isExplicit } = getMatchingEndpointConfig();
+  const countryCode = options.countryCode || inferredCountryCode();
+  const budgetSelection = options.budget || "mid premium";
   if (!window.fetch || shouldSkipApiEndpoint(endpoint, isExplicit)) {
     return {
       products: [],
       usedAffiliate: false,
+      budgetRange: localBudgetRange(budgetSelection, countryCode),
       reason: affiliateFallbackMessage("not-configured"),
     };
   }
 
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ searchQuery, colorSeason }),
-    });
+    const controller = window.AbortController ? new AbortController() : null;
+    const timeout = controller ? window.setTimeout(() => controller.abort(), PRODUCT_REQUEST_TIMEOUT_MS) : 0;
+    let response;
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          searchQuery,
+          colorSeason,
+          budget: budgetSelection,
+          countryCode,
+          allowSearchFallback: false,
+          requireProductPages: true,
+        }),
+        ...(controller ? { signal: controller.signal } : {}),
+      });
+    } finally {
+      if (timeout) window.clearTimeout(timeout);
+    }
 
     let payload = null;
     try {
@@ -1036,15 +1446,18 @@ async function fetchMatchingClothes(searchQuery, colorSeason) {
       return {
         products: [],
         usedAffiliate: false,
+        budgetRange: extractAffiliateBudgetRange(payload, budgetSelection, countryCode),
         reason: String(payload?.error || affiliateFallbackMessage("unavailable")),
       };
     }
 
-    const products = normalizeAffiliateProducts(payload);
+    const products = normalizeAffiliateProducts(payload).filter((product) => product.exactProductPage);
+    const budgetRange = extractAffiliateBudgetRange(payload, budgetSelection, countryCode);
     if (!products.length) {
       return {
         products: [],
         usedAffiliate: false,
+        budgetRange,
         reason: affiliateFallbackMessage("no-products"),
       };
     }
@@ -1053,13 +1466,15 @@ async function fetchMatchingClothes(searchQuery, colorSeason) {
     return {
       products,
       usedAffiliate: hasLiveProducts,
+      budgetRange,
       reason: hasLiveProducts ? "" : affiliateFallbackMessage("unavailable"),
     };
   } catch (error) {
     return {
       products: [],
       usedAffiliate: false,
-      reason: affiliateFallbackMessage("unavailable"),
+      budgetRange: localBudgetRange(budgetSelection, countryCode),
+      reason: error?.name === "AbortError" ? "Product matching timed out for this look." : affiliateFallbackMessage("unavailable"),
     };
   }
 }
@@ -1068,13 +1483,14 @@ function shoppingSearchUrl(query) {
   return `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query)}`;
 }
 
-function pieceSearchQuery(piece, run) {
+function pieceSearchQuery(piece, run, idea = null) {
   const selections = { ...defaultStyleSelections(), ...(run.selections || {}) };
+  const lookOccasion = String(idea?.occasion || selections.occasion || "").trim();
   return [
     piece.search,
     run.profile?.name,
     run.profile?.wardrobe,
-    selections.occasion,
+    lookOccasion,
     selections.fit,
     selections.budget,
   ]
@@ -1084,15 +1500,16 @@ function pieceSearchQuery(piece, run) {
     .trim();
 }
 
-function fallbackProduct(piece, query) {
+function unavailableProduct(piece, options = {}) {
   return {
-    productName: piece.label,
-    brand: "Shopping search",
-    price: "Live price",
+    productName: `${piece.label} match unavailable`,
+    brand: "Retail lookup",
+    price: "Exact product page unavailable",
     imageUrl: "",
-    buyLink: shoppingSearchUrl(query),
+    budgetRange: String(options.budgetRange || ""),
+    buyLink: "",
     isFallback: true,
-    actionLabel: "Search",
+    actionLabel: "Unavailable",
   };
 }
 
@@ -1129,36 +1546,50 @@ function buildFemaleLookPrompt(run, idea, index) {
   const selections = { ...defaultStyleSelections(), ...(run.selections || {}) };
   const palette = run.profile.palette.join(", ");
   const pieces = idea.pieces.map((piece) => piece.label).join(", ");
+  const lookOccasion = String(idea.occasion || "business").trim();
+  const lookBackground = String(idea.background || "editorial interior").trim();
   const frameInstruction =
     selections.frame === "half body"
       ? "Half body portrait crop with face, hair, neckline, upper outfit, and accessories clearly visible."
       : "Full body head-to-toe fashion image with clear face, shoes, silhouette, and outfit proportions visible.";
 
   return [
-    "Photorealistic high-end female fashion editorial for IC_wearables.",
+    "Photorealistic high-end female fashion editorial for IC_wearables. Same woman as the uploaded reference photo, not a new model.",
     `Look ${index + 1}: ${idea.title}. Direction: ${idea.tone}.`,
-    `Occasion: ${selections.occasion}. Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
-    `Background style: ${selections.background}. Do not use the colour palette for the background; use it only for clothing, shoes, bags, jewellery, and makeup harmony.`,
+    `Locked occasion for this look: ${lookOccasion}. Locked background for this look: ${lookBackground}. Do not swap this look into another occasion or background.`,
+    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
+    "Use the colour palette only for clothing, shoes, bags, jewellery, and makeup harmony, not as an abstract background wash.",
     `Colour season: ${run.profile.name}. Palette hex colours: ${palette}. Wardrobe direction: ${run.profile.wardrobe}.`,
     `Outfit pieces to show: ${pieces}. ${frameInstruction}`,
-    "Premium textures, realistic lighting, clear full face, elegant styling, no text, no logos, no watermark.",
+    "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairline, hairstyle, and expression as the reference photo.",
+    "If the reference face is neutral or not smiling, do not add a smile, grin, visible teeth, or any new expression.",
+    "Do not beautify, retouch, slim, age, de-age, change ethnicity, warp, liquify, or swap in a different model.",
+    "Premium textures, realistic lighting, natural skin texture, clear full face, elegant styling, no text, no logos, no watermark.",
   ].join(" ");
 }
 
 function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
-  const productSummary = rows
-    .map(({ piece, product }) => `${piece.label}: ${product.productName} from ${product.brand}`)
+  const liveRows = rows.filter(({ product }) => product.buyLink);
+  const productSummary = liveRows
+    .map(({ piece, product }) =>
+      `${piece.label}: ${product.productName} from ${product.brand}${product.price ? ` (${product.price})` : ""}`,
+    )
     .join("; ");
-  const productImageCount = rows.filter(({ product }) => product.imageUrl).length;
+  const productImageCount = liveRows.filter(({ product }) => product.imageUrl).length;
+  const budgetRange = rows.map(({ product }) => product.budgetRange).find(Boolean) || "";
+  const hasFaceReference = Boolean(run.faceReferenceDataUrl);
 
   return [
     buildFemaleLookPrompt(run, idea, index),
-    "Use Image 1 as the identity reference. Preserve the same person's face, facial structure, hair, skin tone, and expression as closely as possible.",
+    hasFaceReference
+      ? "Use Image 1 as the identity reference. Match the exact same woman's face and current expression with very high fidelity."
+      : "There is no face reference image for this render, so do not invent a stylised or exaggerated face.",
     productImageCount
-      ? "Use the later reference images as clothing and accessory references. Dress the person in those product-inspired pieces while keeping a natural, realistic full outfit."
-      : "Affiliate product image references are unavailable for this look, so style the person using the product names and colour-season guidance.",
+      ? "Use the later reference images as clothing and accessory references. Match the garment silhouette, textures, colour blocking, and styling details to those products as closely as possible while keeping a natural, realistic full outfit."
+      : "Affiliate product image references are unavailable for this look, so style the person using the matched product names and colour-season guidance.",
     productSummary ? `Product references: ${productSummary}.` : "",
-    "Do not change identity. Do not create a different model. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
+    budgetRange ? `Budget target for the shopper's region: ${budgetRange}. Keep the outfit realistically within that range.` : "",
+    "Do not change identity, do not create a different model, do not change expression, and do not add a smile. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
   ]
     .filter(Boolean)
     .join(" ");
@@ -1174,7 +1605,13 @@ function renderResultsSummary(run) {
       ? RESULTS_SAMPLE_MESSAGE
       : endpointSkipped
         ? RESULTS_UNCONFIGURED_MESSAGE
-        : "Generating looks and checking live product links.";
+        : RESULTS_PROGRESS_MESSAGE;
+  }
+
+  if (resultsRunlogSummary) {
+    resultsRunlogSummary.textContent = run.sample
+      ? "This sample run keeps the 5-look layout visible so you can preview business formal, smart casual, city casual, athleisure, and quiet luxury cards."
+      : "Each look runs separately so you can verify business formal, smart casual, city casual, athleisure, and quiet luxury generation one by one.";
   }
 
   if (!resultsPaletteSwatches) return;
@@ -1206,24 +1643,46 @@ function createProductRow(product, piece) {
   }
 
   const copy = document.createElement("div");
+  const pieceLabel = document.createElement("span");
   const brand = document.createElement("span");
   const title = document.createElement("strong");
   const price = document.createElement("small");
+  const budget = product.budgetRange ? document.createElement("small") : null;
+  pieceLabel.className = "look-product-piece";
+  pieceLabel.textContent = piece.label;
   brand.textContent = product.brand;
   title.textContent = product.productName;
   price.textContent = product.price;
-  copy.append(brand, title, price);
+  if (budget) {
+    budget.className = "look-product-budget";
+    budget.textContent = `Budget target: ${product.budgetRange}`;
+    copy.append(pieceLabel, brand, title, price, budget);
+  } else {
+    copy.append(pieceLabel, brand, title, price);
+  }
 
-  const link = document.createElement("a");
-  link.className = "look-product-action";
-  link.href = product.buyLink;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer sponsored";
-  link.textContent = product.actionLabel || "Shop";
-  link.setAttribute("aria-label", `Shop ${piece.label}`);
+  const action = product.buyLink ? document.createElement("a") : document.createElement("span");
+  action.className = "look-product-action";
+  if (product.buyLink) {
+    action.href = product.buyLink;
+    action.target = "_blank";
+    action.rel = "noopener noreferrer sponsored";
+    action.setAttribute("aria-label", `Shop ${piece.label}`);
+  } else {
+    action.classList.add("is-disabled");
+    action.setAttribute("aria-label", `${piece.label} product link unavailable`);
+  }
+  action.textContent = product.actionLabel || (product.buyLink ? "Shop" : "Unavailable");
 
-  row.append(copy, link);
+  row.append(copy, action);
   return row;
+}
+
+function createProductMeta(message) {
+  const meta = document.createElement("div");
+  meta.className = "look-product-meta";
+  meta.textContent = message;
+  return meta;
 }
 
 function createProductNotice(message) {
@@ -1233,10 +1692,70 @@ function createProductNotice(message) {
   return notice;
 }
 
+function createRunlogRow(idea, index) {
+  const row = document.createElement("article");
+  row.className = "results-runlog-row is-working";
+  row.dataset.lookKey = idea.title;
+
+  const indexChip = document.createElement("span");
+  indexChip.className = "results-runlog-index";
+  indexChip.textContent = `0${index + 1}`;
+
+  const copy = document.createElement("div");
+  const title = document.createElement("strong");
+  const detail = document.createElement("p");
+  title.textContent = idea.title;
+  detail.textContent = "Queued for product matching and image generation.";
+  copy.append(title, detail);
+
+  const badge = document.createElement("span");
+  badge.className = "results-runlog-badge";
+  badge.textContent = LOOK_LOG_PHASE_LABELS.queued;
+
+  row.append(indexChip, copy, badge);
+  return { row, detail, badge };
+}
+
+function setRunlogState(lookKey, phase, message) {
+  const entry = femaleRunlogRows.get(lookKey);
+  if (!entry) return;
+  const nextPriority = LOOK_LOG_PHASE_PRIORITY[phase] ?? 0;
+  const currentPriority = LOOK_LOG_PHASE_PRIORITY[entry.phase] ?? -1;
+  if (nextPriority < currentPriority) return;
+  entry.phase = phase;
+  entry.row.classList.remove("is-working", "is-success", "is-fallback", "is-error");
+
+  const visualPhase =
+    phase === "success" || phase === "sample"
+      ? "is-success"
+      : phase === "fallback"
+        ? "is-fallback"
+        : phase === "error"
+          ? "is-error"
+          : "is-working";
+
+  entry.row.classList.add(visualPhase);
+  entry.badge.textContent = LOOK_LOG_PHASE_LABELS[phase] || phase;
+  entry.detail.textContent = message;
+}
+
+function initialiseFemaleRunlog() {
+  if (!resultsRunlog) return;
+  femaleRunlogRows.clear();
+  resultsRunlog.innerHTML = "";
+  femaleOutfitIdeas.forEach((idea, index) => {
+    const entry = createRunlogRow(idea, index);
+    entry.phase = "queued";
+    femaleRunlogRows.set(idea.title, entry);
+    resultsRunlog.appendChild(entry.row);
+  });
+}
+
 async function generatedReferenceImage(prompt, options = {}) {
   const width = options.width || 800;
   const height = options.height || 1000;
   const referenceImages = Array.isArray(options.referenceImages) ? options.referenceImages.filter(Boolean).slice(0, 3) : [];
+  const allowTextFallback = options.allowTextFallback ?? referenceImages.length === 0;
   const explicitEndpoint =
     window.IC_IMAGE_GENERATION_ENDPOINT ||
     window.IC_IMAGE_ENDPOINT ||
@@ -1246,6 +1765,9 @@ async function generatedReferenceImage(prompt, options = {}) {
   const { endpoint, isExplicit } = endpointConfig("/api/generate-style-image", explicitEndpoint);
 
   if (!window.fetch || shouldSkipApiEndpoint(endpoint, isExplicit)) {
+    if (!allowTextFallback) {
+      throw new Error("Reference-preserving image generation requires the backend image endpoint.");
+    }
     return {
       imageUrl: generatedImageUrl(prompt, options),
       provider: "text-fallback",
@@ -1254,6 +1776,9 @@ async function generatedReferenceImage(prompt, options = {}) {
   }
 
   if (!referenceImages.length) {
+    if (!allowTextFallback) {
+      throw new Error("Reference image is required for this render.");
+    }
     return {
       imageUrl: generatedImageUrl(prompt, options),
       provider: "text-fallback",
@@ -1261,20 +1786,35 @@ async function generatedReferenceImage(prompt, options = {}) {
     };
   }
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt,
-      width,
-      height,
-      seed: options.seed,
-      referenceImages,
-    }),
-  });
+  const controller = window.AbortController ? new AbortController() : null;
+  const timeout = controller ? window.setTimeout(() => controller.abort(), options.timeoutMs || IMAGE_REQUEST_TIMEOUT_MS) : 0;
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt,
+        width,
+        height,
+        seed: options.seed,
+        referenceImages,
+      }),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(`Image request timed out after ${options.timeoutMs || IMAGE_REQUEST_TIMEOUT_MS}ms.`);
+    }
+    throw error;
+  } finally {
+    if (timeout) window.clearTimeout(timeout);
+  }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(String(payload?.detail || payload?.error || "Reference image generation failed."));
+    const backendError = new Error(String(payload?.detail || payload?.error || "Reference image generation failed."));
+    backendError.attempts = Array.isArray(payload?.attempts) ? payload.attempts : [];
+    throw backendError;
   }
 
   const imageUrl = payload.imageUrl || payload.imageDataUrl;
@@ -1283,6 +1823,7 @@ async function generatedReferenceImage(prompt, options = {}) {
     imageUrl,
     provider: payload.provider || "reference-generation",
     usedReferences: true,
+    attempts: Array.isArray(payload.attempts) ? payload.attempts : [],
   };
 }
 
@@ -1291,14 +1832,96 @@ function setLookImageStatus(statusElement, message) {
   statusElement.textContent = message;
 }
 
-async function hydrateLookImage(run, idea, index, image, statusElement, rows) {
+function femaleLookStateKey(run, idea, index) {
+  return `${run.profile?.name || "profile"}::${index}::${idea.title}`;
+}
+
+function setLookActionState(actionButton, label, disabled) {
+  if (!actionButton) return;
+  actionButton.textContent = label;
+  actionButton.disabled = Boolean(disabled);
+}
+
+function setLookErrorState(cardState, message) {
+  if (!cardState) return;
+  cardState.image.removeAttribute("src");
+  cardState.image.dataset.renderState = "error";
+  cardState.image.setAttribute("aria-hidden", "true");
+  setLookImageStatus(cardState.imageStatus, message);
+  setLookActionState(cardState.regenerateButton, "Regenerate", false);
+}
+
+function runQueuedImageGeneration(task) {
+  return new Promise((resolve, reject) => {
+    const launch = () => {
+      activeImageGenerationJobs += 1;
+      Promise.resolve()
+        .then(task)
+        .then(resolve, reject)
+        .finally(() => {
+          activeImageGenerationJobs = Math.max(0, activeImageGenerationJobs - 1);
+          const next = pendingImageGenerationJobs.shift();
+          if (next) next();
+        });
+    };
+
+    if (activeImageGenerationJobs < IMAGE_REQUEST_MAX_CONCURRENCY) {
+      launch();
+      return;
+    }
+
+    pendingImageGenerationJobs.push(launch);
+  });
+}
+
+function formatImageAttempts(attempts = []) {
+  const failed = attempts
+    .filter((attempt) => attempt?.status === "failed")
+    .map((attempt) => `${attempt.provider}: ${attempt.detail}`)
+    .filter(Boolean);
+  const skipped = attempts
+    .filter((attempt) => attempt?.status === "skipped")
+    .map((attempt) => `${attempt.provider}: ${attempt.detail}`)
+    .filter(Boolean);
+  return { failed, skipped };
+}
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPromise = [], options = {}) {
+  const cardState = options.cardState || null;
   const seed = hashText(`${run.profile.name}-${idea.title}-${JSON.stringify(run.selections)}`);
-  const productImageUrls = rows
+  let resolvedRows = [];
+  if (rowsOrPromise && typeof rowsOrPromise.then === "function") {
+    try {
+      resolvedRows = await Promise.race([rowsOrPromise, delay(LOOK_REFERENCE_WAIT_MS).then(() => [])]);
+    } catch (error) {
+      resolvedRows = [];
+    }
+  } else {
+    resolvedRows = Array.isArray(rowsOrPromise) ? rowsOrPromise : [];
+  }
+
+  const productImageUrls = resolvedRows
+    .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
+    .sort((left, right) => productReferencePriority(left) - productReferencePriority(right))
     .map(({ product }) => product.imageUrl)
+    .filter((url, index, all) => all.indexOf(url) === index)
     .filter((url) => /^https?:\/\//i.test(url))
     .slice(0, 2);
+  if (!run.faceReferenceDataUrl) {
+    setLookErrorState(cardState, "Image generation unavailable: no face reference found for this look.");
+    setRunlogState(idea.title, "error", "Face reference was unavailable, so this look could not be rendered.");
+    return {
+      imageUsedReferences: false,
+      productReferenceCount: productImageUrls.length,
+      imageProvider: "error",
+    };
+  }
   const referenceImages = [run.faceReferenceDataUrl, ...productImageUrls].filter(Boolean).slice(0, 3);
-  const prompt = buildReferencedFemaleLookPrompt(run, idea, index, rows);
+  const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
 
   setLookImageStatus(
     statusElement,
@@ -1306,15 +1929,53 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rows) {
       ? "Generating with scanned face reference..."
       : "Generating from colour profile...",
   );
+  setRunlogState(
+    idea.title,
+    "rendering",
+    productImageUrls.length
+      ? `Rendering with the scanned face plus ${productImageUrls.length} product reference image${productImageUrls.length === 1 ? "" : "s"}.`
+      : "Rendering with the scanned face and product text only.",
+  );
 
   try {
-    const result = await generatedReferenceImage(prompt, {
-      width: 800,
-      height: 1000,
-      seed,
-      referenceImages,
+    if (activeImageGenerationJobs >= IMAGE_REQUEST_MAX_CONCURRENCY) {
+      setLookImageStatus(statusElement, "Waiting for an image generation slot...");
+      setRunlogState(
+        idea.title,
+        "rendering",
+        `Queued behind ${activeImageGenerationJobs} in-flight render${activeImageGenerationJobs === 1 ? "" : "s"} to avoid provider rate limits.`,
+      );
+    }
+    const result = await runQueuedImageGeneration(() => {
+      setLookImageStatus(statusElement, "Generating with scanned face reference...");
+      if (cardState) {
+        cardState.image.dataset.renderState = "loading";
+        cardState.image.removeAttribute("aria-hidden");
+        setLookActionState(cardState.regenerateButton, "Rendering...", true);
+      }
+      setRunlogState(
+        idea.title,
+        "rendering",
+        productImageUrls.length
+          ? `Rendering now with the scanned face plus ${productImageUrls.length} product reference image${productImageUrls.length === 1 ? "" : "s"}.`
+          : "Rendering now with the scanned face and product text only.",
+      );
+      return generatedReferenceImage(prompt, {
+        width: 800,
+        height: 1000,
+        seed,
+        referenceImages,
+        allowTextFallback: false,
+        disallowLocalTemplate: true,
+      });
     });
     image.onload = () => {
+      const attemptSummary = formatImageAttempts(result.attempts);
+      if (cardState) {
+        cardState.image.dataset.renderState = "ready";
+        cardState.image.removeAttribute("aria-hidden");
+        setLookActionState(cardState.regenerateButton, "Regenerate", false);
+      }
       setLookImageStatus(
         statusElement,
         result.usedReferences
@@ -1323,10 +1984,17 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rows) {
             : "Generated from scanned face and product text."
           : "Generated from styling prompt.",
       );
+      setRunlogState(
+        idea.title,
+        "success",
+        result.usedReferences
+          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and product references" : ""}.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`
+          : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`,
+      );
     };
     image.onerror = () => {
-      image.src = idea.fallbackImage;
-      setLookImageStatus(statusElement, "Reference generation failed. Showing fallback look.");
+      setLookErrorState(cardState, "Image generation failed. The returned image could not be displayed.");
+      setRunlogState(idea.title, "error", "The provider returned an unreadable image for this look.");
     };
     image.src = result.imageUrl;
     return {
@@ -1335,14 +2003,31 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rows) {
       imageProvider: result.provider,
     };
   } catch (error) {
-    image.src = idea.fallbackImage;
-    setLookImageStatus(statusElement, "Reference generation failed. Showing fallback look.");
+    const attemptSummary = formatImageAttempts(error?.attempts || []);
+    setLookErrorState(
+      cardState,
+      `Image generation failed${error?.message ? `: ${error.message}` : ""}`,
+    );
+    setRunlogState(
+      idea.title,
+      "error",
+      `Reference generation failed${error?.message ? `: ${error.message}` : ""}${attemptSummary.failed.length ? ` Attempted providers: ${attemptSummary.failed.join(" | ")}` : ""}`,
+    );
     return {
       imageUsedReferences: false,
       productReferenceCount: productImageUrls.length,
-      imageProvider: "fallback",
+      imageProvider: "error",
     };
   }
+}
+
+function productReferencePriority(row) {
+  const label = `${row?.piece?.label || ""} ${row?.product?.productName || ""}`.toLowerCase();
+  if (/(dress|coat|jacket|blazer|shirt|top|blouse|knit|sweater|cardigan|trouser|pants|jean|skirt|heel|shoe|boot)/.test(label)) {
+    return 0;
+  }
+  if (/(bag|earring|necklace|ring|bracelet|watch|belt|scarf|jewell?ery)/.test(label)) return 2;
+  return 1;
 }
 
 function renderFemaleLookCard(run, idea, index) {
@@ -1356,14 +2041,15 @@ function renderFemaleLookCard(run, idea, index) {
   imageStatus.className = "generated-look-image-status";
   imageStatus.textContent = run.sample ? "Sample look image." : "Preparing AI try-on image...";
   image.onerror = () => {
-    if (image.dataset.fallbackApplied === "true") return;
-    image.dataset.fallbackApplied = "true";
-    image.src = idea.fallbackImage;
-    imageStatus.textContent = "Reference generation failed. Showing fallback look.";
+    image.removeAttribute("src");
+    image.dataset.renderState = "error";
+    image.setAttribute("aria-hidden", "true");
+    imageStatus.textContent = "Image generation failed for this look.";
   };
   if (run.sample) image.src = idea.fallbackImage;
   image.alt = `${idea.title} generated outfit for ${run.profile.name}`;
   image.loading = index === 0 ? "eager" : "lazy";
+  image.dataset.renderState = run.sample ? "sample" : "idle";
   media.append(image, imageStatus);
 
   const body = document.createElement("div");
@@ -1387,6 +2073,15 @@ function renderFemaleLookCard(run, idea, index) {
     pieceList.appendChild(chip);
   });
 
+  const imageActions = document.createElement("div");
+  imageActions.className = "generated-look-actions";
+  const regenerateButton = document.createElement("button");
+  regenerateButton.type = "button";
+  regenerateButton.className = "generated-look-regenerate";
+  regenerateButton.textContent = "Regenerate";
+  regenerateButton.disabled = run.sample;
+  imageActions.appendChild(regenerateButton);
+
   const rackTitle = document.createElement("h3");
   rackTitle.textContent = "Product links";
 
@@ -1398,30 +2093,49 @@ function renderFemaleLookCard(run, idea, index) {
   loading.textContent = "Finding matching pieces...";
   productList.appendChild(loading);
 
-  body.append(top, pieceList, rackTitle, productList);
+  body.append(top, pieceList, imageActions, rackTitle, productList);
   card.append(media, body);
-  return { card, productList, image, imageStatus };
+  return { card, productList, image, imageStatus, regenerateButton };
 }
 
 async function hydrateLookProducts(run, idea, productList) {
-  const rows = await Promise.all(
+  const countryCode = inferredCountryCode();
+  const maxProductsPerPiece = productOptionsPerPiece(countryCode);
+  setRunlogState(idea.title, "products", "Matching product links for this look.");
+  const pieceResults = await Promise.all(
     idea.pieces.map(async (piece) => {
-      const query = pieceSearchQuery(piece, run);
-      const lookup = await fetchMatchingClothes(query, run.profile.name);
-      const product = lookup.products[0] || fallbackProduct(piece, query);
-      return {
+      const query = pieceSearchQuery(piece, run, idea);
+      const lookup = await fetchMatchingClothes(query, run.profile.name, {
+        budget: run.selections?.budget,
+        countryCode,
+      });
+      const liveProducts = lookup.products.slice(0, maxProductsPerPiece);
+      const products = liveProducts.length
+        ? liveProducts
+        : [unavailableProduct(piece, { budgetRange: lookup.budgetRange })];
+      return products.map((product) => ({
         piece,
         product,
-        usedAffiliate: Boolean(lookup.products[0] && !product.isFallback),
+        usedAffiliate: Boolean(liveProducts.length && !product.isFallback),
         reason: lookup.reason,
-      };
+      }));
     }),
   );
+  const rows = pieceResults.flat();
 
   const affiliateCount = rows.filter((row) => row.usedAffiliate).length;
   const fallbackCount = rows.length - affiliateCount;
   const firstReason = rows.find((row) => row.reason)?.reason || "";
+  const budgetRange = rows.map((row) => row.product.budgetRange).find(Boolean) || "";
   const children = [];
+
+  if (budgetRange) {
+    children.push(createProductMeta(`Budget target for this region: ${budgetRange}`));
+  }
+
+  if (maxProductsPerPiece > 1) {
+    children.push(createProductMeta(`Showing up to ${maxProductsPerPiece} matched options per piece for Hong Kong.`));
+  }
 
   if (fallbackCount > 0) {
     children.push(
@@ -1433,7 +2147,36 @@ async function hydrateLookProducts(run, idea, productList) {
 
   children.push(...rows.map(({ product, piece }) => createProductRow(product, piece)));
   productList.replaceChildren(...children);
+  if (fallbackCount && affiliateCount) {
+    setRunlogState(
+      idea.title,
+      "products",
+      `Found ${affiliateCount} live product link${affiliateCount === 1 ? "" : "s"} with ${fallbackCount} fallback item${fallbackCount === 1 ? "" : "s"}.`,
+    );
+  } else if (fallbackCount) {
+    setRunlogState(idea.title, "products", "Product matching is using fallback items while image generation continues.");
+  } else {
+    setRunlogState(
+      idea.title,
+      "products",
+      `Found ${affiliateCount} live product link${affiliateCount === 1 ? "" : "s"} for this look.`,
+    );
+  }
   return { affiliateCount, fallbackCount, totalCount: rows.length, rows };
+}
+
+function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
+  if (!cardState?.regenerateButton) return;
+  const lookKey = femaleLookStateKey(run, idea, index);
+  femaleLookCardState.set(lookKey, { run, idea, index, ...cardState, productStatsPromise });
+
+  cardState.regenerateButton.addEventListener("click", async () => {
+    setLookActionState(cardState.regenerateButton, "Rendering...", true);
+    setLookImageStatus(cardState.imageStatus, "Retrying image generation...");
+    setRunlogState(idea.title, "rendering", "Retrying this look image.");
+    const productStats = await productStatsPromise.catch(() => ({ rows: [], affiliateCount: 0, fallbackCount: 0, totalCount: 0 }));
+    await hydrateLookImage(run, idea, index, cardState.image, cardState.imageStatus, productStats.rows, { cardState });
+  });
 }
 
 function initFemaleResultsPage() {
@@ -1442,14 +2185,24 @@ function initFemaleResultsPage() {
   const run = readFemaleStyleRun();
   renderResultsSummary(run);
   femaleLooksGrid.innerHTML = "";
+  femaleLookCardState.clear();
+  initialiseFemaleRunlog();
 
   const productJobs = femaleOutfitIdeas.map(async (idea, index) => {
-    const { card, productList, image, imageStatus } = renderFemaleLookCard(run, idea, index);
+    const { card, productList, image, imageStatus, regenerateButton } = renderFemaleLookCard(run, idea, index);
     femaleLooksGrid.appendChild(card);
-    const productStats = await hydrateLookProducts(run, idea, productList);
-    const imageStats = run.sample
-      ? { imageUsedReferences: false, productReferenceCount: 0, imageProvider: "sample" }
-      : await hydrateLookImage(run, idea, index, image, imageStatus, productStats.rows);
+    const productStatsPromise = hydrateLookProducts(run, idea, productList);
+    bindLookRegenerate(run, idea, index, { card, image, imageStatus, regenerateButton, productList }, productStatsPromise);
+    const imageStatsPromise = run.sample
+      ? (() => {
+          setRunlogState(idea.title, "sample", "Sample mode is showing the placeholder look without calling the image backend.");
+          return Promise.resolve({ imageUsedReferences: false, productReferenceCount: 0, imageProvider: "sample" });
+        })()
+      : hydrateLookImage(run, idea, index, image, imageStatus, productStatsPromise.then((stats) => stats.rows), {
+          cardState: { card, image, imageStatus, regenerateButton, productList },
+        });
+
+    const [productStats, imageStats] = await Promise.all([productStatsPromise, imageStatsPromise]);
     return { ...productStats, ...imageStats };
   });
 
@@ -1464,14 +2217,25 @@ function initFemaleResultsPage() {
       .filter((outcome) => outcome.status === "fulfilled")
       .map((outcome) => outcome.value);
     const affiliateCount = stats.reduce((sum, stat) => sum + stat.affiliateCount, 0);
-    const fallbackCount = stats.reduce((sum, stat) => sum + stat.fallbackCount, 0);
+    const productFallbackCount = stats.reduce((sum, stat) => sum + stat.fallbackCount, 0);
+    const imageFallbackCount = stats.filter((stat) => stat.imageProvider === "fallback" || stat.imageProvider === "error").length;
 
-    if (fallbackCount && affiliateCount) {
+    if (imageFallbackCount && (productFallbackCount || affiliateCount)) {
+      resultsStatus.textContent = RESULTS_COMBINED_FALLBACK_MESSAGE;
+      return;
+    }
+
+    if (imageFallbackCount) {
+      resultsStatus.textContent = RESULTS_IMAGE_FALLBACK_MESSAGE;
+      return;
+    }
+
+    if (productFallbackCount && affiliateCount) {
       resultsStatus.textContent = RESULTS_PARTIAL_FALLBACK_MESSAGE;
       return;
     }
 
-    if (fallbackCount) {
+    if (productFallbackCount) {
       const endpointConfig = getMatchingEndpointConfig();
       resultsStatus.textContent = shouldSkipApiEndpoint(endpointConfig.endpoint, endpointConfig.isExplicit)
         ? RESULTS_UNCONFIGURED_MESSAGE
@@ -1496,7 +2260,7 @@ async function generateStylePhoto() {
       if (generationStatus) generationStatus.textContent = "Saving face reference for AI try-on...";
       const faceReference = await faceReferenceDataUrl();
       saveFemaleStyleRun(latestFaceResult, faceReference);
-      if (generationStatus) generationStatus.textContent = "Opening four-look results page...";
+      if (generationStatus) generationStatus.textContent = "Opening five-look results page...";
       window.setTimeout(openFemaleResultsPage, 120);
     } catch (error) {
       if (generationStatus) generationStatus.textContent = "Could not save this scan. Try again.";
@@ -1507,17 +2271,47 @@ async function generateStylePhoto() {
 
   const prompt = buildStyleImagePrompt(latestFaceResult);
   if (generationStatus) generationStatus.textContent = IMAGE_GENERATING_MESSAGE;
-  if (generatePhotoButton) generatePhotoButton.disabled = true;
+  if (generatePhotoButton) {
+    generatePhotoButton.disabled = true;
+    generatePhotoButton.textContent = "Generating...";
+  }
   if (generatedStyleImage) {
-    generatedStyleImage.onload = () => {
-      if (generationStatus) generationStatus.textContent = IMAGE_SUCCESS_MESSAGE;
-      if (generatePhotoButton) generatePhotoButton.disabled = false;
-    };
-    generatedStyleImage.onerror = () => {
+    try {
+      const faceReference = await faceReferenceDataUrl();
+      if (!faceReference) throw new Error("Face reference image is unavailable.");
+
+      const result = await generatedReferenceImage(prompt, {
+        width: 1200,
+        height: 1200,
+        seed: hashText(`${latestFaceResult.profile?.name || ""}-${JSON.stringify(currentStyleSelections())}-${styleImageRenderNonce}`),
+        referenceImages: [faceReference],
+        allowTextFallback: false,
+      });
+
+      generatedStyleImage.onload = () => {
+        if (generationStatus) generationStatus.textContent = IMAGE_SUCCESS_MESSAGE;
+        if (generatePhotoButton) {
+          generatePhotoButton.disabled = false;
+          generatePhotoButton.textContent = "Regenerate five-look image";
+        }
+      };
+      generatedStyleImage.onerror = () => {
+        if (generationStatus) generationStatus.textContent = IMAGE_ERROR_MESSAGE;
+        if (generatePhotoButton) {
+          generatePhotoButton.disabled = false;
+          generatePhotoButton.textContent = "Regenerate five-look image";
+        }
+      };
+      generatedStyleImage.src = result.imageUrl;
+      styleImageRenderNonce += 1;
+    } catch (error) {
+      generatedStyleImage.removeAttribute("src");
       if (generationStatus) generationStatus.textContent = IMAGE_ERROR_MESSAGE;
-      if (generatePhotoButton) generatePhotoButton.disabled = false;
-    };
-    generatedStyleImage.src = generatedImageUrl(prompt);
+      if (generatePhotoButton) {
+        generatePhotoButton.disabled = false;
+        generatePhotoButton.textContent = "Generate five-look image";
+      }
+    }
   }
 }
 

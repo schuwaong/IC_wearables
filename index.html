@@ -74,10 +74,11 @@
       <section class="face-lab" id="face-lab" aria-labelledby="face-lab-title">
         <div class="face-lab-copy">
           <p class="eyebrow">Face colour studio</p>
-          <h2 id="face-lab-title">Upload a face, choose the occasion, then generate the look.</h2>
+          <h2 id="face-lab-title">Upload a face, then generate one locked five-look style image.</h2>
           <p>
-            The scan estimates the strongest seasonal palette, then turns the occasion and background into a ready-to-view
-            fashion image. Static hosting falls back to the browser analyser until the private API keys are connected.
+            The scan estimates the strongest seasonal palette, then renders one fashion image covering business formal, smart casual,
+            city casual, athleisure, and quiet luxury automatically. Static hosting falls back to the browser analyser until the private API
+            keys are connected.
           </p>
         </div>
 
@@ -113,35 +114,34 @@
             <div class="generation-panel-header">
               <div>
                 <span>AI outfit image</span>
-                <strong>Occasion and background</strong>
+                <strong>Five locked looks</strong>
               </div>
             </div>
+            <p class="generation-lock-note">
+              Each render includes all five fixed looks in one image. Use the background set to change the scene world, then
+              regenerate when you want another version.
+            </p>
             <div class="generation-controls">
               <label>
-                Occasion
-                <select id="styleOccasionSelect">
-                  <option value="business">Business</option>
-                  <option value="casual">Casual</option>
-                  <option value="date night">Date night</option>
-                  <option value="travel">Travel</option>
-                  <option value="event">Event</option>
-                </select>
-              </label>
-              <label>
-                Background
+                Background set
                 <select id="styleBackgroundSelect">
-                  <option value="premium boutique studio">Boutique studio</option>
-                  <option value="city street at golden hour">City street</option>
-                  <option value="modern office lobby">Office lobby</option>
-                  <option value="evening lounge">Evening lounge</option>
-                  <option value="minimal apartment wardrobe">Wardrobe room</option>
+                  <option value="metropolitan">Metropolitan editorial</option>
+                  <option value="hotel">Luxury hotel circuit</option>
+                  <option value="studio">Minimal studio</option>
                 </select>
               </label>
             </div>
-            <button class="generate-photo-button" id="generatePhotoButton" type="button">Generate photo</button>
-            <p id="generationStatus">Scan a face first, then generate the look.</p>
+            <div class="generation-fixed-scenes" aria-label="Locked scenes included in the generated image">
+              <span>Business formal</span>
+              <span>Smart casual</span>
+              <span>City casual</span>
+              <span>Athleisure</span>
+              <span>Quiet luxury</span>
+            </div>
+            <button class="generate-photo-button" id="generatePhotoButton" type="button">Generate five-look image</button>
+            <p id="generationStatus">Scan a face first, then generate the five-look image.</p>
             <div class="generated-photo-frame">
-              <img id="generatedStyleImage" alt="Generated IC_wearables outfit" />
+              <img id="generatedStyleImage" alt="Generated IC_wearables five-look outfit image" />
             </div>
           </div>
         </div>
@@ -175,7 +175,8 @@
           <p class="eyebrow">Scene 01</p>
           <h2>Scan the face, frame, and intent.</h2>
           <p>
-            The profile starts with a clear men's read: skin undertone, visual contrast, face shape, shoulders, waist, and the occasion.
+            The profile starts with a clear men's read: skin undertone, visual contrast, face shape, shoulders, waist, and
+            styling direction.
           </p>
           <ul class="feature-list" aria-label="Scan benefits">
             <li>Private front-photo profile</li>
@@ -353,7 +354,7 @@
           <p class="eyebrow">Face scan</p>
           <h2 id="access-title">Start with the scan, then generate the outfit.</h2>
           <p>
-            Upload or scan a face, choose the occasion and background, then generate the style photo and shopping rack.
+            Upload or scan a face, then generate one locked five-look style photo and shopping direction.
           </p>
         </div>
 
