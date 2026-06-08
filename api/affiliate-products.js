@@ -1572,7 +1572,22 @@ function affiliateLookupFailed(message, metadata = {}) {
   return error;
 }
 
-async function processRequest(body, requestMeta = {}) {
+function affiliateErrorDetails(label, error) {
+  return [
+    `${label}: ${error.message}`,
+    ...(Array.isArray(error.details) ? error.details.map((detail) => `${label}/${detail}`) : []),
+  ];
+}
+
+function maybeAttachDiagnostics(response, details, requestMeta = {}) {
+  if (!requestMeta.includeDiagnostics) return response;
+  return {
+    ...response,
+    details: [...new Set(details)].slice(0, 40),
+  };
+}
+
+export async function processRequest(body, requestMeta = {}) {
   const { searchQuery, colorSeason, budget, requestedCountryCode, allowSearchFallback, requireProductPages } =
     validatePayload(body);
   const countryCode = requestedCountryCode || detectCountryCode(requestMeta);
@@ -1587,7 +1602,7 @@ async function processRequest(body, requestMeta = {}) {
       market,
     );
   } catch (marketError) {
-    errors.push(`${market.countryCode}: ${marketError.message}`);
+    errors.push(...affiliateErrorDetails(market.countryCode, marketError));
     console.warn(
       `[affiliate] ${market.countryCode} lookup failed; trying global US fallback: ${marketError.message}${
         marketError.details?.length ? ` | ${marketError.details.join(" | ")}` : ""
@@ -1603,13 +1618,17 @@ async function processRequest(body, requestMeta = {}) {
       market,
     );
   } catch (globalError) {
-    errors.push(`GLOBAL: ${globalError.message}`);
+    errors.push(...affiliateErrorDetails("GLOBAL", globalError));
     if (ALLOW_GENERIC_SEARCH_FALLBACK && allowSearchFallback) {
       console.warn(`[affiliate] Global affiliate lookup failed; returning search fallback: ${globalError.message}`);
-      return affiliateResponse(
-        buildSearchFallbackProducts(searchQuery, colorSeason, market, budgetRange, fallbackMarket),
-        budgetRange,
-        market,
+      return maybeAttachDiagnostics(
+        affiliateResponse(
+          buildSearchFallbackProducts(searchQuery, colorSeason, market, budgetRange, fallbackMarket),
+          budgetRange,
+          market,
+        ),
+        errors,
+        requestMeta,
       );
     }
 
@@ -1628,6 +1647,7 @@ async function processRequest(body, requestMeta = {}) {
         max: budgetRange.max,
         countryCode: market.countryCode,
       },
+      details: errors,
     });
   }
 }

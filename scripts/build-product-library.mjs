@@ -1,7 +1,19 @@
 import fs from "node:fs/promises";
 import crypto from "node:crypto";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(SCRIPT_DIR, "..");
+const ENV_FILES = [
+  process.env.PRODUCT_LIBRARY_ENV_FILE,
+  path.join(PROJECT_ROOT, ".env.local"),
+  path.join(PROJECT_ROOT, ".env"),
+].filter(Boolean);
+
+await loadEnvFiles(ENV_FILES);
+
+const USE_LOCAL_AFFILIATE_BACKEND = process.env.PRODUCT_LIBRARY_USE_LOCAL_BACKEND !== "false";
 const BACKEND_BASE_URL = (process.env.IC_BACKEND_BASE_URL || "https://ic-wearables.vercel.app").replace(/\/$/, "");
 const COUNTRY_CODE = (process.env.IC_COUNTRY_CODE || "HK").trim().toUpperCase();
 const OUTPUT_PATH = process.env.PRODUCT_LIBRARY_OUTPUT || "data/product-library.json";
@@ -24,6 +36,12 @@ const IMAGE_CONTENT_TYPES = new Map([
   ["image/webp", "webp"],
   ["image/avif", "avif"],
 ]);
+const localAffiliateBackend = USE_LOCAL_AFFILIATE_BACKEND
+  ? await import("../api/affiliate-products.js").catch((error) => {
+      console.warn(`[product-library] Local affiliate backend unavailable; using HTTP backend: ${error.message}`);
+      return null;
+    })
+  : null;
 
 const seasons = [
   { name: "Light Spring", palette: ["#f8e7b8", "#f5bc6b", "#ff9d89", "#91d2bd", "#83abd7", "#fff4dc"] },
@@ -98,6 +116,39 @@ function slug(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+async function loadEnvFiles(filePaths) {
+  for (const filePath of filePaths) {
+    let content = "";
+    try {
+      content = await fs.readFile(filePath, "utf8");
+    } catch (error) {
+      if (error?.code !== "ENOENT") {
+        console.warn(`[product-library] Could not read env file ${filePath}: ${error.message}`);
+      }
+      continue;
+    }
+
+    for (const line of content.split(/\r?\n/)) {
+      const match = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+      if (!match) continue;
+      const [, key, rawValue] = match;
+      if (Object.prototype.hasOwnProperty.call(process.env, key)) continue;
+      process.env[key] = parseEnvValue(rawValue);
+    }
+  }
+}
+
+function parseEnvValue(value) {
+  const trimmed = String(value || "").trim();
+  const quote = trimmed[0];
+  if ((quote === '"' || quote === "'") && trimmed.endsWith(quote)) {
+    const inner = trimmed.slice(1, -1);
+    return quote === '"' ? inner.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/\\\\/g, "\\") : inner;
+  }
+  const commentIndex = trimmed.search(/\s+#/);
+  return commentIndex === -1 ? trimmed : trimmed.slice(0, commentIndex).trim();
 }
 
 function portablePath(value) {
@@ -245,6 +296,31 @@ async function cacheProductImage(product) {
 
 async function fetchProducts({ season, look, piece }) {
   const searchQuery = [piece.search, season.name, look.occasion].join(" ");
+  if (localAffiliateBackend?.processRequest) {
+    try {
+      const payload = await localAffiliateBackend.processRequest({
+        searchQuery,
+        colorSeason: season.name,
+        countryCode: COUNTRY_CODE,
+        allowSearchFallback: ALLOW_SEARCH_FALLBACK,
+        requireProductPages: REQUIRE_PRODUCT_PAGES,
+      }, { includeDiagnostics: true });
+      return {
+        products: Array.isArray(payload.products) ? payload.products.slice(0, MAX_PRODUCTS_PER_PIECE) : [],
+        error: "",
+        budget: payload.budget || null,
+        details: Array.isArray(payload?.details) ? payload.details : [],
+      };
+    } catch (error) {
+      return {
+        products: [],
+        error: error?.details?.length ? `${error.message} | ${error.details.join(" | ")}` : error.message,
+        budget: error?.budget || null,
+        details: Array.isArray(error?.details) ? error.details : [],
+      };
+    }
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let response;
@@ -277,12 +353,14 @@ async function fetchProducts({ season, look, piece }) {
       products: [],
       error: payload?.error || `lookup failed with ${response.status}`,
       budget: payload?.budget || null,
+      details: Array.isArray(payload?.details) ? payload.details : [],
     };
   }
   return {
     products: Array.isArray(payload.products) ? payload.products.slice(0, MAX_PRODUCTS_PER_PIECE) : [],
     error: "",
     budget: payload.budget || null,
+    details: Array.isArray(payload?.details) ? payload.details : [],
   };
 }
 
@@ -358,6 +436,7 @@ async function main() {
   const generatedAt = new Date().toISOString();
   const products = [];
   const failures = [];
+  const affiliateDiagnostics = [];
   let lookupCount = 0;
 
   for (const season of seasons) {
@@ -367,6 +446,9 @@ async function main() {
         lookupCount += 1;
         const query = [piece.search, season.name, look.occasion].join(" ");
         const result = await fetchProducts({ season, look, piece });
+        for (const detail of result.details || []) {
+          affiliateDiagnostics.push(detail);
+        }
         if (result.error) {
           failures.push({
             countryCode: COUNTRY_CODE,
@@ -375,6 +457,7 @@ async function main() {
             piece: piece.label,
             query,
             error: result.error,
+            details: result.details || [],
           });
         }
         result.products.forEach((product, index) => {
@@ -397,6 +480,7 @@ async function main() {
     allowSearchFallback: ALLOW_SEARCH_FALLBACK,
     maxProductsPerPiece: MAX_PRODUCTS_PER_PIECE,
     maxLookups: MAX_LOOKUPS,
+    lookupMode: localAffiliateBackend?.processRequest ? "local-backend" : "http-backend",
     summary: {
       seasons: seasons.length,
       looks: looks.length,
@@ -408,6 +492,7 @@ async function main() {
       imageCacheFailures: imageCache.failed,
     },
     imageCache,
+    affiliateDiagnostics: [...new Set(affiliateDiagnostics)].slice(0, 40),
     usageNote:
       "This library stores affiliate links, remote product image URLs, and optional local image cache paths. Download and commit product photos only when the affiliate programme/feed terms allow local hosting.",
     products,
@@ -417,6 +502,10 @@ async function main() {
   await fs.mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
   await fs.writeFile(OUTPUT_PATH, `${JSON.stringify(library, null, 2)}\n`);
   console.log(JSON.stringify(library.summary, null, 2));
+  if (library.affiliateDiagnostics.length) {
+    console.log("Affiliate diagnostics:");
+    for (const detail of library.affiliateDiagnostics.slice(0, 8)) console.log(`- ${detail}`);
+  }
   console.log(`Wrote ${OUTPUT_PATH}`);
 }
 
