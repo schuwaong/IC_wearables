@@ -244,6 +244,32 @@ PRODUCT_LIBRARY_CACHE_FALLBACK_IMAGES=false
 Keep `PRODUCT_LIBRARY_CACHE_FALLBACK_IMAGES=false` unless the fallback provider
 is returning real product image URLs that you are allowed to cache.
 
+Build outfit-combination reference boards from the library:
+
+```powershell
+node scripts/build-product-combinations.mjs
+```
+
+This writes:
+
+```text
+assets/outfit-combinations/manifest.json
+assets/outfit-combinations/families/{spring|summer|autumn|winter}__{look}.png
+```
+
+The female image flow can use these boards as Image 2:
+
+```text
+Image 1 = scanned face
+Image 2 = outfit-combination board
+```
+
+The board is a product/garment reference only. The prompt tells the image model
+not to copy typography, catalogue-model identity, face, hair, body, expression,
+or pose from the board. When exact affiliate product images are available and
+cached, the board builder will include them automatically; until then it creates
+palette/product placeholder boards from the JSON rows.
+
 ## Image Generation Backend
 
 The outfit images can be generated through:

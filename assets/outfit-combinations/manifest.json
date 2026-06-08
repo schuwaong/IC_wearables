@@ -1,0 +1,1334 @@
+{
+  "generatedAt": "2026-06-08T20:35:34.920Z",
+  "sourceLibrary": "assets/product-library.json",
+  "outputDir": "assets/outfit-combinations",
+  "summary": {
+    "combinations": 20,
+    "families": 4,
+    "exactProductCombinations": 0,
+    "combinationsWithProductImages": 0
+  },
+  "usageNote": "Send Image 1 as the scanned face and Image 2 as the outfit combination board. The board is a garment/product reference only and must not change face, hair, expression, or identity.",
+  "combinations": [
+    {
+      "id": "family__spring__business-formal",
+      "mode": "family",
+      "seasonFamily": "Spring",
+      "season": "Spring",
+      "palette": [
+        "#ffd166",
+        "#ff8c69",
+        "#36b37e",
+        "#41c7c7",
+        "#fff2c2",
+        "#d98c28"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer Light Spring business formal Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+blazer+Light+Spring+business+formal+Light+Spring&sid=icw-hk-light-spring-women-tailored-blazer-light-spring-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women silk satin blouse Light Spring business formal Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+silk+satin+blouse+Light+Spring+business+formal+Light+Spring&sid=icw-hk-light-spring-women-silk-satin-blouse-light-spring-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "women tailored trousers pencil skirt Light Spring business formal Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+trousers+pencil+skirt+Light+Spring+business+formal+Light+Spring&sid=icw-hk-light-spring-women-tailored-trousers-pencil-skirt-light-spring-business-f",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "women leather pumps loafers Light Spring business formal Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+pumps+loafers+Light+Spring+business+formal+Light+Spring&sid=icw-hk-light-spring-women-leather-pumps-loafers-light-spring-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/spring__business-formal.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__spring__smart-casual",
+      "mode": "family",
+      "seasonFamily": "Spring",
+      "season": "Spring",
+      "palette": [
+        "#ffd166",
+        "#ff8c69",
+        "#36b37e",
+        "#41c7c7",
+        "#fff2c2",
+        "#d98c28"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer Light Spring smart casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+relaxed+blazer+Light+Spring+smart+casual+Light+Spring&sid=icw-hk-light-spring-women-relaxed-blazer-light-spring-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Light Spring smart casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fine+knit+top+Light+Spring+smart+casual+Light+Spring&sid=icw-hk-light-spring-women-fine-knit-top-light-spring-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "women tailored jeans trousers Light Spring smart casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+jeans+trousers+Light+Spring+smart+casual+Light+Spring&sid=icw-hk-light-spring-women-tailored-jeans-trousers-light-spring-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "women loafers slingback shoes Light Spring smart casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+loafers+slingback+shoes+Light+Spring+smart+casual+Light+Spring&sid=icw-hk-light-spring-women-loafers-slingback-shoes-light-spring-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/spring__smart-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__spring__city-casual",
+      "mode": "family",
+      "seasonFamily": "Spring",
+      "season": "Spring",
+      "palette": [
+        "#ffd166",
+        "#ff8c69",
+        "#36b37e",
+        "#41c7c7",
+        "#fff2c2",
+        "#d98c28"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Light Spring city casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cropped+jacket+Light+Spring+city+casual+Light+Spring&sid=icw-hk-light-spring-women-cropped-jacket-light-spring-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt fine knit Light Spring city casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+t+shirt+fine+knit+Light+Spring+city+casual+Light+Spring&sid=icw-hk-light-spring-women-premium-t-shirt-fine-knit-light-spring-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "women straight leg jeans trousers Light Spring city casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+straight+leg+jeans+trousers+Light+Spring+city+casual+Light+Spring&sid=icw-hk-light-spring-women-straight-leg-jeans-trousers-light-spring-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "women minimal leather sneakers Light Spring city casual Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+minimal+leather+sneakers+Light+Spring+city+casual+Light+Spring&sid=icw-hk-light-spring-women-minimal-leather-sneakers-light-spring-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/spring__city-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__spring__athleisure",
+      "mode": "family",
+      "seasonFamily": "Spring",
+      "season": "Spring",
+      "palette": [
+        "#ffd166",
+        "#ff8c69",
+        "#36b37e",
+        "#41c7c7",
+        "#fff2c2",
+        "#d98c28"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women technical jacket Light Spring athleisure Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+technical+jacket+Light+Spring+athleisure+Light+Spring&sid=icw-hk-light-spring-women-technical-jacket-light-spring-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Light Spring athleisure Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+performance+tank+t+shirt+Light+Spring+athleisure+Light+Spring&sid=icw-hk-light-spring-women-performance-tank-t-shirt-light-spring-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "women premium leggings joggers Light Spring athleisure Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+leggings+joggers+Light+Spring+athleisure+Light+Spring&sid=icw-hk-light-spring-women-premium-leggings-joggers-light-spring-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "women premium training sneakers Light Spring athleisure Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+training+sneakers+Light+Spring+athleisure+Light+Spring&sid=icw-hk-light-spring-women-premium-training-sneakers-light-spring-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/spring__athleisure.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__spring__quiet-luxury",
+      "mode": "family",
+      "seasonFamily": "Spring",
+      "season": "Spring",
+      "palette": [
+        "#ffd166",
+        "#ff8c69",
+        "#36b37e",
+        "#41c7c7",
+        "#fff2c2",
+        "#d98c28"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women cashmere knit sweater Light Spring quiet luxury Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cashmere+knit+sweater+Light+Spring+quiet+luxury+Light+Spring&sid=icw-hk-light-spring-women-cashmere-knit-sweater-light-spring-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Light Spring quiet luxury Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+wool+coat+Light+Spring+quiet+luxury+Light+Spring&sid=icw-hk-light-spring-women-wool-coat-light-spring-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "women fluid wool trousers Light Spring quiet luxury Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fluid+wool+trousers+Light+Spring+quiet+luxury+Light+Spring&sid=icw-hk-light-spring-women-fluid-wool-trousers-light-spring-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "women leather tote loafers Light Spring quiet luxury Light Spring search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+tote+loafers+Light+Spring+quiet+luxury+Light+Spring&sid=icw-hk-light-spring-women-leather-tote-loafers-light-spring-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/spring__quiet-luxury.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__summer__business-formal",
+      "mode": "family",
+      "seasonFamily": "Summer",
+      "season": "Summer",
+      "palette": [
+        "#7f95ad",
+        "#c9a7b7",
+        "#6b778d",
+        "#e6e9ed",
+        "#8d6f8b",
+        "#b7c7d9"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer Light Summer business formal Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+blazer+Light+Summer+business+formal+Light+Summer&sid=icw-hk-light-summer-women-tailored-blazer-light-summer-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women silk satin blouse Light Summer business formal Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+silk+satin+blouse+Light+Summer+business+formal+Light+Summer&sid=icw-hk-light-summer-women-silk-satin-blouse-light-summer-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "women tailored trousers pencil skirt Light Summer business formal Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+trousers+pencil+skirt+Light+Summer+business+formal+Light+Summer&sid=icw-hk-light-summer-women-tailored-trousers-pencil-skirt-light-summer-business-f",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "women leather pumps loafers Light Summer business formal Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+pumps+loafers+Light+Summer+business+formal+Light+Summer&sid=icw-hk-light-summer-women-leather-pumps-loafers-light-summer-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/summer__business-formal.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__summer__smart-casual",
+      "mode": "family",
+      "seasonFamily": "Summer",
+      "season": "Summer",
+      "palette": [
+        "#7f95ad",
+        "#c9a7b7",
+        "#6b778d",
+        "#e6e9ed",
+        "#8d6f8b",
+        "#b7c7d9"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer Light Summer smart casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+relaxed+blazer+Light+Summer+smart+casual+Light+Summer&sid=icw-hk-light-summer-women-relaxed-blazer-light-summer-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Light Summer smart casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fine+knit+top+Light+Summer+smart+casual+Light+Summer&sid=icw-hk-light-summer-women-fine-knit-top-light-summer-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "women tailored jeans trousers Light Summer smart casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+jeans+trousers+Light+Summer+smart+casual+Light+Summer&sid=icw-hk-light-summer-women-tailored-jeans-trousers-light-summer-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "women loafers slingback shoes Light Summer smart casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+loafers+slingback+shoes+Light+Summer+smart+casual+Light+Summer&sid=icw-hk-light-summer-women-loafers-slingback-shoes-light-summer-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/summer__smart-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__summer__city-casual",
+      "mode": "family",
+      "seasonFamily": "Summer",
+      "season": "Summer",
+      "palette": [
+        "#7f95ad",
+        "#c9a7b7",
+        "#6b778d",
+        "#e6e9ed",
+        "#8d6f8b",
+        "#b7c7d9"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Light Summer city casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cropped+jacket+Light+Summer+city+casual+Light+Summer&sid=icw-hk-light-summer-women-cropped-jacket-light-summer-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt fine knit Light Summer city casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+t+shirt+fine+knit+Light+Summer+city+casual+Light+Summer&sid=icw-hk-light-summer-women-premium-t-shirt-fine-knit-light-summer-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "women straight leg jeans trousers Light Summer city casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+straight+leg+jeans+trousers+Light+Summer+city+casual+Light+Summer&sid=icw-hk-light-summer-women-straight-leg-jeans-trousers-light-summer-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "women minimal leather sneakers Light Summer city casual Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+minimal+leather+sneakers+Light+Summer+city+casual+Light+Summer&sid=icw-hk-light-summer-women-minimal-leather-sneakers-light-summer-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/summer__city-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__summer__athleisure",
+      "mode": "family",
+      "seasonFamily": "Summer",
+      "season": "Summer",
+      "palette": [
+        "#7f95ad",
+        "#c9a7b7",
+        "#6b778d",
+        "#e6e9ed",
+        "#8d6f8b",
+        "#b7c7d9"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women technical jacket Light Summer athleisure Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+technical+jacket+Light+Summer+athleisure+Light+Summer&sid=icw-hk-light-summer-women-technical-jacket-light-summer-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Light Summer athleisure Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+performance+tank+t+shirt+Light+Summer+athleisure+Light+Summer&sid=icw-hk-light-summer-women-performance-tank-t-shirt-light-summer-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "women premium leggings joggers Light Summer athleisure Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+leggings+joggers+Light+Summer+athleisure+Light+Summer&sid=icw-hk-light-summer-women-premium-leggings-joggers-light-summer-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "women premium training sneakers Light Summer athleisure Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+training+sneakers+Light+Summer+athleisure+Light+Summer&sid=icw-hk-light-summer-women-premium-training-sneakers-light-summer-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/summer__athleisure.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__summer__quiet-luxury",
+      "mode": "family",
+      "seasonFamily": "Summer",
+      "season": "Summer",
+      "palette": [
+        "#7f95ad",
+        "#c9a7b7",
+        "#6b778d",
+        "#e6e9ed",
+        "#8d6f8b",
+        "#b7c7d9"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women cashmere knit sweater Light Summer quiet luxury Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cashmere+knit+sweater+Light+Summer+quiet+luxury+Light+Summer&sid=icw-hk-light-summer-women-cashmere-knit-sweater-light-summer-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Light Summer quiet luxury Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+wool+coat+Light+Summer+quiet+luxury+Light+Summer&sid=icw-hk-light-summer-women-wool-coat-light-summer-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "women fluid wool trousers Light Summer quiet luxury Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fluid+wool+trousers+Light+Summer+quiet+luxury+Light+Summer&sid=icw-hk-light-summer-women-fluid-wool-trousers-light-summer-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "women leather tote loafers Light Summer quiet luxury Light Summer search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+tote+loafers+Light+Summer+quiet+luxury+Light+Summer&sid=icw-hk-light-summer-women-leather-tote-loafers-light-summer-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/summer__quiet-luxury.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__autumn__business-formal",
+      "mode": "family",
+      "seasonFamily": "Autumn",
+      "season": "Autumn",
+      "palette": [
+        "#8b5e3c",
+        "#c28057",
+        "#6f7557",
+        "#d6b073",
+        "#f1dcc0",
+        "#154f5b"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer Soft Autumn business formal Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+blazer+Soft+Autumn+business+formal+Soft+Autumn&sid=icw-hk-soft-autumn-women-tailored-blazer-soft-autumn-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women silk satin blouse Soft Autumn business formal Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+silk+satin+blouse+Soft+Autumn+business+formal+Soft+Autumn&sid=icw-hk-soft-autumn-women-silk-satin-blouse-soft-autumn-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "women tailored trousers pencil skirt Soft Autumn business formal Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+trousers+pencil+skirt+Soft+Autumn+business+formal+Soft+Autumn&sid=icw-hk-soft-autumn-women-tailored-trousers-pencil-skirt-soft-autumn-business-for",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "women leather pumps loafers Soft Autumn business formal Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+pumps+loafers+Soft+Autumn+business+formal+Soft+Autumn&sid=icw-hk-soft-autumn-women-leather-pumps-loafers-soft-autumn-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/autumn__business-formal.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__autumn__smart-casual",
+      "mode": "family",
+      "seasonFamily": "Autumn",
+      "season": "Autumn",
+      "palette": [
+        "#8b5e3c",
+        "#c28057",
+        "#6f7557",
+        "#d6b073",
+        "#f1dcc0",
+        "#154f5b"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer Soft Autumn smart casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+relaxed+blazer+Soft+Autumn+smart+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-relaxed-blazer-soft-autumn-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Soft Autumn smart casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fine+knit+top+Soft+Autumn+smart+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-fine-knit-top-soft-autumn-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "women tailored jeans trousers Soft Autumn smart casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+jeans+trousers+Soft+Autumn+smart+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-tailored-jeans-trousers-soft-autumn-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "women loafers slingback shoes Soft Autumn smart casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+loafers+slingback+shoes+Soft+Autumn+smart+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-loafers-slingback-shoes-soft-autumn-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/autumn__smart-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__autumn__city-casual",
+      "mode": "family",
+      "seasonFamily": "Autumn",
+      "season": "Autumn",
+      "palette": [
+        "#8b5e3c",
+        "#c28057",
+        "#6f7557",
+        "#d6b073",
+        "#f1dcc0",
+        "#154f5b"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Soft Autumn city casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cropped+jacket+Soft+Autumn+city+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-cropped-jacket-soft-autumn-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt fine knit Soft Autumn city casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+t+shirt+fine+knit+Soft+Autumn+city+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-premium-t-shirt-fine-knit-soft-autumn-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "women straight leg jeans trousers Soft Autumn city casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+straight+leg+jeans+trousers+Soft+Autumn+city+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-straight-leg-jeans-trousers-soft-autumn-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "women minimal leather sneakers Soft Autumn city casual Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+minimal+leather+sneakers+Soft+Autumn+city+casual+Soft+Autumn&sid=icw-hk-soft-autumn-women-minimal-leather-sneakers-soft-autumn-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/autumn__city-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__autumn__athleisure",
+      "mode": "family",
+      "seasonFamily": "Autumn",
+      "season": "Autumn",
+      "palette": [
+        "#8b5e3c",
+        "#c28057",
+        "#6f7557",
+        "#d6b073",
+        "#f1dcc0",
+        "#154f5b"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women technical jacket Soft Autumn athleisure Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+technical+jacket+Soft+Autumn+athleisure+Soft+Autumn&sid=icw-hk-soft-autumn-women-technical-jacket-soft-autumn-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Soft Autumn athleisure Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+performance+tank+t+shirt+Soft+Autumn+athleisure+Soft+Autumn&sid=icw-hk-soft-autumn-women-performance-tank-t-shirt-soft-autumn-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "women premium leggings joggers Soft Autumn athleisure Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+leggings+joggers+Soft+Autumn+athleisure+Soft+Autumn&sid=icw-hk-soft-autumn-women-premium-leggings-joggers-soft-autumn-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "women premium training sneakers Soft Autumn athleisure Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+training+sneakers+Soft+Autumn+athleisure+Soft+Autumn&sid=icw-hk-soft-autumn-women-premium-training-sneakers-soft-autumn-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/autumn__athleisure.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__autumn__quiet-luxury",
+      "mode": "family",
+      "seasonFamily": "Autumn",
+      "season": "Autumn",
+      "palette": [
+        "#8b5e3c",
+        "#c28057",
+        "#6f7557",
+        "#d6b073",
+        "#f1dcc0",
+        "#154f5b"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women cashmere knit sweater Soft Autumn quiet luxury Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cashmere+knit+sweater+Soft+Autumn+quiet+luxury+Soft+Autumn&sid=icw-hk-soft-autumn-women-cashmere-knit-sweater-soft-autumn-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Soft Autumn quiet luxury Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+wool+coat+Soft+Autumn+quiet+luxury+Soft+Autumn&sid=icw-hk-soft-autumn-women-wool-coat-soft-autumn-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "women fluid wool trousers Soft Autumn quiet luxury Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fluid+wool+trousers+Soft+Autumn+quiet+luxury+Soft+Autumn&sid=icw-hk-soft-autumn-women-fluid-wool-trousers-soft-autumn-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "women leather tote loafers Soft Autumn quiet luxury Soft Autumn search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+tote+loafers+Soft+Autumn+quiet+luxury+Soft+Autumn&sid=icw-hk-soft-autumn-women-leather-tote-loafers-soft-autumn-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/autumn__quiet-luxury.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__winter__business-formal",
+      "mode": "family",
+      "seasonFamily": "Winter",
+      "season": "Winter",
+      "palette": [
+        "#050505",
+        "#ffffff",
+        "#0b5fff",
+        "#c1121f",
+        "#008f7a",
+        "#7b2cbf"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer Dark Winter business formal Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+blazer+Dark+Winter+business+formal+Dark+Winter&sid=icw-hk-dark-winter-women-tailored-blazer-dark-winter-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women silk satin blouse Dark Winter business formal Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+silk+satin+blouse+Dark+Winter+business+formal+Dark+Winter&sid=icw-hk-dark-winter-women-silk-satin-blouse-dark-winter-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "women tailored trousers pencil skirt Dark Winter business formal Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+trousers+pencil+skirt+Dark+Winter+business+formal+Dark+Winter&sid=icw-hk-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "women leather pumps loafers Dark Winter business formal Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+pumps+loafers+Dark+Winter+business+formal+Dark+Winter&sid=icw-hk-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/winter__business-formal.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__winter__smart-casual",
+      "mode": "family",
+      "seasonFamily": "Winter",
+      "season": "Winter",
+      "palette": [
+        "#050505",
+        "#ffffff",
+        "#0b5fff",
+        "#c1121f",
+        "#008f7a",
+        "#7b2cbf"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer Dark Winter smart casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+relaxed+blazer+Dark+Winter+smart+casual+Dark+Winter&sid=icw-hk-dark-winter-women-relaxed-blazer-dark-winter-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Dark Winter smart casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fine+knit+top+Dark+Winter+smart+casual+Dark+Winter&sid=icw-hk-dark-winter-women-fine-knit-top-dark-winter-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "women tailored jeans trousers Dark Winter smart casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+tailored+jeans+trousers+Dark+Winter+smart+casual+Dark+Winter&sid=icw-hk-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "women loafers slingback shoes Dark Winter smart casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+loafers+slingback+shoes+Dark+Winter+smart+casual+Dark+Winter&sid=icw-hk-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/winter__smart-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__winter__city-casual",
+      "mode": "family",
+      "seasonFamily": "Winter",
+      "season": "Winter",
+      "palette": [
+        "#050505",
+        "#ffffff",
+        "#0b5fff",
+        "#c1121f",
+        "#008f7a",
+        "#7b2cbf"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Dark Winter city casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cropped+jacket+Dark+Winter+city+casual+Dark+Winter&sid=icw-hk-dark-winter-women-cropped-jacket-dark-winter-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt fine knit Dark Winter city casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+t+shirt+fine+knit+Dark+Winter+city+casual+Dark+Winter&sid=icw-hk-dark-winter-women-premium-t-shirt-fine-knit-dark-winter-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "women straight leg jeans trousers Dark Winter city casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+straight+leg+jeans+trousers+Dark+Winter+city+casual+Dark+Winter&sid=icw-hk-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "women minimal leather sneakers Dark Winter city casual Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+minimal+leather+sneakers+Dark+Winter+city+casual+Dark+Winter&sid=icw-hk-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/winter__city-casual.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__winter__athleisure",
+      "mode": "family",
+      "seasonFamily": "Winter",
+      "season": "Winter",
+      "palette": [
+        "#050505",
+        "#ffffff",
+        "#0b5fff",
+        "#c1121f",
+        "#008f7a",
+        "#7b2cbf"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women technical jacket Dark Winter athleisure Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+technical+jacket+Dark+Winter+athleisure+Dark+Winter&sid=icw-hk-dark-winter-women-technical-jacket-dark-winter-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Dark Winter athleisure Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+performance+tank+t+shirt+Dark+Winter+athleisure+Dark+Winter&sid=icw-hk-dark-winter-women-performance-tank-t-shirt-dark-winter-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "women premium leggings joggers Dark Winter athleisure Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+leggings+joggers+Dark+Winter+athleisure+Dark+Winter&sid=icw-hk-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "women premium training sneakers Dark Winter athleisure Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+premium+training+sneakers+Dark+Winter+athleisure+Dark+Winter&sid=icw-hk-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/winter__athleisure.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    },
+    {
+      "id": "family__winter__quiet-luxury",
+      "mode": "family",
+      "seasonFamily": "Winter",
+      "season": "Winter",
+      "palette": [
+        "#050505",
+        "#ffffff",
+        "#0b5fff",
+        "#c1121f",
+        "#008f7a",
+        "#7b2cbf"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women cashmere knit sweater Dark Winter quiet luxury Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+cashmere+knit+sweater+Dark+Winter+quiet+luxury+Dark+Winter&sid=icw-hk-dark-winter-women-cashmere-knit-sweater-dark-winter-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Dark Winter quiet luxury Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+wool+coat+Dark+Winter+quiet+luxury+Dark+Winter&sid=icw-hk-dark-winter-women-wool-coat-dark-winter-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "women fluid wool trousers Dark Winter quiet luxury Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+fluid+wool+trousers+Dark+Winter+quiet+luxury+Dark+Winter&sid=icw-hk-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "women leather tote loafers Dark Winter quiet luxury Dark Winter search results",
+          "brand": "Zalora HK",
+          "price": "HKD price on site",
+          "affiliateLink": "https://www.zalora.com.hk/catalog/?q=women+leather+tote+loafers+Dark+Winter+quiet+luxury+Dark+Winter&sid=icw-hk-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "generic-search"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/families/winter__quiet-luxury.png",
+      "productCount": 4,
+      "productImageCount": 0,
+      "exactProductCount": 0
+    }
+  ]
+}

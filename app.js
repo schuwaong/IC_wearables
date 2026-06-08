@@ -86,6 +86,8 @@ const IMAGE_REQUEST_MAX_CONCURRENCY = Math.max(
 const PRODUCT_REQUEST_TIMEOUT_MS = 12000;
 const LOOK_REFERENCE_WAIT_MS = 1500;
 const PRODUCT_LIBRARY_URL = window.IC_PRODUCT_LIBRARY_URL || "../assets/product-library.json";
+const PRODUCT_COMBINATION_MANIFEST_URL =
+  window.IC_PRODUCT_COMBINATION_MANIFEST_URL || "../assets/outfit-combinations/manifest.json";
 const LOOK_LOG_PHASE_LABELS = {
   queued: "Queued",
   products: "Products",
@@ -107,6 +109,7 @@ const LOOK_LOG_PHASE_PRIORITY = {
 let activeImageGenerationJobs = 0;
 const pendingImageGenerationJobs = [];
 const femaleLookCardState = new Map();
+let productCombinationManifestPromise = null;
 
 const seasonProfiles = [
   {
@@ -1604,7 +1607,7 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
       : "There is no face reference image for this render, so do not invent a stylised or exaggerated face.",
     productImageCount
       ? "Use Images 2 and later only as garment, shoe, bag, and accessory references. Copy clothing silhouette, fabric texture, colour blocking, and styling details from those product images. Ignore and do not copy any catalogue model face, body, pose, skin, hair, or identity from product images."
-      : "Style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance. Do not treat any product or catalogue model as the person.",
+      : "If Image 2 is an IC_wearables outfit-combination board, use it only as a combined garment, shoe, bag, accessory, colour, and texture reference. Do not copy any board typography, layout, placeholder letters, catalogue model face, hair, body, pose, or identity. If no Image 2 exists, style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance.",
     productSummary ? `Product references: ${productSummary}.` : "",
     budgetRange ? `Budget target for the shopper's region: ${budgetRange}. Keep the outfit realistically within that range.` : "",
     "Do not change identity, do not create a different model, do not change hairstyle, do not change hairline, do not change expression, and do not add a smile. Preserve natural skin texture, facial asymmetry, and the uploaded hair shape from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
@@ -1716,6 +1719,49 @@ function productLibraryHref(rawUrl = PRODUCT_LIBRARY_URL) {
   } catch {
     return rawUrl;
   }
+}
+
+function seasonFamilyName(seasonName) {
+  const normalized = String(seasonName || "").toLowerCase();
+  if (normalized.includes("spring")) return "Spring";
+  if (normalized.includes("summer")) return "Summer";
+  if (normalized.includes("autumn") || normalized.includes("fall")) return "Autumn";
+  if (normalized.includes("winter")) return "Winter";
+  return "";
+}
+
+function productCombinationHref(rawUrl = PRODUCT_COMBINATION_MANIFEST_URL) {
+  try {
+    return new URL(rawUrl, window.location.href).toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
+async function productCombinationManifest() {
+  if (!productCombinationManifestPromise) {
+    productCombinationManifestPromise = fetch(productCombinationHref(), { cache: "no-store" })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Combination manifest request failed with ${response.status}`);
+        return response.json();
+      })
+      .catch(() => null);
+  }
+  return productCombinationManifestPromise;
+}
+
+async function combinationBoardForLook(run, idea) {
+  const manifest = await productCombinationManifest();
+  const combinations = Array.isArray(manifest?.combinations) ? manifest.combinations : [];
+  const family = seasonFamilyName(run.profile?.name);
+  const match =
+    combinations.find((combination) => combination.mode === "family" && combination.seasonFamily === family && combination.look === idea.title) ||
+    combinations.find((combination) => combination.season === run.profile?.name && combination.look === idea.title);
+  if (!match?.boardImage) return null;
+  return {
+    ...match,
+    boardUrl: new URL(`../${match.boardImage}`, window.location.href).toString(),
+  };
 }
 
 function createLibraryProductRow(product) {
@@ -2054,6 +2100,10 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     .filter((url, index, all) => all.indexOf(url) === index)
     .filter((url) => /^https?:\/\//i.test(url))
     .slice(0, 2);
+  const combinationBoard = await Promise.race([
+    combinationBoardForLook(run, idea),
+    delay(LOOK_REFERENCE_WAIT_MS).then(() => null),
+  ]);
   if (!run.faceReferenceDataUrl) {
     setLookErrorState(cardState, "Image generation unavailable: no face reference found for this look.");
     setRunlogState(idea.title, "error", "Face reference was unavailable, so this look could not be rendered.");
@@ -2063,7 +2113,8 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       imageProvider: "error",
     };
   }
-  const referenceImages = [run.faceReferenceDataUrl, ...productImageUrls].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT);
+  const productReferenceImages = combinationBoard?.boardUrl ? [combinationBoard.boardUrl] : productImageUrls;
+  const referenceImages = [run.faceReferenceDataUrl, ...productReferenceImages].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
   upsertPromptInspector(cardState, prompt);
 
@@ -2076,8 +2127,10 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
   setRunlogState(
     idea.title,
     "rendering",
-    productImageUrls.length
-      ? `Rendering with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
+    combinationBoard?.boardUrl
+      ? "Rendering with scanned face plus one outfit-combination board."
+      : productImageUrls.length
+        ? `Rendering with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
       : "Rendering with the scanned face and product text only.",
   );
 
@@ -2100,8 +2153,10 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       setRunlogState(
         idea.title,
         "rendering",
-        productImageUrls.length
-          ? `Rendering now with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
+        combinationBoard?.boardUrl
+          ? "Rendering now with Image 1 face plus Image 2 outfit-combination board."
+          : productImageUrls.length
+            ? `Rendering now with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
           : "Rendering now with the scanned face and product text only.",
       );
       return generatedReferenceImage(prompt, {
@@ -2125,8 +2180,10 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       setLookImageStatus(
         statusElement,
         result.usedReferences
-          ? productImageUrls.length
-            ? "Generated from scanned face and garment references."
+          ? productReferenceImages.length
+            ? combinationBoard?.boardUrl
+              ? "Generated from scanned face and outfit-combination board."
+              : "Generated from scanned face and garment references."
             : "Generated from scanned face and product text."
           : "Generated from styling prompt.",
       );
@@ -2134,7 +2191,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         idea.title,
         "success",
         result.usedReferences
-          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and garment references" : ""}.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`
+          ? `Image ready via ${result.provider} with the scanned face${combinationBoard?.boardUrl ? " and outfit board" : productImageUrls.length ? " and garment references" : ""}.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`
           : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`,
       );
     };
@@ -2145,7 +2202,8 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     image.src = result.imageUrl;
     return {
       imageUsedReferences: result.usedReferences,
-      productReferenceCount: productImageUrls.length,
+      productReferenceCount: productReferenceImages.length,
+      combinationBoard: combinationBoard?.boardImage || "",
       imageProvider: result.provider,
     };
   } catch (error) {
@@ -2161,7 +2219,8 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     );
     return {
       imageUsedReferences: false,
-      productReferenceCount: productImageUrls.length,
+      productReferenceCount: productReferenceImages.length,
+      combinationBoard: combinationBoard?.boardImage || "",
       imageProvider: "error",
     };
   }
