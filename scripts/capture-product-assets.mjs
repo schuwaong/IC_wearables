@@ -20,9 +20,15 @@ const MAX_PRODUCTS = Math.max(1, Number(process.env.PRODUCT_CAPTURE_MAX_PRODUCTS
 const OVERWRITE = process.env.PRODUCT_CAPTURE_OVERWRITE === "true";
 const ALLOW_FALLBACK_PRODUCTS = process.env.PRODUCT_CAPTURE_ALLOW_FALLBACK === "true";
 const ALLOW_SCREENSHOTS = process.env.PRODUCT_CAPTURE_ALLOW_SCREENSHOTS === "true";
+const BRAND_FILTER = String(process.env.PRODUCT_CAPTURE_BRAND_FILTER || "").trim().toLowerCase();
+const SEASON_FILTER = String(process.env.PRODUCT_CAPTURE_SEASON_FILTER || "").trim().toLowerCase();
+const LOOK_FILTER = String(process.env.PRODUCT_CAPTURE_LOOK_FILTER || "").trim().toLowerCase();
+const PIECE_FILTER = String(process.env.PRODUCT_CAPTURE_PIECE_FILTER || "").trim().toLowerCase();
 const SCREENSHOT_WIDTH = Math.max(900, Number(process.env.PRODUCT_CAPTURE_SCREENSHOT_WIDTH) || 1365);
 const SCREENSHOT_HEIGHT = Math.max(900, Number(process.env.PRODUCT_CAPTURE_SCREENSHOT_HEIGHT) || 1600);
 const SCREENSHOT_TOP = Math.max(0, Number(process.env.PRODUCT_CAPTURE_SCREENSHOT_TOP) || 260);
+const SCREENSHOT_LEFT = Math.max(0, Number(process.env.PRODUCT_CAPTURE_SCREENSHOT_LEFT) || 0);
+const SCREENSHOT_CROP_WIDTH = Math.max(300, Number(process.env.PRODUCT_CAPTURE_SCREENSHOT_CROP_WIDTH) || SCREENSHOT_WIDTH);
 const SCREENSHOT_CROP_HEIGHT = Math.max(400, Number(process.env.PRODUCT_CAPTURE_SCREENSHOT_CROP_HEIGHT) || 920);
 const SCREENSHOT_VIRTUAL_TIME_MS = Math.max(1000, Number(process.env.PRODUCT_CAPTURE_VIRTUAL_TIME_MS) || 8000);
 const CAPTURE_TIMEOUT_MS = Math.max(8000, Number(process.env.PRODUCT_CAPTURE_TIMEOUT_MS) || 30000);
@@ -207,11 +213,14 @@ async function captureScreenshotCrop(product, chromePath) {
   }
 
   const metadata = await sharp(screenshotPath).metadata();
-  const width = Math.min(SCREENSHOT_WIDTH, metadata.width || SCREENSHOT_WIDTH);
-  const top = Math.min(SCREENSHOT_TOP, Math.max(0, (metadata.height || SCREENSHOT_HEIGHT) - 1));
-  const height = Math.min(SCREENSHOT_CROP_HEIGHT, Math.max(1, (metadata.height || SCREENSHOT_HEIGHT) - top));
+  const sourceWidth = metadata.width || SCREENSHOT_WIDTH;
+  const sourceHeight = metadata.height || SCREENSHOT_HEIGHT;
+  const left = Math.min(SCREENSHOT_LEFT, Math.max(0, sourceWidth - 1));
+  const width = Math.min(SCREENSHOT_CROP_WIDTH, Math.max(1, sourceWidth - left));
+  const top = Math.min(SCREENSHOT_TOP, Math.max(0, sourceHeight - 1));
+  const height = Math.min(SCREENSHOT_CROP_HEIGHT, Math.max(1, sourceHeight - top));
   await sharp(screenshotPath)
-    .extract({ left: 0, top, width, height })
+    .extract({ left, top, width, height })
     .resize(900, 900, { fit: "inside", withoutEnlargement: true })
     .png()
     .toFile(absolutePath);
@@ -250,6 +259,10 @@ async function rejectLikelyBotWall(filePath) {
 
 function shouldAttempt(product) {
   if (product.isFallback && !ALLOW_FALLBACK_PRODUCTS) return false;
+  if (BRAND_FILTER && !String(product.brand || "").toLowerCase().includes(BRAND_FILTER)) return false;
+  if (SEASON_FILTER && !String(product.season || "").toLowerCase().includes(SEASON_FILTER)) return false;
+  if (LOOK_FILTER && !String(product.look || "").toLowerCase().includes(LOOK_FILTER)) return false;
+  if (PIECE_FILTER && !String(product.piece || "").toLowerCase().includes(PIECE_FILTER)) return false;
   return Boolean(product.imageUrl || (ALLOW_SCREENSHOTS && product.affiliateLink));
 }
 
