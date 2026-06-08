@@ -270,6 +270,34 @@ or pose from the board. When exact affiliate product images are available and
 cached, the board builder will include them automatically; until then it creates
 palette/product placeholder boards from the JSON rows.
 
+Capture local product image assets:
+
+```powershell
+$env:PRODUCT_CAPTURE_MAX_PRODUCTS='24'
+node scripts/capture-product-assets.mjs
+```
+
+If products have real `imageUrl` values, this downloads those images into
+`data/product-images/` and updates `data/product-library.json`.
+
+Screenshot capture is intentionally opt-in because retailer pages can show bot
+walls, cookie gates, search pages, or copyrighted product photos:
+
+```powershell
+$env:PRODUCT_CAPTURE_ALLOW_FALLBACK='true'
+$env:PRODUCT_CAPTURE_ALLOW_SCREENSHOTS='true'
+node scripts/capture-product-assets.mjs
+```
+
+The screenshot mode uses local Chrome headless, crops the page into a product
+asset, and rejects likely blank/bot-check captures. Keep screenshot/downloaded
+retailer photos local unless your affiliate/feed terms allow you to host them.
+After valid assets are captured, rebuild the board images:
+
+```powershell
+node scripts/build-product-combinations.mjs
+```
+
 ## Image Generation Backend
 
 The outfit images can be generated through:
