@@ -169,6 +169,8 @@ const seasonProfiles = [
 ];
 
 const femaleRunlogRows = new Map();
+const CHROMA_GREEN_BACKGROUND_INSTRUCTION =
+  "Use a flat, evenly lit chroma key green background (#00B140) behind the full body only. No scenery, room, street, furniture, shadows, gradients, props, text, logos, or patterned background. Keep clean separation around hair, shoulders, arms, clothing edges, shoes, and accessories so the subject can be cropped and the background can be replaced later.";
 
 const mensBackgroundSets = {
   metropolitan: {
@@ -749,8 +751,7 @@ function buildStyleImagePrompt(result) {
   const backgroundSet = mensBackgroundSets[selections.backgroundSet] || mensBackgroundSets.metropolitan;
   const panelLines = fixedStyleLooks.map((look, index) => {
     const pieces = look.mensPieces.map((piece) => piece.label).join(", ");
-    const background = backgroundSet.scenes[index] || backgroundSet.scenes[0];
-    return `Panel ${index + 1}: ${look.title} look in ${background}. Styling direction: ${look.tone}. Outfit pieces: ${pieces}.`;
+    return `Panel ${index + 1}: ${look.title} look on a flat chroma key green studio background. Styling direction: ${look.tone}. Outfit pieces: ${pieces}.`;
   });
 
   return [
@@ -759,7 +760,8 @@ function buildStyleImagePrompt(result) {
     "Create one polished five-panel composite with the same man repeated consistently across all panels.",
     "Use a magazine contact-sheet layout: two panels on the top row, three panels on the bottom row, all inside one final image.",
     ...panelLines,
-    `Background set: ${backgroundSet.label}. Background direction: ${backgroundSet.description}.`,
+    `Background set label for later replacement: ${backgroundSet.label}. Do not render the described scene yet; render chroma green instead.`,
+    CHROMA_GREEN_BACKGROUND_INSTRUCTION,
     "All five panels must be present in the same image. Do not collapse them into one background and do not omit any look.",
     `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
     `Image frame: ${selections.frame}. In every panel, show a clear face and believable outfit proportions.`,
@@ -1556,7 +1558,8 @@ function buildFemaleLookPrompt(run, idea, index) {
   return [
     "Photorealistic high-end female fashion editorial for IC_wearables. Same woman as the uploaded reference photo, not a new model.",
     `Look ${index + 1}: ${idea.title}. Direction: ${idea.tone}.`,
-    `Locked occasion for this look: ${lookOccasion}. Locked background for this look: ${lookBackground}. Do not swap this look into another occasion or background.`,
+    `Locked occasion for this look: ${lookOccasion}. Background placeholder label for later replacement: ${lookBackground}. Do not render that scene yet; render chroma green instead.`,
+    CHROMA_GREEN_BACKGROUND_INSTRUCTION,
     `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
     "Use the colour palette only for clothing, shoes, bags, jewellery, and makeup harmony, not as an abstract background wash.",
     `Colour season: ${run.profile.name}. Palette hex colours: ${palette}. Wardrobe direction: ${run.profile.wardrobe}.`,

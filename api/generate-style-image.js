@@ -21,6 +21,7 @@ const MAX_REFERENCE_IMAGE_BYTES = Math.max(
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(MODULE_DIR, "..");
 const LOCAL_DEFAULT_PALETTE = ["#f0d28d", "#7a1f2b", "#1d2d44", "#f8f1e6"];
+const CHROMA_GREEN = "#00B140";
 const LOCAL_SCENE_TONES = [
   { key: "business", base: "#1f2e43", glow: "#c89e5a" },
   { key: "smart", base: "#6a563f", glow: "#e5c489" },
@@ -543,6 +544,14 @@ function roundedRectMask(width, height, radius) {
 }
 
 function sceneGradientSvg(width, height, palette, tone, seedValue) {
+  if (isChromaGreenPrompt(seedValue)) {
+    return svgBuffer(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+        <rect width="${width}" height="${height}" rx="0" fill="${CHROMA_GREEN}"/>
+      </svg>
+    `);
+  }
+
   const seed = hashNumber(seedValue);
   const primary = palette[seed % palette.length];
   const secondary = palette[(seed + 1) % palette.length];
@@ -573,6 +582,10 @@ function sceneGradientSvg(width, height, palette, tone, seedValue) {
   `);
 }
 
+function isChromaGreenPrompt(prompt) {
+  return /(chroma key green|#00b140|green background|background can be replaced|crop)/i.test(String(prompt || ""));
+}
+
 function swatchStripSvg(width, height, palette) {
   const gap = 8;
   const swatchWidth = Math.max(16, Math.floor((width - gap * (palette.length - 1)) / palette.length));
@@ -587,6 +600,10 @@ function swatchStripSvg(width, height, palette) {
 }
 
 function cardFrameSvg(width, height, radius, palette, tone) {
+  if (tone?.chromaGreen) {
+    return svgBuffer(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"></svg>`);
+  }
+
   return svgBuffer(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <rect width="${width}" height="${height}" rx="${radius}" fill="rgba(8,8,7,0.18)"/>
@@ -631,6 +648,7 @@ async function buildSubjectCard(referenceImage, width, height, palette, tone) {
 
 async function loadSceneBackground(assetPath, width, height, palette, tone, seedValue) {
   const fallback = sceneGradientSvg(width, height, palette, tone, seedValue);
+  if (isChromaGreenPrompt(seedValue)) return sharp(fallback).png().toBuffer();
   if (!assetPath) return sharp(fallback).png().toBuffer();
 
   try {
@@ -747,7 +765,8 @@ async function buildLocalCompositeImage(prompt, width, height, referenceImages =
   });
 
   const sceneJobs = panelsMeta.map(async (meta, index) => {
-    const tone = LOCAL_SCENE_TONES[index] || LOCAL_SCENE_TONES[0];
+    const chromaGreen = isChromaGreenPrompt(prompt);
+    const tone = { ...(LOCAL_SCENE_TONES[index] || LOCAL_SCENE_TONES[0]), chromaGreen };
     const background = await loadSceneBackground(
       backgrounds[index],
       meta.width,
@@ -759,7 +778,7 @@ async function buildLocalCompositeImage(prompt, width, height, referenceImages =
     const subjectWidth = Math.round(meta.width * (isFivePanel && index >= 2 ? 0.7 : 0.74));
     const subjectHeight = Math.round(meta.height * 0.72);
     const subject = await buildSubjectCard(referenceImage, subjectWidth, subjectHeight, palette, tone);
-    const swatches = swatchStripSvg(Math.round(meta.width * 0.44), 14, palette);
+    const swatches = chromaGreen ? null : swatchStripSvg(Math.round(meta.width * 0.44), 14, palette);
 
     return sharp(background)
       .composite([
@@ -768,25 +787,34 @@ async function buildLocalCompositeImage(prompt, width, height, referenceImages =
           left: Math.round((meta.width - subjectWidth) / 2),
           top: Math.round(meta.height * 0.12),
         },
-        {
-          input: swatches,
-          left: Math.round(meta.width * 0.08),
-          top: meta.height - 34,
-        },
+        ...(swatches
+          ? [
+              {
+                input: swatches,
+                left: Math.round(meta.width * 0.08),
+                top: meta.height - 34,
+              },
+            ]
+          : []),
       ])
       .png()
       .toBuffer();
   });
 
+  const chromaGreen = isChromaGreenPrompt(prompt);
   const panels = await Promise.all(sceneJobs);
   const base = await sharp(sceneGradientSvg(width, height, palette, LOCAL_SCENE_TONES[0], `${prompt}-board`))
-    .composite([
-      {
-        input: svgBuffer(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect x="${padding / 2}" y="${padding / 2}" width="${width - padding}" height="${height - padding}" rx="34" fill="none" stroke="rgba(248,241,230,0.16)" stroke-width="2"/></svg>`,
-        ),
-      },
-    ])
+    .composite(
+      chromaGreen
+        ? []
+        : [
+            {
+              input: svgBuffer(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect x="${padding / 2}" y="${padding / 2}" width="${width - padding}" height="${height - padding}" rx="34" fill="none" stroke="rgba(248,241,230,0.16)" stroke-width="2"/></svg>`,
+              ),
+            },
+          ],
+    )
     .png()
     .toBuffer();
 
@@ -805,13 +833,14 @@ async function buildLocalCompositeImage(prompt, width, height, referenceImages =
 async function buildLocalPortraitImage(prompt, width, height, referenceImages = []) {
   const palette = extractPalette(prompt);
   const referenceImage = referenceImages[0] ? await referenceImageToBinary(referenceImages[0]) : null;
-  const tone = LOCAL_SCENE_TONES[hashNumber(prompt) % LOCAL_SCENE_TONES.length];
+  const chromaGreen = isChromaGreenPrompt(prompt);
+  const tone = { ...LOCAL_SCENE_TONES[hashNumber(prompt) % LOCAL_SCENE_TONES.length], chromaGreen };
   const [backgroundAsset] = localSceneAssets(prompt);
   const background = await loadSceneBackground(backgroundAsset, width, height, palette, tone, `${prompt}-portrait`);
   const subjectWidth = Math.round(width * 0.72);
   const subjectHeight = Math.round(height * 0.7);
   const subject = await buildSubjectCard(referenceImage, subjectWidth, subjectHeight, palette, tone);
-  const swatches = swatchStripSvg(Math.round(width * 0.46), 18, palette);
+  const swatches = chromaGreen ? null : swatchStripSvg(Math.round(width * 0.46), 18, palette);
 
   return sharp(background)
     .composite([
@@ -820,18 +849,22 @@ async function buildLocalPortraitImage(prompt, width, height, referenceImages = 
         left: Math.round((width - subjectWidth) / 2),
         top: Math.round(height * 0.11),
       },
-      {
-        input: swatches,
-        left: Math.round(width * 0.08),
-        top: height - 40,
-      },
-      {
-        input: svgBuffer(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-            <rect x="${Math.round(width * 0.07)}" y="${Math.round(height * 0.08)}" width="${Math.round(width * 0.86)}" height="${Math.round(height * 0.8)}" rx="34" fill="none" stroke="rgba(248,241,230,0.14)" stroke-width="2"/>
-          </svg>`,
-        ),
-      },
+      ...(swatches
+        ? [
+            {
+              input: swatches,
+              left: Math.round(width * 0.08),
+              top: height - 40,
+            },
+            {
+              input: svgBuffer(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+                  <rect x="${Math.round(width * 0.07)}" y="${Math.round(height * 0.08)}" width="${Math.round(width * 0.86)}" height="${Math.round(height * 0.8)}" rx="34" fill="none" stroke="rgba(248,241,230,0.14)" stroke-width="2"/>
+                </svg>`,
+              ),
+            },
+          ]
+        : []),
     ])
     .png()
     .toBuffer();
