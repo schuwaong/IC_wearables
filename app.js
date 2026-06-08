@@ -27,6 +27,8 @@ const resultsPaletteSwatches = document.getElementById("resultsPaletteSwatches")
 const resultsStatus = document.getElementById("resultsStatus");
 const resultsRunlog = document.getElementById("resultsRunlog");
 const resultsRunlogSummary = document.getElementById("resultsRunlogSummary");
+const productLibrarySummary = document.getElementById("productLibrarySummary");
+const productLibraryList = document.getElementById("productLibraryList");
 
 const STYLE_RUN_STORAGE_KEY = "icWearablesFemaleStyleRun";
 const pathName = window.location.pathname.toLowerCase();
@@ -65,6 +67,14 @@ const IMAGE_REFERENCE_MAX_COUNT = Math.max(
   1,
   Math.min(8, Number(window.IC_IMAGE_REFERENCE_MAX_COUNT || safeStorageValue("icImageReferenceMaxCount") || 5) || 5),
 );
+const IMAGE_REFERENCE_PROVIDER_ORDER = String(
+  window.IC_IMAGE_REFERENCE_PROVIDER_ORDER ||
+    safeStorageValue("icImageReferenceProviderOrder") ||
+    "vertex,gemini,dashscope,local-template",
+)
+  .split(",")
+  .map((provider) => provider.trim().toLowerCase())
+  .filter(Boolean);
 const IMAGE_REQUEST_MAX_CONCURRENCY = Math.max(
   1,
   Number(
@@ -75,6 +85,7 @@ const IMAGE_REQUEST_MAX_CONCURRENCY = Math.max(
 );
 const PRODUCT_REQUEST_TIMEOUT_MS = 12000;
 const LOOK_REFERENCE_WAIT_MS = 1500;
+const PRODUCT_LIBRARY_URL = window.IC_PRODUCT_LIBRARY_URL || "../assets/product-library.json";
 const LOOK_LOG_PHASE_LABELS = {
   queued: "Queued",
   products: "Products",
@@ -771,9 +782,9 @@ function buildStyleImagePrompt(result) {
     `Image frame: ${selections.frame}. In every panel, show a clear face and believable outfit proportions.`,
     `Colour profile: ${result.profile.name}. Palette hex colours for clothing, shoes, and accessories only: ${palette}.`,
     `Visual read: ${axisSummary}. Wardrobe direction: ${result.profile.wardrobe}.`,
-    "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairstyle, hairline, facial hair, and expression as the reference photo in every panel.",
+    "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairstyle, hairline, hair length, hair volume, hair part, hair colour, facial hair, and expression as the reference photo in every panel.",
     "If the reference face is neutral or not smiling, keep it neutral in every panel. Do not add a smile, grin, visible teeth, or any new expression.",
-    "Do not beautify, retouch, slim, age, de-age, change ethnicity, stretch, warp, liquify, face-swap, or replace the face with a different model.",
+    "Do not beautify, retouch, slim, age, de-age, change ethnicity, stretch, warp, liquify, restyle the hair, change the hairline, face-swap, or replace the face with a different model.",
     "Do not create five different men. It must be the same person with the same natural face in all five looks.",
     "Use realistic head size, camera perspective, and skin texture. No text, no logos, no watermark.",
   ].join(" ");
@@ -1568,9 +1579,9 @@ function buildFemaleLookPrompt(run, idea, index) {
     "Use the colour palette only for clothing, shoes, bags, jewellery, and makeup harmony, not as an abstract background wash.",
     `Colour season: ${run.profile.name}. Palette hex colours: ${palette}. Wardrobe direction: ${run.profile.wardrobe}.`,
     `Outfit pieces to show: ${pieces}. ${frameInstruction}`,
-    "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairline, hairstyle, and expression as the reference photo.",
+    "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairline, hairstyle, hair length, hair volume, hair part, bangs or fringe, hair colour, and expression as the reference photo.",
     "If the reference face is neutral or not smiling, do not add a smile, grin, visible teeth, or any new expression.",
-    "Do not beautify, retouch, slim, age, de-age, change ethnicity, warp, liquify, or swap in a different model.",
+    "Do not beautify, retouch, slim, age, de-age, change ethnicity, warp, liquify, restyle the hair, change the hairline, or swap in a different model.",
     "Premium textures, realistic lighting, natural skin texture, clear full face, elegant styling, no text, no logos, no watermark.",
   ].join(" ");
 }
@@ -1589,14 +1600,14 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
   return [
     buildFemaleLookPrompt(run, idea, index),
     hasFaceReference
-      ? "Use Image 1 as the only visual identity reference. Match the exact same woman's face and current expression with very high fidelity."
+      ? "Use Image 1 as the only visual identity and hairstyle reference. Match the exact same woman's face, hairline, hairstyle, hair length, hair volume, hair part, hair colour, and current expression with very high fidelity."
       : "There is no face reference image for this render, so do not invent a stylised or exaggerated face.",
     productImageCount
       ? "Use Images 2 and later only as garment, shoe, bag, and accessory references. Copy clothing silhouette, fabric texture, colour blocking, and styling details from those product images. Ignore and do not copy any catalogue model face, body, pose, skin, hair, or identity from product images."
       : "Style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance. Do not treat any product or catalogue model as the person.",
     productSummary ? `Product references: ${productSummary}.` : "",
     budgetRange ? `Budget target for the shopper's region: ${budgetRange}. Keep the outfit realistically within that range.` : "",
-    "Do not change identity, do not create a different model, do not change expression, and do not add a smile. Preserve natural skin texture and facial asymmetry from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
+    "Do not change identity, do not create a different model, do not change hairstyle, do not change hairline, do not change expression, and do not add a smile. Preserve natural skin texture, facial asymmetry, and the uploaded hair shape from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
   ]
     .filter(Boolean)
     .join(" ");
@@ -1697,6 +1708,99 @@ function createProductNotice(message) {
   notice.className = "look-product-notice";
   notice.textContent = message;
   return notice;
+}
+
+function productLibraryHref(rawUrl = PRODUCT_LIBRARY_URL) {
+  try {
+    return new URL(rawUrl, window.location.href).toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
+function createLibraryProductRow(product) {
+  const row = document.createElement("article");
+  row.className = "library-product-row";
+  if (product.isFallback) row.classList.add("is-fallback");
+
+  const marker = document.createElement("span");
+  marker.className = "product-marker";
+  marker.textContent = String(product.piece || product.brand || "P").slice(0, 1).toUpperCase();
+
+  const copy = document.createElement("div");
+  const meta = document.createElement("span");
+  const title = document.createElement("strong");
+  const status = document.createElement("small");
+  meta.textContent = [product.season, product.look, product.piece].filter(Boolean).join(" / ");
+  title.textContent = `${product.productName || "Product"}${product.brand ? ` - ${product.brand}` : ""}`;
+  status.textContent = [
+    product.isFallback ? "Fallback search link" : "Exact product",
+    product.imageUrl ? "has image URL" : "no image URL",
+    product.localImagePath ? `cached: ${product.localImagePath}` : product.imageCacheStatus,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+  copy.append(meta, title, status);
+
+  const action = product.affiliateLink ? document.createElement("a") : document.createElement("span");
+  action.className = "look-product-action";
+  action.textContent = product.actionLabel || (product.affiliateLink ? "Open" : "No link");
+  if (product.affiliateLink) {
+    action.href = product.affiliateLink;
+    action.target = "_blank";
+    action.rel = "noopener noreferrer sponsored";
+  } else {
+    action.classList.add("is-disabled");
+  }
+
+  row.append(marker, copy, action);
+  return row;
+}
+
+async function hydrateProductLibraryPanel() {
+  if (!productLibrarySummary || !productLibraryList) return;
+  const libraryUrl = productLibraryHref();
+  try {
+    const response = await fetch(libraryUrl, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Library request failed with ${response.status}`);
+    const library = await response.json();
+    const summary = library.summary || {};
+    const diagnostics = Array.isArray(library.affiliateDiagnostics) ? library.affiliateDiagnostics : [];
+    const products = Array.isArray(library.products) ? library.products : [];
+    productLibrarySummary.textContent =
+      `${summary.products || products.length || 0} rows loaded for ${library.countryCode || "HK"}: ${summary.exactProducts || 0} exact products, ${summary.fallbackSearchLinks || 0} fallback search links, ${summary.cachedImages || 0} cached images.`;
+
+    const children = [];
+    const openJson = document.createElement("a");
+    openJson.className = "library-json-link";
+    openJson.href = libraryUrl;
+    openJson.target = "_blank";
+    openJson.rel = "noopener noreferrer";
+    openJson.textContent = "Open raw product-library.json";
+    children.push(openJson);
+
+    if (diagnostics.length) {
+      const diagnosticBox = document.createElement("div");
+      diagnosticBox.className = "library-diagnostics";
+      const title = document.createElement("strong");
+      title.textContent = "Affiliate diagnostics";
+      const list = document.createElement("ul");
+      diagnostics.slice(0, 6).forEach((detail) => {
+        const item = document.createElement("li");
+        item.textContent = detail;
+        list.appendChild(item);
+      });
+      diagnosticBox.append(title, list);
+      children.push(diagnosticBox);
+    }
+
+    children.push(...products.slice(0, 24).map((product) => createLibraryProductRow(product)));
+    productLibraryList.replaceChildren(...children);
+  } catch (error) {
+    productLibrarySummary.textContent =
+      "Product library JSON is not published with this static site yet. You can still inspect it locally in data/product-library.json.";
+    productLibraryList.replaceChildren();
+  }
 }
 
 function createRunlogRow(idea, index) {
@@ -1809,6 +1913,8 @@ async function generatedReferenceImage(prompt, options = {}) {
         height,
         seed: options.seed,
         referenceImages,
+        providerOrder: options.providerOrder || IMAGE_REFERENCE_PROVIDER_ORDER,
+        disallowLocalTemplate: options.disallowLocalTemplate === true,
       }),
       ...(controller ? { signal: controller.signal } : {}),
     });
@@ -1834,6 +1940,7 @@ async function generatedReferenceImage(prompt, options = {}) {
     provider: payload.provider || "reference-generation",
     usedReferences: true,
     attempts: Array.isArray(payload.attempts) ? payload.attempts : [],
+    debug: payload.debug || null,
   };
 }
 
@@ -1896,6 +2003,32 @@ function formatImageAttempts(attempts = []) {
   return { failed, skipped };
 }
 
+function createPromptInspector(prompt, providerOrder = IMAGE_REFERENCE_PROVIDER_ORDER) {
+  const details = document.createElement("details");
+  details.className = "look-prompt-inspector";
+  const summary = document.createElement("summary");
+  summary.textContent = "View exact generation prompt";
+  const meta = document.createElement("p");
+  meta.textContent = `Reference fallback order: ${providerOrder.join(" -> ") || "backend default"}`;
+  const pre = document.createElement("pre");
+  pre.textContent = prompt || "Prompt will appear when this look starts rendering.";
+  details.append(summary, meta, pre);
+  return details;
+}
+
+function upsertPromptInspector(cardState, prompt) {
+  if (!cardState?.body) return;
+  let inspector = cardState.body.querySelector(".look-prompt-inspector");
+  if (!inspector) {
+    inspector = createPromptInspector(prompt);
+    const rackTitle = cardState.body.querySelector("h3");
+    cardState.body.insertBefore(inspector, rackTitle || null);
+    return;
+  }
+  const pre = inspector.querySelector("pre");
+  if (pre) pre.textContent = prompt || "";
+}
+
 function delay(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
@@ -1932,6 +2065,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
   }
   const referenceImages = [run.faceReferenceDataUrl, ...productImageUrls].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
+  upsertPromptInspector(cardState, prompt);
 
   setLookImageStatus(
     statusElement,
@@ -1977,6 +2111,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         referenceImages,
         maxReferenceImages: IMAGE_REFERENCE_MAX_COUNT,
         allowTextFallback: false,
+        providerOrder: IMAGE_REFERENCE_PROVIDER_ORDER,
         disallowLocalTemplate: false,
       });
     });
@@ -1999,8 +2134,8 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         idea.title,
         "success",
         result.usedReferences
-          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and garment references" : ""}.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`
-          : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier failures: ${attemptSummary.failed.join(" | ")}` : ""}`,
+          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and garment references" : ""}.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`
+          : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`,
       );
     };
     image.onerror = () => {
@@ -2022,7 +2157,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     setRunlogState(
       idea.title,
       "error",
-      `Reference generation failed${error?.message ? `: ${error.message}` : ""}${attemptSummary.failed.length ? ` Attempted providers: ${attemptSummary.failed.join(" | ")}` : ""}`,
+      `All reference-capable providers failed${attemptSummary.failed.length ? `: ${attemptSummary.failed.join(" | ")}` : error?.message ? `: ${error.message}` : "."}`,
     );
     return {
       imageUsedReferences: false,
@@ -2106,7 +2241,7 @@ function renderFemaleLookCard(run, idea, index) {
 
   body.append(top, pieceList, imageActions, rackTitle, productList);
   card.append(media, body);
-  return { card, productList, image, imageStatus, regenerateButton };
+  return { card, body, productList, image, imageStatus, regenerateButton };
 }
 
 async function hydrateLookProducts(run, idea, productList) {
@@ -2195,6 +2330,7 @@ function initFemaleResultsPage() {
 
   const run = readFemaleStyleRun();
   renderResultsSummary(run);
+  hydrateProductLibraryPanel();
   femaleLooksGrid.innerHTML = "";
   femaleLookCardState.clear();
   initialiseFemaleRunlog();

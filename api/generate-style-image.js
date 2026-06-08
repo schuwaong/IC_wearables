@@ -12,8 +12,9 @@ export const config = {
 };
 
 const DEFAULT_PROVIDER_ORDER = "dashscope,vertex,gemini,cloudflare,pollinations,local-template";
+const DEFAULT_REFERENCE_PROVIDER_ORDER = "vertex,gemini,dashscope,local-template";
 const DEFAULT_NEGATIVE_PROMPT =
-  "low resolution, low quality, distorted face, warped face, changed identity, different person, different face in each panel, changed expression, added smile, grin, visible teeth when not in reference, face swap, beauty filter, face retouching, warped body, bad hands, extra fingers, plastic skin, over-smoothed face, text, logo, watermark";
+  "low resolution, low quality, distorted face, warped face, changed identity, different person, different face in each panel, changed expression, added smile, grin, visible teeth when not in reference, changed hairstyle, different hairstyle, changed hairline, changed hair length, changed hair colour, face swap, beauty filter, face retouching, warped body, bad hands, extra fingers, plastic skin, over-smoothed face, text, logo, watermark";
 const MAX_REFERENCE_IMAGE_BYTES = Math.max(
   512000,
   Math.min(8_000_000, Number(process.env.IMAGE_REFERENCE_MAX_BYTES) || 4_000_000),
@@ -103,6 +104,14 @@ function cleanReferenceImages(value) {
     .slice(0, MAX_REFERENCE_IMAGES);
 }
 
+function cleanProviderOrder(value) {
+  return String(value || "")
+    .split(",")
+    .map((provider) => provider.trim().toLowerCase())
+    .filter(Boolean)
+    .filter((provider, index, all) => all.indexOf(provider) === index);
+}
+
 function getPostPayload(req) {
   const body = parseBody(req.body);
   return {
@@ -112,6 +121,7 @@ function getPostPayload(req) {
     seed: Number.isInteger(Number(body.seed)) && Number(body.seed) >= 0 ? Number(body.seed) : undefined,
     referenceImages: cleanReferenceImages(body.referenceImages),
     disallowLocalTemplate: body.disallowLocalTemplate === true,
+    providerOrder: cleanProviderOrder(body.providerOrder),
   };
 }
 
@@ -137,11 +147,14 @@ function bearer(value = "") {
   return value.match(/^Bearer\s+/i) ? value : `Bearer ${value}`;
 }
 
-function providerOrder() {
-  return String(process.env.IMAGE_PROVIDER_ORDER || DEFAULT_PROVIDER_ORDER)
-    .split(",")
-    .map((provider) => provider.trim().toLowerCase())
-    .filter(Boolean);
+function providerOrder(override = [], hasReferenceImages = false) {
+  const requestOrder = Array.isArray(override) ? override : cleanProviderOrder(override);
+  if (requestOrder.length) return requestOrder;
+  return cleanProviderOrder(
+    hasReferenceImages
+      ? process.env.IMAGE_REFERENCE_PROVIDER_ORDER || DEFAULT_REFERENCE_PROVIDER_ORDER
+      : process.env.IMAGE_PROVIDER_ORDER || DEFAULT_PROVIDER_ORDER,
+  );
 }
 
 function debugEnabled(req) {
@@ -158,6 +171,7 @@ function promptDebugPayload(prompt, referenceImages = []) {
   return {
     prompt,
     dashscopePrompt: lockedPrompt,
+    referenceProviderOrder: providerOrder([], referenceImages.length > 0),
     referenceImageCount: referenceImages.length,
     promptLength: String(prompt || "").length,
     dashscopePromptLength: lockedPrompt.length,
@@ -465,7 +479,7 @@ function promptWithReferenceLock(prompt, referenceImages = []) {
   if (!referenceImages.length) return cleanPrompt;
   return [
     cleanPrompt,
-    "Reference lock: keep the exact same person from Image 1 in every scene or panel. Preserve the exact facial identity, head shape, facial proportions, skin tone, hairstyle, facial hair, and the current expression. If the reference is neutral or unsmiling, keep it neutral. Do not add a smile or visible teeth unless already present in the reference. Do not beautify, retouch, warp, liquify, age-shift, face-swap, or replace the face.",
+    "Reference lock: Image 1 is the only identity and hair authority. Keep the exact same person from Image 1 in every scene or panel. Preserve the exact facial identity, head shape, facial proportions, jawline, cheekbones, eyes, brows, nose, lips, skin tone, facial asymmetry, hairstyle, hairline, hair length, hair volume, hair part, bangs or fringe, hair colour, facial hair, and current expression. If the reference is neutral or unsmiling, keep it neutral. Do not add a smile or visible teeth unless already present in the reference. Do not beautify, retouch, warp, liquify, stretch, slim, age-shift, face-swap, hair-swap, restyle the hair, or replace the face. Product or catalogue reference images may guide clothing only and must never change the face, hair, head, pose identity, or body identity.",
   ].join(" ");
 }
 
@@ -1197,7 +1211,7 @@ async function generateImage(prompt, width, height, seed, referenceImages = [], 
   const attempts = [];
   const disallowLocalTemplate = options.disallowLocalTemplate === true;
 
-  for (const provider of providerOrder()) {
+  for (const provider of providerOrder(options.providerOrder, hasReferenceImages)) {
     try {
       if (provider === "dashscope" || provider === "alibaba") {
         const result = await callDashScope(prompt, width, height, seed, referenceImages);
@@ -1299,7 +1313,7 @@ export default async function handler(req, res) {
       payload.height,
       payload.seed,
       payload.referenceImages,
-      { disallowLocalTemplate: payload.disallowLocalTemplate },
+      { disallowLocalTemplate: payload.disallowLocalTemplate, providerOrder: payload.providerOrder },
     );
     setCommonHeaders(res, result.provider);
 
