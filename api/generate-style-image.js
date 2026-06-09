@@ -12,7 +12,7 @@ export const config = {
 };
 
 const DEFAULT_PROVIDER_ORDER = "dashscope,vertex,gemini,cloudflare,pollinations,local-template";
-const DEFAULT_REFERENCE_PROVIDER_ORDER = "vertex,gemini,pollinations,dashscope,local-template";
+const DEFAULT_REFERENCE_PROVIDER_ORDER = "vertex,pollinations,local-template,gemini,dashscope";
 const DEFAULT_NEGATIVE_PROMPT =
   "low resolution, low quality, distorted face, warped face, changed identity, different person, different face in each panel, changed expression, added smile, grin, visible teeth when not in reference, changed hairstyle, different hairstyle, changed hairline, changed hair length, changed hair colour, face swap, beauty filter, face retouching, warped body, bad hands, extra fingers, plastic skin, over-smoothed face, text, logo, watermark";
 const MAX_REFERENCE_IMAGE_BYTES = Math.max(
@@ -256,12 +256,85 @@ function vertexAspectRatio(width, height) {
 }
 
 async function loadVertexCredentialConfig() {
+  function normalizedCredentialObject(credentials) {
+    if (!credentials || typeof credentials !== "object" || Array.isArray(credentials)) {
+      throw new Error("Decoded value is not a JSON object");
+    }
+    return {
+      ...credentials,
+      private_key:
+        typeof credentials.private_key === "string"
+          ? credentials.private_key.replace(/\\n/g, "\n")
+          : credentials.private_key,
+    };
+  }
+
+  function unwrapQuotedValue(value = "") {
+    let current = String(value || "").trim();
+    for (let index = 0; index < 2; index += 1) {
+      const first = current[0];
+      const last = current[current.length - 1];
+      if ((first === "\"" && last === "\"") || (first === "'" && last === "'")) {
+        current = current.slice(1, -1).trim();
+        continue;
+      }
+      break;
+    }
+    return current;
+  }
+
+  function parseCredentialValue(rawValue, envName) {
+    const trimmed = String(rawValue || "").trim();
+    if (!trimmed) return null;
+
+    const candidates = [];
+    const pushCandidate = (value) => {
+      const candidate = String(value || "").trim();
+      if (!candidate || candidates.includes(candidate)) return;
+      candidates.push(candidate);
+    };
+
+    pushCandidate(trimmed);
+    pushCandidate(unwrapQuotedValue(trimmed));
+
+    const assignmentMatch = trimmed.match(/^[A-Z0-9_]+\s*=\s*(.+)$/s);
+    if (assignmentMatch) {
+      pushCandidate(assignmentMatch[1]);
+      pushCandidate(unwrapQuotedValue(assignmentMatch[1]));
+    }
+
+    const braceStart = trimmed.indexOf("{");
+    const braceEnd = trimmed.lastIndexOf("}");
+    if (braceStart >= 0 && braceEnd > braceStart) {
+      const braceSlice = trimmed.slice(braceStart, braceEnd + 1);
+      pushCandidate(braceSlice);
+      pushCandidate(unwrapQuotedValue(braceSlice));
+    }
+
+    let lastError = null;
+    for (const candidate of candidates) {
+      try {
+        let parsed = JSON.parse(candidate);
+        if (typeof parsed === "string") {
+          parsed = JSON.parse(parsed);
+        }
+        return normalizedCredentialObject(parsed);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw new Error(
+      `${envName} is not valid JSON. Paste the raw Google service-account key JSON into the env value without the variable name or extra wrapper quotes. ${compactErrorMessage(lastError)}`,
+    );
+  }
+
   const inlineJson =
     process.env.VERTEX_AI_SERVICE_ACCOUNT_JSON ||
     process.env.GOOGLE_SERVICE_ACCOUNT_JSON ||
     "";
   if (inlineJson.trim()) {
-    return JSON.parse(inlineJson);
+    return parseCredentialValue(inlineJson, "VERTEX_AI_SERVICE_ACCOUNT_JSON");
   }
 
   const inlineBase64 =
@@ -269,7 +342,10 @@ async function loadVertexCredentialConfig() {
     process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 ||
     "";
   if (inlineBase64.trim()) {
-    return JSON.parse(Buffer.from(inlineBase64, "base64").toString("utf8"));
+    return parseCredentialValue(
+      Buffer.from(inlineBase64, "base64").toString("utf8"),
+      "VERTEX_AI_SERVICE_ACCOUNT_JSON_BASE64",
+    );
   }
 
   const credentialsPath =
@@ -286,7 +362,7 @@ async function loadVertexCredentialConfig() {
   for (const candidatePath of candidatePaths) {
     try {
       const raw = await fs.readFile(candidatePath, "utf8");
-      return JSON.parse(raw);
+      return normalizedCredentialObject(JSON.parse(raw));
     } catch (error) {
       if (credentialsPath.trim()) throw error;
     }

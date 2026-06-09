@@ -73,7 +73,7 @@ const IMAGE_REFERENCE_MAX_COUNT = Math.max(
 const IMAGE_REFERENCE_PROVIDER_ORDER = String(
   window.IC_IMAGE_REFERENCE_PROVIDER_ORDER ||
     safeStorageValue("icImageReferenceProviderOrder") ||
-    "vertex,gemini,pollinations,dashscope",
+    "vertex,pollinations,local-template",
 )
   .split(",")
   .map((provider) => provider.trim().toLowerCase())
@@ -2708,7 +2708,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         maxReferenceImages: IMAGE_REFERENCE_MAX_COUNT,
         allowTextFallback: false,
         providerOrder: IMAGE_REFERENCE_PROVIDER_ORDER,
-        disallowLocalTemplate: true,
+        disallowLocalTemplate: false,
       });
     });
     image.onload = () => {
@@ -3098,7 +3098,7 @@ async function generateStylePhoto() {
         referenceImages: [faceReference],
         allowTextFallback: false,
         providerOrder: IMAGE_REFERENCE_PROVIDER_ORDER,
-        disallowLocalTemplate: true,
+        disallowLocalTemplate: false,
       });
 
       generatedStyleImage.onload = () => {
