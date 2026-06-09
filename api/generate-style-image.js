@@ -12,7 +12,7 @@ export const config = {
 };
 
 const DEFAULT_PROVIDER_ORDER = "dashscope,vertex,gemini,cloudflare,pollinations,local-template";
-const DEFAULT_REFERENCE_PROVIDER_ORDER = "vertex,gemini,dashscope,local-template";
+const DEFAULT_REFERENCE_PROVIDER_ORDER = "vertex,gemini,pollinations,dashscope,local-template";
 const DEFAULT_NEGATIVE_PROMPT =
   "low resolution, low quality, distorted face, warped face, changed identity, different person, different face in each panel, changed expression, added smile, grin, visible teeth when not in reference, changed hairstyle, different hairstyle, changed hairline, changed hair length, changed hair colour, face swap, beauty filter, face retouching, warped body, bad hands, extra fingers, plastic skin, over-smoothed face, text, logo, watermark";
 const MAX_REFERENCE_IMAGE_BYTES = Math.max(
@@ -32,10 +32,14 @@ const LOCAL_SCENE_TONES = [
   { key: "quiet", base: "#4f4638", glow: "#d7c3a1" },
 ];
 const POLLINATIONS_DEFAULT_MODELS = "flux,qwen-image,zimage";
+const POLLINATIONS_DEFAULT_EDIT_MODELS = "gptimage,p-image-edit,kontext,gpt-image-2,nanobanana";
 const POLLINATIONS_PROVIDER_MODEL_MAP = {
   "pollinations-flux": ["flux"],
   "pollinations-qwen": ["qwen-image"],
   "pollinations-zimage": ["zimage"],
+  "pollinations-kontext": ["kontext"],
+  "pollinations-edit": ["p-image-edit"],
+  "pollinations-gptimage": ["gptimage"],
 };
 const DEFAULT_PROVIDER_TIMEOUT_MS = Math.max(5000, Number(process.env.IMAGE_PROVIDER_TIMEOUT_MS) || 30000);
 const PROVIDER_TIMEOUT_ENV_MAP = {
@@ -189,6 +193,14 @@ function pollinationsApiKey() {
 
 function pollinationsModelOrder(preferred = []) {
   const defaults = String(process.env.POLLINATIONS_IMAGE_MODELS || POLLINATIONS_DEFAULT_MODELS)
+    .split(",")
+    .map((model) => model.trim())
+    .filter(Boolean);
+  return [...preferred, ...defaults].filter((model, index, all) => all.indexOf(model) === index);
+}
+
+function pollinationsEditModelOrder(preferred = []) {
+  const defaults = String(process.env.POLLINATIONS_IMAGE_EDIT_MODELS || POLLINATIONS_DEFAULT_EDIT_MODELS)
     .split(",")
     .map((model) => model.trim())
     .filter(Boolean);
@@ -440,6 +452,27 @@ function pollinationsUrl(prompt, width, height, seed, model) {
   if (model) url.searchParams.set("model", model);
   if (seed !== undefined) url.searchParams.set("seed", String(seed));
   return url;
+}
+
+function pollinationsApiBaseUrl() {
+  return String(process.env.POLLINATIONS_API_BASE_URL || process.env.POLLINATIONS_OPENAI_BASE_URL || "https://gen.pollinations.ai")
+    .trim()
+    .replace(/\/$/, "");
+}
+
+function mimeExtension(contentType = "image/png") {
+  const normalized = String(contentType || "").toLowerCase();
+  if (normalized.includes("jpeg") || normalized.includes("jpg")) return "jpg";
+  if (normalized.includes("webp")) return "webp";
+  if (normalized.includes("gif")) return "gif";
+  if (normalized.includes("avif")) return "avif";
+  return "png";
+}
+
+function pollinationsEditEndpoint() {
+  const explicit = String(process.env.POLLINATIONS_IMAGE_EDIT_ENDPOINT || "").trim();
+  if (explicit) return explicit;
+  return `${pollinationsApiBaseUrl()}/v1/images/edits`;
 }
 
 function providerTimeoutMs(provider) {
@@ -1205,11 +1238,119 @@ async function callPollinations(prompt, width, height, seed, preferredModels = [
   throw new Error(`Pollinations image generation failed: ${errors.join(" | ") || "no models available"}`);
 }
 
+async function callPollinationsEdit(prompt, width, height, seed, referenceImages = [], preferredModels = []) {
+  const apiKey = pollinationsApiKey();
+  if (!apiKey) {
+    throw new Error("POLLINATIONS_API_KEY is not configured");
+  }
+  if (!referenceImages.length) return callPollinations(prompt, width, height, seed, preferredModels);
+
+  const { width: safeWidth, height: safeHeight } = normalizedSize(width, height);
+  const lockedPrompt = promptWithReferenceLock(prompt, referenceImages);
+  const referenceFiles = await Promise.all(referenceImages.map((image) => referenceImageToBinary(image)));
+  const errors = [];
+
+  for (const model of pollinationsEditModelOrder(preferredModels)) {
+    const formData = new FormData();
+    formData.set("model", model);
+    formData.set("prompt", [
+      lockedPrompt,
+      `Render at approximately ${safeWidth}x${safeHeight}.`,
+      seed === undefined ? "" : `Use seed ${seed} when supported.`,
+    ]
+      .filter(Boolean)
+      .join(" "));
+    formData.set("n", "1");
+    formData.set("size", `${safeWidth}x${safeHeight}`);
+    formData.set("width", String(safeWidth));
+    formData.set("height", String(safeHeight));
+    if (seed !== undefined) formData.set("seed", String(seed));
+
+    referenceFiles.forEach((file, index) => {
+      const contentType = file.contentType || "image/png";
+      const blob = new Blob([file.buffer], { type: contentType });
+      formData.append("image", blob, `reference-${index + 1}.${mimeExtension(contentType)}`);
+    });
+
+    try {
+      const response = await fetchWithTimeout(
+        pollinationsEditEndpoint(),
+        {
+          method: "POST",
+          headers: {
+            Authorization: bearer(apiKey),
+            Accept: "application/json,image/avif,image/webp,image/png,image/jpeg,image/*",
+          },
+          body: formData,
+        },
+        providerTimeoutMs("pollinations"),
+        `Pollinations image edit (${model})`,
+      );
+      const contentType = response.headers.get("content-type") || "";
+      const buffer = Buffer.from(await response.arrayBuffer());
+      if (!response.ok) {
+        throw new Error(buffer.toString("utf8").slice(0, 240) || String(response.status));
+      }
+
+      if (contentType.startsWith("image/")) {
+        if (!buffer.byteLength) throw new Error("Pollinations returned no image bytes");
+        return {
+          type: "buffer",
+          buffer,
+          contentType,
+          provider: `pollinations-edit:${model}`,
+        };
+      }
+
+      const payload = JSON.parse(buffer.toString("utf8") || "{}");
+      const firstImage = payload?.data?.[0] || payload?.images?.[0] || payload;
+      const imageUrl = firstImage?.url || firstImage?.imageUrl || firstImage?.image_url || payload?.url || payload?.imageUrl;
+      const base64Image =
+        firstImage?.b64_json ||
+        firstImage?.b64Json ||
+        firstImage?.base64 ||
+        firstImage?.image ||
+        payload?.b64_json ||
+        payload?.base64;
+
+      if (imageUrl) {
+        return {
+          type: "redirect",
+          url: imageUrl,
+          provider: `pollinations-edit:${model}`,
+        };
+      }
+
+      if (base64Image) {
+        const cleanBase64 = String(base64Image).replace(/^data:image\/[a-z0-9.+-]+;base64,/i, "");
+        return {
+          type: "buffer",
+          buffer: Buffer.from(cleanBase64, "base64"),
+          contentType: firstImage?.mimeType || firstImage?.mime_type || "image/png",
+          provider: `pollinations-edit:${model}`,
+        };
+      }
+
+      throw new Error("Pollinations returned no image URL or bytes");
+    } catch (error) {
+      errors.push(`${model}: ${error.message}`);
+    }
+  }
+
+  throw new Error(`Pollinations image edit failed: ${errors.join(" | ") || "no models available"}`);
+}
+
 async function generateImage(prompt, width, height, seed, referenceImages = [], options = {}) {
   const errors = [];
   const hasReferenceImages = referenceImages.length > 0;
   const attempts = [];
   const disallowLocalTemplate = options.disallowLocalTemplate === true;
+
+  function localTemplateBlocked(providerKey) {
+    if (!disallowLocalTemplate) return false;
+    attempts.push({ provider: providerKey, status: "skipped", detail: "Local template fallback is disabled for this request." });
+    return true;
+  }
 
   for (const provider of providerOrder(options.providerOrder, hasReferenceImages)) {
     try {
@@ -1229,10 +1370,7 @@ async function generateImage(prompt, width, height, seed, referenceImages = [], 
         return { ...result, attempts };
       }
       if (provider === "local" || provider === "local-template" || provider === "local-editorial") {
-        if (disallowLocalTemplate) {
-          attempts.push({ provider, status: "skipped", detail: "Local template fallback is disabled for this request." });
-          continue;
-        }
+        if (localTemplateBlocked(provider)) continue;
         const result = await callLocalTemplate(prompt, width, height, referenceImages);
         attempts.push({ provider, status: "success", resolvedProvider: result.provider });
         return { ...result, attempts };
@@ -1247,22 +1385,22 @@ async function generateImage(prompt, width, height, seed, referenceImages = [], 
         return { ...result, attempts };
       }
       if (provider === "pollinations") {
-        if (hasReferenceImages) {
-          attempts.push({ provider, status: "skipped", detail: "Reference images are not supported by this provider." });
-          continue;
-        }
-        const result = await callPollinations(prompt, width, height, seed);
+        const result = hasReferenceImages
+          ? await callPollinationsEdit(prompt, width, height, seed, referenceImages)
+          : await callPollinations(prompt, width, height, seed);
         attempts.push({ provider, status: "success", resolvedProvider: result.provider });
         return { ...result, attempts };
       }
       if (provider in POLLINATIONS_PROVIDER_MODEL_MAP) {
-        if (hasReferenceImages) {
-          attempts.push({ provider, status: "skipped", detail: "Reference images are not supported by this provider." });
-          continue;
-        }
-        const result = await callPollinations(prompt, width, height, seed, POLLINATIONS_PROVIDER_MODEL_MAP[provider]);
+        const preferredModels = POLLINATIONS_PROVIDER_MODEL_MAP[provider];
+        const result = hasReferenceImages
+          ? await callPollinationsEdit(prompt, width, height, seed, referenceImages, preferredModels)
+          : await callPollinations(prompt, width, height, seed, preferredModels);
         attempts.push({ provider, status: "success", resolvedProvider: result.provider });
         return { ...result, attempts };
+      }
+      if (provider.includes("local")) {
+        if (localTemplateBlocked(provider)) continue;
       }
       attempts.push({ provider, status: "skipped", detail: "Unknown provider key." });
     } catch (error) {
