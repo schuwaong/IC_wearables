@@ -1,3 +1,5 @@
+import { findCuratedAffiliateProducts, hasCuratedAffiliateCatalog } from "./curated-affiliate-catalog.js";
+
 const CJ_PRODUCT_SEARCH_ENDPOINT =
   process.env.CJ_PRODUCT_SEARCH_ENDPOINT || "https://ads.api.cj.com/query";
 const INVOLVE_ASIA_PRODUCT_SEARCH_ENDPOINT =
@@ -27,8 +29,8 @@ const INVOLVE_ASIA_TRACKING_VALUE =
 const AFFILIATE_APPEND_GENERIC_SUBID =
   String(process.env.AFFILIATE_APPEND_GENERIC_SUBID || "").trim().toLowerCase() === "true";
 const AFFILIATE_GENERIC_SUBID_PARAM = process.env.AFFILIATE_GENERIC_SUBID_PARAM || "sid";
-const DEFAULT_AFFILIATE_PROVIDER_ORDER = "feed,cj,rakuten,ebay,involve-asia";
-const SEA_PROVIDER_ORDER = "feed,involve-asia,cj,rakuten,ebay";
+const DEFAULT_AFFILIATE_PROVIDER_ORDER = "curated,feed,cj,rakuten,ebay,involve-asia";
+const SEA_PROVIDER_ORDER = "curated,feed,involve-asia,cj,rakuten,ebay";
 const AFFILIATE_TRACKED_SOURCES = new Set([
   "awin",
   "awin-feed",
@@ -290,47 +292,31 @@ const MARKET_CONFIG = {
     countryCode: "HK",
     currency: "HKD",
     network: "hk-local",
-    searchHints: ["Hong Kong", "HK", "ships to Hong Kong", "HKD"],
+    searchHints: ["Hong Kong", "HK", "ships to Hong Kong", "HKD", "Zalora Hong Kong", "Taobao Hong Kong"],
     retailerKeywords: [
       "Zalora HK",
-      "ITeSHOP HK",
-      "ASOS HK",
-      "Lane Crawford",
-      "ZARA Hong Kong",
-      "H&M Hong Kong",
-      "UNIQLO Hong Kong",
-      "COS Hong Kong",
-      "HBX Hong Kong",
-      "Kapok Hong Kong",
-      "6ixty8ight Hong Kong",
-      "Marks & Spencer Hong Kong",
-      "NET-A-PORTER HK",
-      "MR PORTER HK",
-      "Farfetch HK",
-      "Harvey Nichols Hong Kong",
-      "eBay HK",
+      "Taobao HK",
     ],
     cjAdvertiserIds: process.env.CJ_HK_ADVERTISER_IDS || process.env.CJ_ADVERTISER_IDS || "joined",
     cjCategory: process.env.CJ_HK_CATEGORY || process.env.CJ_CATEGORY || "",
     cjCurrency: process.env.CJ_HK_CURRENCY || "HKD",
     fallbackRetailers: [
       { brand: "Zalora HK", url: "https://www.zalora.com.hk/catalog/?q=" },
-      { brand: "ITeSHOP HK", url: "https://www.iteshop.com/hk/search?q=" },
-      { brand: "ZARA HK", url: "https://www.zara.com/hk/en/search?searchTerm=" },
-      { brand: "H&M HK", url: "https://www2.hm.com/en_hk/search-results.html?q=" },
-      { brand: "UNIQLO HK", url: "https://www.uniqlo.com.hk/en/search?q=" },
-      { brand: "COS HK", url: "https://www.cos.com/en-hk/search?query=" },
-      { brand: "HBX HK", url: "https://hbx.com/women/search?q=" },
-      { brand: "Kapok HK", url: "https://ka-pok.com/search?q=" },
-      { brand: "6ixty8ight HK", url: "https://www.6ixty8ight.com/hk/search?q=" },
-      { brand: "Marks & Spencer HK", url: "https://www.marksandspencer.com/hk/search?q=" },
-      { brand: "ASOS HK", url: "https://www.asos.com/search/?q=" },
-      { brand: "Lane Crawford", url: "https://www.lanecrawford.com/search/?text=" },
-      { brand: "FARFETCH HK", url: "https://www.farfetch.com/hk/shopping/search/items.aspx?q=" },
-      { brand: "NET-A-PORTER HK", url: "https://www.net-a-porter.com/en-hk/shop/search/" },
-      { brand: "MR PORTER HK", url: "https://www.mrporter.com/en-hk/mens/search/" },
-      { brand: "Harvey Nichols", url: "https://www.harveynichols.com/search/?q=" },
-      { brand: "eBay HK", url: "https://www.ebay.com.hk/sch/i.html?_nkw=" },
+      { brand: "Taobao HK", url: "https://s.taobao.com/search?q=" },
+    ],
+  },
+  MY: {
+    countryCode: "MY",
+    currency: "MYR",
+    network: "my-fashion",
+    searchHints: ["Malaysia", "MY", "ships to Malaysia", "MYR", "Love Bonito Malaysia", "JD Sports Malaysia"],
+    retailerKeywords: ["Love Bonito MY", "JD Sports MY"],
+    cjAdvertiserIds: process.env.CJ_MY_ADVERTISER_IDS || process.env.CJ_ADVERTISER_IDS || "joined",
+    cjCategory: process.env.CJ_MY_CATEGORY || process.env.CJ_CATEGORY || "",
+    cjCurrency: process.env.CJ_MY_CURRENCY || "MYR",
+    fallbackRetailers: [
+      { brand: "Love Bonito MY", url: "https://www.lovebonito.com/my/search?q=" },
+      { brand: "JD Sports MY", url: "https://www.jdsports.my/search?q=" },
     ],
   },
   GLOBAL: {
@@ -351,6 +337,7 @@ const MARKET_CONFIG = {
 
 const HK_STORE_LOCATORS = [
   { match: /zalora/i, url: "https://www.zalora.com.hk/", mode: "map" },
+  { match: /taobao/i, url: "", mode: "online" },
   { match: /iteshop|i\.t/i, url: "https://www.iteshop.com/hk/", mode: "map" },
   { match: /zara/i, url: "https://www.zara.com/hk/en/z-stores-st1404.html", mode: "locator" },
   { match: /h&m|hennes/i, url: "https://www2.hm.com/en_hk/customer-service/shopping-at-hm/store-locator.html", mode: "locator" },
@@ -468,6 +455,8 @@ function marketForCountry(countryCode) {
   switch (countryCode) {
     case "HK":
       return MARKET_CONFIG.HK;
+    case "MY":
+      return MARKET_CONFIG.MY;
     default:
       const localCurrency = COUNTRY_CURRENCY[countryCode] || MARKET_CONFIG.GLOBAL.currency;
       return {
@@ -557,6 +546,8 @@ function affiliateProviderOrder(market) {
 
 function canAttemptProvider(provider, market) {
   switch (provider) {
+    case "curated":
+      return hasCuratedAffiliateCatalog(market.countryCode);
     case "feed":
     case "feeds":
     case "product-feed":
@@ -764,16 +755,94 @@ function buildInvolveAsiaUrl(searchQuery, colorSeason, market) {
   url.searchParams.set("country", market.countryCode);
   url.searchParams.set("currency", market.currency);
   url.searchParams.set("retailers", market.retailerKeywords.join(","));
+  appendInvolveAsiaCategory(url.searchParams);
   return url.toString();
 }
 
 function buildInvolveAsiaPayload(searchQuery, colorSeason, market) {
-  return {
+  const payload = {
     keyword: buildMarketKeywords(searchQuery, colorSeason, market),
     limit: MAX_RESULTS,
     country: market.countryCode,
     currency: market.currency,
   };
+  appendInvolveAsiaCategory(payload);
+  return payload;
+}
+
+function appendInvolveAsiaCategory(target) {
+  const category = String(process.env.INVOLVE_ASIA_CATEGORY || "fashion").trim();
+  const categoryParam = String(process.env.INVOLVE_ASIA_CATEGORY_PARAM || "").trim();
+  if (!category || !categoryParam || !target) return target;
+
+  if (typeof target.set === "function") {
+    target.set(categoryParam, category);
+    return target;
+  }
+
+  target[categoryParam] = category;
+  return target;
+}
+
+function filterFashionForwardProducts(products, market) {
+  const normalizedKeywords = keywordTokens(
+    "fashion",
+    "clothing",
+    "apparel",
+    "dress",
+    "top",
+    "shirt",
+    "blouse",
+    "skirt",
+    "jeans",
+    "pants",
+    "trousers",
+    "shorts",
+    "jacket",
+    "coat",
+    "blazer",
+    "knitwear",
+    "sweater",
+    "hoodie",
+    "cardigan",
+    "outerwear",
+    "shoes",
+    "sneakers",
+    "heels",
+    "boots",
+    "sandals",
+    "bag",
+    "handbag",
+    "accessories",
+    ...(market?.retailerKeywords || []),
+  );
+  const exclusionKeywords = keywordTokens(
+    "supplement",
+    "vitamin",
+    "insurance",
+    "loan",
+    "credit card",
+    "hosting",
+    "vpn",
+    "antivirus",
+    "domain",
+    "flight",
+    "hotel",
+    "tour",
+    "mobile plan",
+    "broadband",
+    "gaming",
+    "software",
+    "course",
+    "electronics",
+  );
+
+  return products.filter((product) => {
+    const haystack = slug(`${product.productName} ${product.brand} ${product.buyLink}`);
+    const hasFashionSignal = normalizedKeywords.some((keyword) => haystack.includes(slug(keyword)));
+    if (!hasFashionSignal) return false;
+    return !exclusionKeywords.some((keyword) => haystack.includes(slug(keyword)));
+  });
 }
 
 async function searchInvolveAsiaProducts(searchQuery, colorSeason, market, options = {}) {
@@ -815,7 +884,8 @@ async function searchInvolveAsiaProducts(searchQuery, colorSeason, market, optio
       throw new Error(`Involve Asia lookup failed with ${response.status}: ${raw.slice(0, 300)}`);
     }
 
-    return normalizeProducts(raw, { searchQuery, colorSeason, market, source: "involve-asia", ...options });
+    const normalized = normalizeProducts(raw, { searchQuery, colorSeason, market, source: "involve-asia", ...options });
+    return filterFashionForwardProducts(normalized, market);
   } finally {
     clearTimeout(timeout);
   }
@@ -1103,6 +1173,8 @@ function rankProductsForQuery(products, searchQuery, colorSeason) {
 
 async function searchProviderProducts(provider, searchQuery, colorSeason, market, options) {
   switch (provider) {
+    case "curated":
+      return searchCuratedProducts(searchQuery, colorSeason, market, options);
     case "feed":
     case "feeds":
     case "product-feed":
@@ -1121,6 +1193,33 @@ async function searchProviderProducts(provider, searchQuery, colorSeason, market
     default:
       throw new Error(`Unsupported affiliate provider: ${provider}`);
   }
+}
+
+async function searchCuratedProducts(searchQuery, colorSeason, market, options = {}) {
+  const matches = findCuratedAffiliateProducts(market.countryCode, searchQuery);
+  if (!matches.length) return [];
+
+  return matches
+    .map((product) => ({
+      productName: String(product.productName || ""),
+      brand: String(product.brand || ""),
+      price: String(product.price || ""),
+      priceAmount: Number.isFinite(product.priceAmount) ? product.priceAmount : parsePriceAmount(product.price),
+      imageUrl: String(product.imageUrl || ""),
+      budgetRange: options?.budgetRange?.label || "",
+      buyLink: appendAffiliateTracking(String(product.buyLink || ""), {
+        searchQuery,
+        colorSeason,
+        market,
+        source: product.source || "involve-asia",
+      }),
+      isFallback: false,
+      actionLabel: "Shop",
+      source: product.source || "involve-asia",
+      ...affiliateTrackingMetadata(product.source || "involve-asia", false),
+    }))
+    .filter((product) => product.productName && product.buyLink)
+    .slice(0, MAX_RESULTS);
 }
 
 async function searchMarketProducts(searchQuery, colorSeason, market, options = {}) {
@@ -1639,9 +1738,36 @@ function networkDisplayName(source = "") {
   return names[normalizedSource] || source || "affiliate network";
 }
 
+function fallbackRetailersForQuery(searchQuery, market) {
+  const retailers = Array.isArray(market?.fallbackRetailers) ? market.fallbackRetailers : [];
+  if (market?.countryCode !== "MY" || retailers.length <= 1) return retailers;
+
+  const normalizedQuery = String(searchQuery || "").toLowerCase();
+  const sporty =
+    /\b(athleisure|technical|performance|training|sneaker|sneakers|jogger|joggers|legging|leggings|sport|running|gym)\b/.test(
+      normalizedQuery,
+    );
+  const dressy =
+    /\b(blazer|blouse|trouser|trousers|skirt|cashmere|wool|tote|loafer|loafers|slingback|knit|coat)\b/.test(
+      normalizedQuery,
+    );
+
+  const jdSports = retailers.filter((retailer) => /jd sports/i.test(String(retailer.brand || "")));
+  const loveBonito = retailers.filter((retailer) => /love bonito/i.test(String(retailer.brand || "")));
+  const remaining = retailers.filter(
+    (retailer) => !/jd sports|love bonito/i.test(String(retailer.brand || "")),
+  );
+
+  if (sporty && !dressy) return [...jdSports, ...loveBonito, ...remaining];
+  if (dressy && !sporty) return [...loveBonito, ...jdSports, ...remaining];
+  return [...loveBonito, ...jdSports, ...remaining];
+}
+
 function buildRetailerSearchFallback(searchQuery, colorSeason, market, budgetRange) {
   const query = [searchQuery, colorSeason].filter(Boolean).join(" ");
-  return market.fallbackRetailers.slice(0, maxResultsForMarket(market)).map((retailer) => {
+  return fallbackRetailersForQuery(searchQuery, market)
+    .slice(0, maxResultsForMarket(market))
+    .map((retailer) => {
     const buyLink = `${retailer.url}${encodeURIComponent(query)}`;
     const nearby = nearbyStoreForRetailer(retailer.brand, market);
     const tracking = affiliateTrackingMetadata("generic-search", true);
@@ -1669,6 +1795,10 @@ function buildRetailerSearchFallback(searchQuery, colorSeason, market, budgetRan
 function buildSearchFallbackProducts(searchQuery, colorSeason, market, budgetRange, fallbackMarket) {
   const primary = buildRetailerSearchFallback(searchQuery, colorSeason, market, budgetRange);
   const maxResults = maxResultsForMarket(market);
+  if (primary.length > 0) {
+    return primary.slice(0, maxResults);
+  }
+
   if (!fallbackMarket || fallbackMarket.countryCode === market.countryCode || primary.length >= maxResults) {
     return primary.slice(0, maxResults);
   }
@@ -1709,6 +1839,8 @@ function cleanProducts(products) {
     brand: product.brand,
     price: product.price,
     imageUrl: product.imageUrl,
+    localImagePath: product.localImagePath || "",
+    countryCode: product.countryCode || "",
     budgetRange: product.budgetRange,
     buyLink: product.buyLink,
     isFallback: Boolean(product.isFallback),
@@ -1770,10 +1902,14 @@ export async function processRequest(body, requestMeta = {}) {
   const errors = [];
 
   try {
-    return affiliateResponse(
-      await searchMarketProducts(searchQuery, colorSeason, market, { budgetRange, requireProductPages }),
-      budgetRange,
-      market,
+    return maybeAttachDiagnostics(
+      affiliateResponse(
+        await searchMarketProducts(searchQuery, colorSeason, market, { budgetRange, requireProductPages }),
+        budgetRange,
+        market,
+      ),
+      [],
+      requestMeta,
     );
   } catch (marketError) {
     errors.push(...affiliateErrorDetails(market.countryCode, marketError));
@@ -1786,10 +1922,14 @@ export async function processRequest(body, requestMeta = {}) {
 
   const fallbackMarket = globalMarket();
   try {
-    return affiliateResponse(
-      await searchMarketProducts(searchQuery, colorSeason, fallbackMarket, { budgetRange, requireProductPages }),
-      budgetRange,
-      market,
+    return maybeAttachDiagnostics(
+      affiliateResponse(
+        await searchMarketProducts(searchQuery, colorSeason, fallbackMarket, { budgetRange, requireProductPages }),
+        budgetRange,
+        market,
+      ),
+      errors,
+      requestMeta,
     );
   } catch (globalError) {
     errors.push(...affiliateErrorDetails("GLOBAL", globalError));

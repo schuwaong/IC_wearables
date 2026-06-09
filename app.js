@@ -57,7 +57,7 @@ const RESULTS_LIVE_MESSAGE = "Five generated looks are ready with live product l
 const RESULTS_PARTIAL_FALLBACK_MESSAGE =
   "Some exact product pages are unavailable right now. Search links are available for the remaining pieces.";
 const RESULTS_FALLBACK_MESSAGE =
-  "Exact product-page matches are temporarily unavailable. Showing colour-matched HK search links instead.";
+  "Exact product-page matches are temporarily unavailable. Showing colour-matched search links for your active market instead.";
 const RESULTS_UNCONFIGURED_MESSAGE =
   "Live product links are not connected on this site yet.";
 const RESULTS_SAMPLE_MESSAGE = "Showing sample looks. Run a new face scan for a personalised results set.";
@@ -88,9 +88,13 @@ const IMAGE_REQUEST_MAX_CONCURRENCY = Math.max(
 );
 const PRODUCT_REQUEST_TIMEOUT_MS = 12000;
 const LOOK_REFERENCE_WAIT_MS = 1500;
-const PRODUCT_LIBRARY_URL = window.IC_PRODUCT_LIBRARY_URL || "../assets/product-library.json";
+const PROJECT_ROOT_RELATIVE_PREFIX = pathName.includes("/female/") || pathName.includes("/men/") ? "../" : "";
+const MENS_IMAGE_FALLBACK_URL = `${PROJECT_ROOT_RELATIVE_PREFIX}assets/ic-wearables-hero-premium-v2.png`;
+const PRODUCT_LIBRARY_URL = window.IC_PRODUCT_LIBRARY_URL || "data/product-library.json";
+const PRODUCT_LIBRARY_FALLBACK_URL = "assets/product-library.json";
 const PRODUCT_COMBINATION_MANIFEST_URL =
-  window.IC_PRODUCT_COMBINATION_MANIFEST_URL || "../assets/outfit-combinations/manifest.json";
+  window.IC_PRODUCT_COMBINATION_MANIFEST_URL || "data/outfit-combination-crops/manifest.json";
+const PRODUCT_COMBINATION_FALLBACK_URL = "assets/outfit-combinations/manifest.json";
 const LOCATION_STORAGE_KEY = "icWearablesShopperLocation";
 const LOOK_LOG_PHASE_LABELS = {
   queued: "Queued",
@@ -114,6 +118,9 @@ let activeImageGenerationJobs = 0;
 const pendingImageGenerationJobs = [];
 const femaleLookCardState = new Map();
 let productCombinationManifestPromise = null;
+let productLibraryDataPromise = null;
+let productLibraryIndexPromise = null;
+const MAX_AUTOMATIC_PRODUCT_REFERENCE_IMAGES = 1;
 
 const seasonProfiles = [
   {
@@ -790,9 +797,11 @@ function buildStyleImagePrompt(result) {
     `Colour profile: ${result.profile.name}. Palette hex colours for clothing, shoes, and accessories only: ${palette}.`,
     `Visual read: ${axisSummary}. Wardrobe direction: ${result.profile.wardrobe}.`,
     "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairstyle, hairline, hair length, hair volume, hair part, hair colour, facial hair, and expression as the reference photo in every panel.",
+    "Keep the same face scale, the same head-to-body relationship, and the same hairstyle silhouette around the forehead, temples, ears, and shoulders in every panel.",
     "If the reference face is neutral or not smiling, keep it neutral in every panel. Do not add a smile, grin, visible teeth, or any new expression.",
-    "Do not beautify, retouch, slim, age, de-age, change ethnicity, stretch, warp, liquify, restyle the hair, change the hairline, face-swap, or replace the face with a different model.",
+    "Do not beautify, retouch, slim, widen, age, de-age, change ethnicity, stretch, warp, liquify, restyle the hair, change the hairline, change the hair part, add or remove hair volume, face-swap, or replace the face with a different model.",
     "Do not create five different men. It must be the same person with the same natural face in all five looks.",
+    "If styling instructions conflict with identity or hairstyle preservation, identity preservation wins.",
     "Use realistic head size, camera perspective, and skin texture. No text, no logos, no watermark.",
   ].join(" ");
 }
@@ -1102,6 +1111,7 @@ function configuredBackendBaseUrl() {
 
 const TIMEZONE_COUNTRY_HINTS = {
   "Asia/Hong_Kong": "HK",
+  "Asia/Kuala_Lumpur": "MY",
   "Asia/Singapore": "SG",
   "Asia/Tokyo": "JP",
   "Asia/Seoul": "KR",
@@ -1275,18 +1285,21 @@ function inferredCountryCode() {
     String(safeStorageValue("icCountryCode") || "").trim().toUpperCase();
   if (/^[A-Z]{2}$/.test(direct)) return direct;
 
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    const hintedCountry = TIMEZONE_COUNTRY_HINTS[timezone] || "";
+    if (hintedCountry) return hintedCountry;
+  } catch {
+    // Fall through to locale detection.
+  }
+
   const localeCandidates = [navigator.language, ...(navigator.languages || [])];
   for (const locale of localeCandidates) {
     const region = regionFromLocale(locale);
     if (region) return region;
   }
 
-  try {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    return TIMEZONE_COUNTRY_HINTS[timezone] || "";
-  } catch {
-    return "";
-  }
+  return "";
 }
 
 function readStoredLocation() {
@@ -1422,6 +1435,17 @@ function inferredCurrency(countryCode) {
   return COUNTRY_CURRENCY[countryCode] || "USD";
 }
 
+function marketLabel(countryCode = inferredCountryCode()) {
+  switch (String(countryCode || "").trim().toUpperCase()) {
+    case "HK":
+      return "Hong Kong";
+    case "MY":
+      return "Malaysia";
+    default:
+      return "this region";
+  }
+}
+
 function formatCurrencyAmount(amount, currency) {
   return new Intl.NumberFormat("en", {
     style: "currency",
@@ -1515,6 +1539,7 @@ function normalizeAffiliateProducts(payload) {
       brand: String(product.brand || product.merchant || "Retail partner"),
       price: String(product.price || product.salePrice || "Live price"),
       imageUrl: String(product.imageUrl || product.image || ""),
+      localImagePath: String(product.localImagePath || product.sourceImage || product.cropImage || ""),
       budgetRange: String(product.budgetRange || ""),
       buyLink: String(product.buyLink || product.link || product.url || ""),
       isFallback: Boolean(product.isFallback || product.source === "generic-search"),
@@ -1529,6 +1554,7 @@ function normalizeAffiliateProducts(payload) {
     }))
     .map((product) => ({
       ...product,
+      imageUrl: normalizeProductImageUrl(product),
       exactProductPage: !product.isFallback && looksLikeSpecificProductPage(product.rawBuyLink),
     }));
 }
@@ -1555,6 +1581,8 @@ async function fetchMatchingClothes(searchQuery, colorSeason, options = {}) {
   const { endpoint, isExplicit } = getMatchingEndpointConfig();
   const countryCode = options.countryCode || inferredCountryCode();
   const budgetSelection = options.budget || "mid premium";
+  const requireExactProductPages = options.requireProductPages !== false;
+  const allowSearchFallback = options.allowSearchFallback !== false;
   if (!window.fetch || shouldSkipApiEndpoint(endpoint, isExplicit)) {
     return {
       products: [],
@@ -1577,8 +1605,8 @@ async function fetchMatchingClothes(searchQuery, colorSeason, options = {}) {
           colorSeason,
           budget: budgetSelection,
           countryCode,
-          allowSearchFallback: true,
-          requireProductPages: false,
+          allowSearchFallback,
+          requireProductPages: requireExactProductPages,
         }),
         ...(controller ? { signal: controller.signal } : {}),
       });
@@ -1602,7 +1630,9 @@ async function fetchMatchingClothes(searchQuery, colorSeason, options = {}) {
       };
     }
 
-    const products = normalizeAffiliateProducts(payload).filter((product) => product.exactProductPage || product.isFallback);
+    const products = normalizeAffiliateProducts(payload).filter((product) =>
+      requireExactProductPages ? product.exactProductPage || product.isFallback : product.buyLink,
+    );
     const budgetRange = extractAffiliateBudgetRange(payload, budgetSelection, countryCode);
     if (!products.length) {
       return {
@@ -1714,8 +1744,10 @@ function buildFemaleLookPrompt(run, idea, index) {
     `Colour season: ${run.profile.name}. Palette hex colours: ${palette}. Wardrobe direction: ${run.profile.wardrobe}.`,
     `Outfit pieces to show: ${pieces}. ${frameInstruction}`,
     "Keep the exact same face identity, head shape, facial structure, jawline, cheekbones, eyes, brows, nose, lips, skin tone, hairline, hairstyle, hair length, hair volume, hair part, bangs or fringe, hair colour, and expression as the reference photo.",
+    "Keep the same face scale and the same hairstyle silhouette around the forehead, temples, ears, neck, and shoulders as the reference photo.",
     "If the reference face is neutral or not smiling, do not add a smile, grin, visible teeth, or any new expression.",
-    "Do not beautify, retouch, slim, age, de-age, change ethnicity, warp, liquify, restyle the hair, change the hairline, or swap in a different model.",
+    "Do not beautify, retouch, slim, widen, age, de-age, change ethnicity, warp, liquify, restyle the hair, change the hairline, change the hair part, add or remove hair volume, or swap in a different model.",
+    "If outfit styling conflicts with identity or hairstyle preservation, identity preservation wins.",
     "Premium textures, realistic lighting, natural skin texture, clear full face, elegant styling, no text, no logos, no watermark.",
   ].join(" ");
 }
@@ -1782,9 +1814,10 @@ function createProductRow(product, piece) {
   row.className = "look-product-row";
   if (product.isFallback) row.classList.add("is-fallback");
 
-  if (product.imageUrl) {
+  const exactImageUrl = normalizeProductImageUrl(product);
+  if (exactImageUrl) {
     const image = document.createElement("img");
-    image.src = product.imageUrl;
+    image.src = exactImageUrl;
     image.alt = product.productName;
     image.loading = "lazy";
     row.appendChild(image);
@@ -1800,12 +1833,15 @@ function createProductRow(product, piece) {
   const brand = document.createElement("span");
   const title = document.createElement("strong");
   const price = document.createElement("small");
+  const matchStatus = document.createElement("small");
   const budget = product.budgetRange ? document.createElement("small") : null;
   pieceLabel.className = "look-product-piece";
   pieceLabel.textContent = piece.label;
   brand.textContent = product.brand;
   title.textContent = product.productName;
   price.textContent = product.price;
+  matchStatus.className = "look-product-budget";
+  matchStatus.textContent = product.isFallback ? "Fallback search result" : "Exact product page";
   const trackingStatus = document.createElement("small");
   trackingStatus.className = "look-product-budget";
   trackingStatus.textContent =
@@ -1816,9 +1852,9 @@ function createProductRow(product, piece) {
   if (budget) {
     budget.className = "look-product-budget";
     budget.textContent = `Budget target: ${product.budgetRange}`;
-    copy.append(pieceLabel, brand, title, price, trackingStatus, budget);
+    copy.append(pieceLabel, brand, title, price, matchStatus, trackingStatus, budget);
   } else {
-    copy.append(pieceLabel, brand, title, price, trackingStatus);
+    copy.append(pieceLabel, brand, title, price, matchStatus, trackingStatus);
   }
 
   const actions = document.createElement("div");
@@ -1867,12 +1903,194 @@ function createProductNotice(message) {
   return notice;
 }
 
-function productLibraryHref(rawUrl = PRODUCT_LIBRARY_URL) {
+function absoluteProjectUrl(rawUrl = "") {
   try {
     return new URL(rawUrl, window.location.href).toString();
   } catch {
     return rawUrl;
   }
+}
+
+function productAssetCandidates(...urls) {
+  return urls
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .flatMap((value) => {
+      const normalized = value.replace(/^\.?\//, "");
+      const withPrefix = normalized.startsWith("../") ? normalized : `${PROJECT_ROOT_RELATIVE_PREFIX}${normalized}`;
+      const candidates = [value, normalized, withPrefix];
+      return candidates.filter((candidate, index, all) => all.indexOf(candidate) === index);
+    });
+}
+
+function marketAssetCandidates(kind, countryCode = inferredCountryCode()) {
+  const normalizedCountry = String(countryCode || "").trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalizedCountry)) return [];
+
+  if (kind === "library") {
+    return productAssetCandidates(
+      `data/product-library-${normalizedCountry.toLowerCase()}.json`,
+      `assets/product-library-${normalizedCountry.toLowerCase()}.json`,
+    );
+  }
+
+  if (kind === "combinations") {
+    return productAssetCandidates(
+      `data/outfit-combination-crops/${normalizedCountry.toLowerCase()}/manifest.json`,
+      `assets/outfit-combinations/${normalizedCountry.toLowerCase()}/manifest.json`,
+    );
+  }
+
+  return [];
+}
+
+async function fetchFirstJson(candidates) {
+  let lastError = null;
+  for (const candidate of candidates) {
+    const href = absoluteProjectUrl(candidate);
+    try {
+      const response = await fetch(href, { cache: "no-store" });
+      if (!response.ok) throw new Error(`request failed with ${response.status}`);
+      const payload = await response.json();
+      return { payload, href, candidate };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("No JSON candidate could be loaded.");
+}
+
+function normalizeProductImageUrl(product = {}) {
+  const localPath = String(product.localImagePath || product.sourceImage || product.cropImage || "").trim();
+  if (localPath) return absoluteProjectUrl(`${PROJECT_ROOT_RELATIVE_PREFIX}${localPath.replace(/^\.?\//, "")}`);
+  const remoteUrl = String(product.imageUrl || "").trim();
+  return /^https?:\/\//i.test(remoteUrl) ? remoteUrl : "";
+}
+
+function productLibraryCandidates() {
+  return [
+    ...marketAssetCandidates("library"),
+    ...productAssetCandidates(PRODUCT_LIBRARY_URL, PRODUCT_LIBRARY_FALLBACK_URL),
+  ].filter((candidate, index, all) => all.indexOf(candidate) === index);
+}
+
+function productCombinationCandidates() {
+  return [
+    ...marketAssetCandidates("combinations"),
+    ...productAssetCandidates(PRODUCT_COMBINATION_MANIFEST_URL, PRODUCT_COMBINATION_FALLBACK_URL),
+  ].filter((candidate, index, all) => all.indexOf(candidate) === index);
+}
+
+async function loadProductLibrary() {
+  if (!productLibraryDataPromise) {
+    productLibraryDataPromise = fetchFirstJson(productLibraryCandidates())
+      .then(({ payload, href }) => ({
+        ...payload,
+        __resolvedHref: href,
+      }))
+      .catch(() => null);
+  }
+  return productLibraryDataPromise;
+}
+
+function productLibraryIndexKey(product = {}) {
+  return [
+    String(product.season || "").trim().toLowerCase(),
+    String(product.look || "").trim().toLowerCase(),
+    String(product.piece || "").trim().toLowerCase(),
+    String(product.brand || "").trim().toLowerCase(),
+  ].join("::");
+}
+
+function approvedBrandSetForCountry(countryCode = "") {
+  switch (String(countryCode || "").trim().toUpperCase()) {
+    case "HK":
+      return new Set(["zalora hk", "taobao hk"]);
+    case "MY":
+      return new Set(["love bonito my", "jd sports my"]);
+    default:
+      return null;
+  }
+}
+
+function approvedBrandNameForProduct(product = {}, countryCode = "") {
+  const normalizedBrand = String(product.brand || "").trim().toLowerCase();
+  const allowed = approvedBrandSetForCountry(countryCode);
+  if (!allowed || allowed.has(normalizedBrand)) return normalizedBrand;
+
+  const normalizedLink = String(product.buyLink || product.affiliateLink || "").trim().toLowerCase();
+  if (String(countryCode || "").trim().toUpperCase() === "HK" && normalizedLink.includes("zalora.com.hk")) {
+    return "zalora hk";
+  }
+  if (String(countryCode || "").trim().toUpperCase() === "HK" && normalizedLink.includes("taobao.com")) {
+    return "taobao hk";
+  }
+  if (String(countryCode || "").trim().toUpperCase() === "MY") {
+    if (normalizedLink.includes("lovebonito.com/my")) return "love bonito my";
+    if (normalizedLink.includes("jdsports.my")) return "jd sports my";
+  }
+  return "";
+}
+
+async function loadProductLibraryIndex() {
+  if (!productLibraryIndexPromise) {
+    productLibraryIndexPromise = loadProductLibrary().then((library) => {
+      const index = new Map();
+      const products = Array.isArray(library?.products) ? library.products : [];
+      products.forEach((product) => {
+        const key = productLibraryIndexKey(product);
+        if (!key || index.has(key)) return;
+        index.set(key, product);
+      });
+      return index;
+    });
+  }
+  return productLibraryIndexPromise;
+}
+
+async function hydrateProductsFromLibrary(rows = [], run = null, idea = null) {
+  const index = await loadProductLibraryIndex().catch(() => new Map());
+  return rows.map((row) => {
+    const product = row?.product || {};
+    const countryCode = String(product.countryCode || row?.countryCode || inferredCountryCode() || "").trim().toUpperCase();
+    const approvedBrand = approvedBrandNameForProduct(product, countryCode);
+    if (!approvedBrand) return row;
+    const libraryKey = productLibraryIndexKey({
+      season: run?.profile?.name || "",
+      look: idea?.title || "",
+      piece: row?.piece?.label || "",
+      brand: approvedBrand,
+    });
+    const libraryMatch = index.get(libraryKey);
+    if (!libraryMatch) return row;
+    const hasExactProductPage = !product.isFallback && looksLikeSpecificProductPage(product.buyLink || product.affiliateLink || "");
+    const shouldUpgrade = product.isFallback || !hasExactProductPage || !normalizeProductImageUrl(product);
+    if (!shouldUpgrade) return row;
+    return {
+      ...row,
+      usedAffiliate: !libraryMatch.isFallback,
+      reason: libraryMatch.isFallback ? row.reason : "",
+      product: {
+        ...product,
+        productName: libraryMatch.productName || product.productName || "",
+        brand: libraryMatch.brand || product.brand || "",
+        price: libraryMatch.price || product.price || "",
+        budgetRange: libraryMatch.budgetRange || product.budgetRange || "",
+        buyLink: libraryMatch.affiliateLink || libraryMatch.buyLink || product.buyLink || "",
+        affiliateLink: libraryMatch.affiliateLink || libraryMatch.buyLink || product.affiliateLink || "",
+        isFallback: Boolean(libraryMatch.isFallback),
+        actionLabel:
+          libraryMatch.actionLabel ||
+          (!libraryMatch.isFallback && (libraryMatch.affiliateLink || libraryMatch.buyLink) ? "Shop" : product.actionLabel || "Search"),
+        commissionable: Boolean(libraryMatch.commissionable),
+        affiliateNetwork: libraryMatch.affiliateNetwork || product.affiliateNetwork || "",
+        trackingStatus: libraryMatch.trackingStatus || product.trackingStatus || "",
+        trackingLabel: libraryMatch.trackingLabel || product.trackingLabel || "",
+        localImagePath: product.localImagePath || libraryMatch.localImagePath || libraryMatch.sourceImage || "",
+        imageUrl: product.imageUrl || libraryMatch.imageUrl || "",
+      },
+    };
+  });
 }
 
 function seasonFamilyName(seasonName) {
@@ -1884,21 +2102,13 @@ function seasonFamilyName(seasonName) {
   return "";
 }
 
-function productCombinationHref(rawUrl = PRODUCT_COMBINATION_MANIFEST_URL) {
-  try {
-    return new URL(rawUrl, window.location.href).toString();
-  } catch {
-    return rawUrl;
-  }
-}
-
 async function productCombinationManifest() {
   if (!productCombinationManifestPromise) {
-    productCombinationManifestPromise = fetch(productCombinationHref(), { cache: "no-store" })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Combination manifest request failed with ${response.status}`);
-        return response.json();
-      })
+    productCombinationManifestPromise = fetchFirstJson(productCombinationCandidates())
+      .then(({ payload, href }) => ({
+        ...payload,
+        __resolvedHref: href,
+      }))
       .catch(() => null);
   }
   return productCombinationManifestPromise;
@@ -1907,14 +2117,33 @@ async function productCombinationManifest() {
 async function combinationBoardForLook(run, idea) {
   const manifest = await productCombinationManifest();
   const combinations = Array.isArray(manifest?.combinations) ? manifest.combinations : [];
+  const countryCode = inferredCountryCode();
   const family = seasonFamilyName(run.profile?.name);
   const match =
+    combinations.find(
+      (combination) =>
+        String(combination.countryCode || "").trim().toUpperCase() === countryCode &&
+        combination.mode === "family" &&
+        combination.seasonFamily === family &&
+        combination.look === idea.title,
+    ) ||
+    combinations.find(
+      (combination) =>
+        String(combination.countryCode || "").trim().toUpperCase() === countryCode &&
+        combination.season === run.profile?.name &&
+        combination.look === idea.title,
+    ) ||
     combinations.find((combination) => combination.mode === "family" && combination.seasonFamily === family && combination.look === idea.title) ||
     combinations.find((combination) => combination.season === run.profile?.name && combination.look === idea.title);
   if (!match?.boardImage) return null;
+  if (Array.isArray(match.products) && match.products.length) {
+    const allApproved = match.products.every((product) => approvedBrandNameForProduct(product, countryCode));
+    if (!allApproved) return null;
+  }
+  const boardImage = normalizeProductImageUrl({ localImagePath: match.boardImage, imageUrl: match.boardImage });
   return {
     ...match,
-    boardUrl: new URL(`../${match.boardImage}`, window.location.href).toString(),
+    boardUrl: boardImage,
   };
 }
 
@@ -1923,9 +2152,20 @@ function createLibraryProductRow(product) {
   row.className = "library-product-row";
   if (product.isFallback) row.classList.add("is-fallback");
 
-  const marker = document.createElement("span");
-  marker.className = "product-marker";
-  marker.textContent = String(product.piece || product.brand || "P").slice(0, 1).toUpperCase();
+  const imageUrl = normalizeProductImageUrl(product);
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.className = "library-product-image";
+    image.src = imageUrl;
+    image.alt = product.productName || "Product image";
+    image.loading = "lazy";
+    row.appendChild(image);
+  } else {
+    const marker = document.createElement("span");
+    marker.className = "product-marker";
+    marker.textContent = String(product.piece || product.brand || "P").slice(0, 1).toUpperCase();
+    row.appendChild(marker);
+  }
 
   const copy = document.createElement("div");
   const meta = document.createElement("span");
@@ -1936,7 +2176,7 @@ function createLibraryProductRow(product) {
   status.textContent = [
     product.isFallback ? "Fallback search link" : "Exact product",
     product.trackingLabel || (product.commissionable ? "affiliate tracked" : "not affiliate tracked"),
-    product.imageUrl ? "has image URL" : "no image URL",
+    imageUrl ? "has exact image" : "no image",
     product.localImagePath ? `cached: ${product.localImagePath}` : product.imageCacheStatus,
   ]
     .filter(Boolean)
@@ -1954,17 +2194,15 @@ function createLibraryProductRow(product) {
     action.classList.add("is-disabled");
   }
 
-  row.append(marker, copy, action);
+  row.append(copy, action);
   return row;
 }
 
 async function hydrateProductLibraryPanel() {
   if (!productLibrarySummary || !productLibraryList) return;
-  const libraryUrl = productLibraryHref();
   try {
-    const response = await fetch(libraryUrl, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Library request failed with ${response.status}`);
-    const library = await response.json();
+    const library = await loadProductLibrary();
+    if (!library) throw new Error("Library request failed");
     const summary = library.summary || {};
     const diagnostics = Array.isArray(library.affiliateDiagnostics) ? library.affiliateDiagnostics : [];
     const products = Array.isArray(library.products) ? library.products : [];
@@ -1974,7 +2212,7 @@ async function hydrateProductLibraryPanel() {
     const children = [];
     const openJson = document.createElement("a");
     openJson.className = "library-json-link";
-    openJson.href = libraryUrl;
+    openJson.href = library.__resolvedHref || absoluteProjectUrl(PRODUCT_LIBRARY_URL);
     openJson.target = "_blank";
     openJson.rel = "noopener noreferrer";
     openJson.textContent = "Open raw product-library.json";
@@ -2169,6 +2407,146 @@ function setLookErrorState(cardState, message) {
   setLookActionState(cardState.regenerateButton, "Regenerate", false);
 }
 
+function setLookFallbackState(cardState, imageUrl, message) {
+  if (!cardState) return;
+  if (!imageUrl) {
+    setLookErrorState(cardState, message);
+    return;
+  }
+  cardState.image.dataset.renderState = "fallback";
+  cardState.image.removeAttribute("aria-hidden");
+  cardState.image.onload = null;
+  cardState.image.onerror = () => {
+    setLookErrorState(cardState, "Fallback image could not be displayed.");
+  };
+  cardState.image.src = imageUrl;
+  setLookImageStatus(cardState.imageStatus, message);
+  setLookActionState(cardState.regenerateButton, "Regenerate", false);
+}
+
+async function copyTextToClipboard(text) {
+  const value = String(text || "");
+  if (!value) throw new Error("Nothing to copy.");
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "true");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  const success = document.execCommand("copy");
+  document.body.removeChild(textarea);
+  if (!success) throw new Error("Clipboard copy is not available in this browser.");
+}
+
+function triggerDownload(url, filename) {
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+}
+
+function safeFileSlug(value, fallback = "reference") {
+  const slug = String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+  return slug || fallback;
+}
+
+function dataUrlExtension(dataUrl = "") {
+  const match = String(dataUrl).match(/^data:image\/([a-z0-9.+-]+);base64,/i);
+  if (!match) return "png";
+  const subtype = match[1].toLowerCase();
+  if (subtype.includes("jpeg") || subtype.includes("jpg")) return "jpg";
+  if (subtype.includes("webp")) return "webp";
+  return "png";
+}
+
+function geminiReferenceInstructions(lookTitle, referenceCount) {
+  const garmentCount = Math.max(0, referenceCount - 1);
+  return [
+    "Gemini Flash handoff:",
+    "Image 1 must be the face and hairstyle identity reference.",
+    garmentCount
+      ? `Images 2-${referenceCount} are garment-only references. They must influence clothing and accessories only, never the face or hair.`
+      : "No garment reference image is attached, so style the outfit from the prompt text only.",
+    "If the model starts changing the face, expression, or hairstyle, stop and rerun with identity preservation prioritized over outfit accuracy.",
+  ].join("\n");
+}
+
+async function collectLookReferenceBundle(run, idea, rows = []) {
+  const resolvedRows = Array.isArray(rows) ? rows : [];
+  const faceReference = run.faceReferenceDataUrl || (await faceReferenceDataUrl()) || "";
+  if (!faceReference) {
+    throw new Error("No saved face reference is available for this look.");
+  }
+
+  const combinationBoard = await Promise.race([
+    combinationBoardForLook(run, idea),
+    delay(LOOK_REFERENCE_WAIT_MS).then(() => null),
+  ]);
+
+  const productImageUrls = resolvedRows
+    .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
+    .sort((left, right) => productReferencePriority(left) - productReferencePriority(right))
+    .map(({ product }) => product.imageUrl)
+    .filter((url, index, all) => all.indexOf(url) === index)
+    .slice(0, MAX_AUTOMATIC_PRODUCT_REFERENCE_IMAGES);
+
+  const garmentReferences = combinationBoard?.boardUrl ? [combinationBoard.boardUrl] : productImageUrls;
+  return {
+    faceReference,
+    garmentReferences,
+    combinationBoard,
+    referenceImages: [faceReference, ...garmentReferences].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT),
+  };
+}
+
+async function downloadLookReferenceBundle(run, idea, rows = []) {
+  const bundle = await collectLookReferenceBundle(run, idea, rows);
+  const lookSlug = safeFileSlug(idea.title, "look");
+
+  triggerDownload(bundle.faceReference, `${lookSlug}-face-reference.${dataUrlExtension(bundle.faceReference)}`);
+  bundle.garmentReferences.forEach((referenceUrl, index) => {
+    const extension = /^data:/i.test(referenceUrl)
+      ? dataUrlExtension(referenceUrl)
+      : (() => {
+          try {
+            const pathname = new URL(referenceUrl, window.location.href).pathname;
+            const match = pathname.match(/\.([a-z0-9]+)$/i);
+            return match ? match[1].toLowerCase() : "png";
+          } catch {
+            return "png";
+          }
+        })();
+    triggerDownload(referenceUrl, `${lookSlug}-reference-${index + 2}.${extension}`);
+  });
+
+  return bundle;
+}
+
+async function copyGeminiLookPrompt(run, idea, index, rows = []) {
+  const bundle = await collectLookReferenceBundle(run, idea, rows);
+  const prompt = buildReferencedFemaleLookPrompt(run, idea, index, rows);
+  const handoffText = [
+    prompt,
+    "",
+    geminiReferenceInstructions(idea.title, bundle.referenceImages.length),
+  ].join("\n");
+  await copyTextToClipboard(handoffText);
+  return bundle;
+}
+
 function runQueuedImageGeneration(task) {
   return new Promise((resolve, reject) => {
     const launch = () => {
@@ -2247,6 +2625,13 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
   } else {
     resolvedRows = Array.isArray(rowsOrPromise) ? rowsOrPromise : [];
   }
+  resolvedRows = resolvedRows.map((row) => ({
+    ...row,
+    product: {
+      ...row.product,
+      imageUrl: normalizeProductImageUrl(row.product),
+    },
+  }));
 
   const productImageUrls = resolvedRows
     .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
@@ -2254,23 +2639,24 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     .map(({ product }) => product.imageUrl)
     .filter((url, index, all) => all.indexOf(url) === index)
     .filter((url) => /^https?:\/\//i.test(url))
-    .slice(0, 2);
+    .slice(0, MAX_AUTOMATIC_PRODUCT_REFERENCE_IMAGES);
   const combinationBoard = await Promise.race([
     combinationBoardForLook(run, idea),
     delay(LOOK_REFERENCE_WAIT_MS).then(() => null),
   ]);
   if (!run.faceReferenceDataUrl) {
-    setLookErrorState(cardState, "Image generation unavailable: no face reference found for this look.");
-    setRunlogState(idea.title, "error", "Face reference was unavailable, so this look could not be rendered.");
+    setLookFallbackState(cardState, idea.fallbackImage, "Face reference was unavailable, so a fallback look image is shown.");
+    setRunlogState(idea.title, "fallback", "Face reference was unavailable, so the fallback look image is shown.");
     return {
       imageUsedReferences: false,
       productReferenceCount: productImageUrls.length,
-      imageProvider: "error",
+      imageProvider: "fallback",
     };
   }
   const productReferenceImages = combinationBoard?.boardUrl ? [combinationBoard.boardUrl] : productImageUrls;
   const referenceImages = [run.faceReferenceDataUrl, ...productReferenceImages].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
+  const fallbackImageUrl = idea.fallbackImage;
   upsertPromptInspector(cardState, prompt);
 
   setLookImageStatus(
@@ -2363,20 +2749,21 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
     };
   } catch (error) {
     const attemptSummary = formatImageAttempts(error?.attempts || []);
-    setLookErrorState(
+    setLookFallbackState(
       cardState,
-      `Image generation failed${error?.message ? `: ${error.message}` : ""}`,
+      fallbackImageUrl,
+      "AI try-on failed, so a fallback look image is shown instead.",
     );
     setRunlogState(
       idea.title,
-      "error",
-      `All reference-capable providers failed${attemptSummary.failed.length ? `: ${attemptSummary.failed.join(" | ")}` : error?.message ? `: ${error.message}` : "."}`,
+      "fallback",
+      `All reference-capable providers failed, so the fallback look image is shown${attemptSummary.failed.length ? `: ${attemptSummary.failed.join(" | ")}` : error?.message ? `: ${error.message}` : "."}`,
     );
     return {
       imageUsedReferences: false,
       productReferenceCount: productReferenceImages.length,
       combinationBoard: combinationBoard?.boardImage || "",
-      imageProvider: "error",
+      imageProvider: "fallback",
     };
   }
 }
@@ -2442,6 +2829,20 @@ function renderFemaleLookCard(run, idea, index) {
   regenerateButton.disabled = run.sample;
   imageActions.appendChild(regenerateButton);
 
+  const copyPromptButton = document.createElement("button");
+  copyPromptButton.type = "button";
+  copyPromptButton.className = "generated-look-secondary";
+  copyPromptButton.textContent = "Copy Gemini prompt";
+  copyPromptButton.disabled = run.sample;
+  imageActions.appendChild(copyPromptButton);
+
+  const downloadRefsButton = document.createElement("button");
+  downloadRefsButton.type = "button";
+  downloadRefsButton.className = "generated-look-secondary";
+  downloadRefsButton.textContent = "Download refs";
+  downloadRefsButton.disabled = run.sample;
+  imageActions.appendChild(downloadRefsButton);
+
   const rackTitle = document.createElement("h3");
   rackTitle.textContent = "Product links";
 
@@ -2455,7 +2856,16 @@ function renderFemaleLookCard(run, idea, index) {
 
   body.append(top, pieceList, imageActions, rackTitle, productList);
   card.append(media, body);
-  return { card, body, productList, image, imageStatus, regenerateButton };
+  return {
+    card,
+    body,
+    productList,
+    image,
+    imageStatus,
+    regenerateButton,
+    copyPromptButton,
+    downloadRefsButton,
+  };
 }
 
 async function hydrateLookProducts(run, idea, productList) {
@@ -2481,7 +2891,7 @@ async function hydrateLookProducts(run, idea, productList) {
       }));
     }),
   );
-  const rows = pieceResults.flat();
+  const rows = await hydrateProductsFromLibrary(pieceResults.flat(), run, idea);
 
   const affiliateCount = rows.filter((row) => row.usedAffiliate).length;
   const fallbackCount = rows.length - affiliateCount;
@@ -2494,7 +2904,7 @@ async function hydrateLookProducts(run, idea, productList) {
   }
 
   if (maxProductsPerPiece > 1) {
-    children.push(createProductMeta(`Showing up to ${maxProductsPerPiece} matched options per piece for Hong Kong.`));
+    children.push(createProductMeta(`Showing up to ${maxProductsPerPiece} matched options per piece for ${marketLabel(countryCode)}.`));
   }
 
   if (fallbackCount > 0) {
@@ -2536,6 +2946,46 @@ function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
     setRunlogState(idea.title, "rendering", "Retrying this look image.");
     const productStats = await productStatsPromise.catch(() => ({ rows: [], affiliateCount: 0, fallbackCount: 0, totalCount: 0 }));
     await hydrateLookImage(run, idea, index, cardState.image, cardState.imageStatus, productStats.rows, { cardState });
+  });
+
+  cardState.copyPromptButton?.addEventListener("click", async () => {
+    try {
+      setLookImageStatus(cardState.imageStatus, "Copying Gemini handoff prompt...");
+      const productStats = await productStatsPromise.catch(() => ({
+        rows: [],
+        affiliateCount: 0,
+        fallbackCount: 0,
+        totalCount: 0,
+      }));
+      const bundle = await copyGeminiLookPrompt(run, idea, index, productStats.rows);
+      setLookImageStatus(
+        cardState.imageStatus,
+        `Gemini prompt copied. Use Image 1 for face identity and ${Math.max(0, bundle.referenceImages.length - 1)} garment reference image${Math.max(0, bundle.referenceImages.length - 1) === 1 ? "" : "s"}.`,
+      );
+      setRunlogState(idea.title, "success", "Copied a manual Gemini Flash handoff prompt for this look.");
+    } catch (error) {
+      setLookImageStatus(cardState.imageStatus, error?.message || "Could not copy the Gemini prompt.");
+    }
+  });
+
+  cardState.downloadRefsButton?.addEventListener("click", async () => {
+    try {
+      setLookImageStatus(cardState.imageStatus, "Preparing downloadable references...");
+      const productStats = await productStatsPromise.catch(() => ({
+        rows: [],
+        affiliateCount: 0,
+        fallbackCount: 0,
+        totalCount: 0,
+      }));
+      const bundle = await downloadLookReferenceBundle(run, idea, productStats.rows);
+      setLookImageStatus(
+        cardState.imageStatus,
+        `Downloaded ${bundle.referenceImages.length} reference image${bundle.referenceImages.length === 1 ? "" : "s"} for manual Gemini use.`,
+      );
+      setRunlogState(idea.title, "success", "Downloaded the face and garment references for manual Gemini Flash rendering.");
+    } catch (error) {
+      setLookImageStatus(cardState.imageStatus, error?.message || "Could not download the reference images.");
+    }
   });
 }
 
@@ -2668,11 +3118,14 @@ async function generateStylePhoto() {
       generatedStyleImage.src = result.imageUrl;
       styleImageRenderNonce += 1;
     } catch (error) {
-      generatedStyleImage.removeAttribute("src");
-      if (generationStatus) generationStatus.textContent = IMAGE_ERROR_MESSAGE;
+      generatedStyleImage.src = MENS_IMAGE_FALLBACK_URL;
+      if (generationStatus) {
+        generationStatus.textContent =
+          "AI try-on failed, so a sample five-look image is shown instead.";
+      }
       if (generatePhotoButton) {
         generatePhotoButton.disabled = false;
-        generatePhotoButton.textContent = "Generate five-look image";
+        generatePhotoButton.textContent = "Regenerate five-look image";
       }
     }
   }
