@@ -401,6 +401,10 @@ function normalizeProduct(product, context, index) {
     isFallback: Boolean(product.isFallback),
     source: product.source || "",
     actionLabel: product.actionLabel || (product.buyLink ? "Shop" : "Unavailable"),
+    commissionable: Boolean(product.commissionable),
+    affiliateNetwork: product.affiliateNetwork || "",
+    trackingStatus: product.trackingStatus || "",
+    trackingLabel: product.trackingLabel || "",
     nearbyStoreUrl: product.nearbyStoreUrl || "",
     nearbyStoreMode: product.nearbyStoreMode || "",
     nearbyStoreLabel: product.nearbyStoreLabel || "",
@@ -474,6 +478,7 @@ async function main() {
 
   const exactCount = products.filter((product) => !product.isFallback).length;
   const fallbackCount = products.length - exactCount;
+  const commissionableCount = products.filter((product) => product.commissionable).length;
   const imageCache = await attachImageCache(products);
   const library = {
     generatedAt,
@@ -490,6 +495,8 @@ async function main() {
       products: products.length,
       exactProducts: exactCount,
       fallbackSearchLinks: fallbackCount,
+      commissionableProducts: commissionableCount,
+      untrackedProducts: products.length - commissionableCount,
       failures: failures.length,
       cachedImages: imageCache.cached + imageCache.existing,
       imageCacheFailures: imageCache.failed,

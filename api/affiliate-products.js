@@ -24,8 +24,29 @@ const INVOLVE_ASIA_SEARCH_BODY_PARAM = process.env.INVOLVE_ASIA_SEARCH_BODY_PARA
 const INVOLVE_ASIA_TRACKING_PARAM = process.env.INVOLVE_ASIA_TRACKING_PARAM || "sid";
 const INVOLVE_ASIA_TRACKING_VALUE =
   process.env.INVOLVE_ASIA_TRACKING_VALUE || process.env.INVOLVE_ASIA_AFFILIATE_ID || "icw";
+const AFFILIATE_APPEND_GENERIC_SUBID =
+  String(process.env.AFFILIATE_APPEND_GENERIC_SUBID || "").trim().toLowerCase() === "true";
+const AFFILIATE_GENERIC_SUBID_PARAM = process.env.AFFILIATE_GENERIC_SUBID_PARAM || "sid";
 const DEFAULT_AFFILIATE_PROVIDER_ORDER = "feed,cj,rakuten,ebay,involve-asia";
 const SEA_PROVIDER_ORDER = "feed,involve-asia,cj,rakuten,ebay";
+const AFFILIATE_TRACKED_SOURCES = new Set([
+  "awin",
+  "awin-feed",
+  "cj",
+  "ebay",
+  "epn",
+  "impact",
+  "impact-feed",
+  "involve",
+  "involve-asia",
+  "rakuten",
+  "rakuten-feed",
+  "skimlinks",
+  "skimlinks-feed",
+  "sovrn",
+  "sovrn-feed",
+]);
+const UNVERIFIED_FEED_SOURCES = new Set(["direct-feed", "feed", "product-feed", "feeds"]);
 
 const EBAY_MARKETPLACE_BY_COUNTRY = {
   AU: "EBAY_AU",
@@ -601,6 +622,8 @@ function buildCjGraphqlPayload(searchQuery, colorSeason, market) {
   }
 
   const keywords = buildCjKeywordList(searchQuery, colorSeason, market);
+  const websiteId = escapeGraphqlString(process.env.CJ_WEBSITE_ID);
+  const shopperId = escapeGraphqlString(trackingId(searchQuery, colorSeason, market));
   const query = `
     query ShoppingProducts(
       $companyId: ID!
@@ -634,7 +657,7 @@ function buildCjGraphqlPayload(searchQuery, colorSeason, market) {
             amount
             currency
           }
-          linkCode(pid: "${process.env.CJ_WEBSITE_ID}") {
+          linkCode(pid: "${websiteId}", shopperId: "${shopperId}") {
             clickUrl
             imageUrl
           }
@@ -658,6 +681,10 @@ function buildCjGraphqlPayload(searchQuery, colorSeason, market) {
       advertiserCountries: [market.countryCode],
     },
   };
+}
+
+function escapeGraphqlString(value = "") {
+  return String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function isCjGraphqlEndpoint() {
@@ -716,6 +743,11 @@ async function searchCjProducts(searchQuery, colorSeason, market, options = {}) 
 
     const raw = await response.text();
     if (!response.ok) {
+      if (response.status === 403 && isCjGraphqlEndpoint()) {
+        throw new Error(
+          "CJ Product Search is not authorised for this token/company. The token works for CJ GraphQL, but the configured CJ company/user needs Product Search permission and joined advertiser/product-feed access before exact affiliate product links can be returned.",
+        );
+      }
       throw new Error(`CJ Product Search failed with ${response.status}: ${raw.slice(0, 300)}`);
     }
 
@@ -1261,6 +1293,7 @@ function normalizeProduct(item, context) {
 
   if (!productName || !rawBuyLink) return null;
   if (requireProductPages && !looksLikeSpecificProductPage(rawBuyLink)) return null;
+  const tracking = affiliateTrackingMetadata(source, false);
 
   return {
     productName: String(productName),
@@ -1275,6 +1308,13 @@ function normalizeProduct(item, context) {
       market,
       source,
     }),
+    isFallback: false,
+    actionLabel: "Shop",
+    source,
+    commissionable: tracking.commissionable,
+    affiliateNetwork: tracking.affiliateNetwork,
+    trackingStatus: tracking.trackingStatus,
+    trackingLabel: tracking.trackingLabel,
   };
 }
 
@@ -1502,8 +1542,12 @@ function appendAffiliateTracking(rawUrl, { searchQuery, colorSeason, market, sou
       return url.toString();
     }
 
-    if (!url.searchParams.has("sid")) {
-      url.searchParams.set("sid", trackingId(searchQuery, colorSeason, market));
+    if (!AFFILIATE_APPEND_GENERIC_SUBID || !source || source === "generic-search") {
+      return url.toString();
+    }
+
+    if (!url.searchParams.has(AFFILIATE_GENERIC_SUBID_PARAM)) {
+      url.searchParams.set(AFFILIATE_GENERIC_SUBID_PARAM, trackingId(searchQuery, colorSeason, market));
     }
     return url.toString();
   } catch {
@@ -1536,21 +1580,85 @@ function trackingId(searchQuery, colorSeason, market) {
     .slice(0, 80) || "icw";
 }
 
+function affiliateTrackingMetadata(source = "", isFallback = false) {
+  const normalizedSource = String(source || "").trim().toLowerCase();
+  if (isFallback || normalizedSource === "generic-search") {
+    return {
+      commissionable: false,
+      affiliateNetwork: "",
+      trackingStatus: "search-link-only",
+      trackingLabel: "Search link only - not affiliate tracked",
+    };
+  }
+
+  if (AFFILIATE_TRACKED_SOURCES.has(normalizedSource)) {
+    return {
+      commissionable: true,
+      affiliateNetwork: normalizedSource,
+      trackingStatus: "affiliate-tracked",
+      trackingLabel: `Affiliate tracked via ${networkDisplayName(normalizedSource)}`,
+    };
+  }
+
+  if (UNVERIFIED_FEED_SOURCES.has(normalizedSource)) {
+    return {
+      commissionable: false,
+      affiliateNetwork: normalizedSource,
+      trackingStatus: "feed-link-unverified",
+      trackingLabel: "Product feed link - verify affiliate tracking in the network",
+    };
+  }
+
+  return {
+    commissionable: false,
+    affiliateNetwork: normalizedSource,
+    trackingStatus: "tracking-unverified",
+    trackingLabel: "Tracking not verified",
+  };
+}
+
+function networkDisplayName(source = "") {
+  const normalizedSource = String(source || "").toLowerCase();
+  const names = {
+    "awin": "Awin",
+    "awin-feed": "Awin",
+    "cj": "CJ",
+    "ebay": "eBay Partner Network",
+    "epn": "eBay Partner Network",
+    "impact": "Impact",
+    "impact-feed": "Impact",
+    "involve": "Involve Asia",
+    "involve-asia": "Involve Asia",
+    "rakuten": "Rakuten Advertising",
+    "rakuten-feed": "Rakuten Advertising",
+    "skimlinks": "Skimlinks",
+    "skimlinks-feed": "Skimlinks",
+    "sovrn": "Sovrn",
+    "sovrn-feed": "Sovrn",
+  };
+  return names[normalizedSource] || source || "affiliate network";
+}
+
 function buildRetailerSearchFallback(searchQuery, colorSeason, market, budgetRange) {
   const query = [searchQuery, colorSeason].filter(Boolean).join(" ");
   return market.fallbackRetailers.slice(0, maxResultsForMarket(market)).map((retailer) => {
     const buyLink = `${retailer.url}${encodeURIComponent(query)}`;
     const nearby = nearbyStoreForRetailer(retailer.brand, market);
+    const tracking = affiliateTrackingMetadata("generic-search", true);
     return {
       productName: `${query} search results`,
       brand: retailer.brand,
       price: `${market.currency} price on site`,
       imageUrl: "",
       budgetRange: budgetRange?.label || "",
-      buyLink: appendAffiliateTracking(buyLink, { searchQuery, colorSeason, market }),
+      buyLink: appendAffiliateTracking(buyLink, { searchQuery, colorSeason, market, source: "generic-search" }),
       isFallback: true,
       actionLabel: "Search",
       source: "generic-search",
+      commissionable: tracking.commissionable,
+      affiliateNetwork: tracking.affiliateNetwork,
+      trackingStatus: tracking.trackingStatus,
+      trackingLabel: tracking.trackingLabel,
       nearbyStoreUrl: nearby.url,
       nearbyStoreMode: nearby.mode,
       nearbyStoreLabel: nearby.label,
@@ -1606,6 +1714,10 @@ function cleanProducts(products) {
     isFallback: Boolean(product.isFallback),
     actionLabel: product.actionLabel,
     source: product.source,
+    commissionable: Boolean(product.commissionable),
+    affiliateNetwork: product.affiliateNetwork || "",
+    trackingStatus: product.trackingStatus || "",
+    trackingLabel: product.trackingLabel || "",
     nearbyStoreUrl: product.nearbyStoreUrl || "",
     nearbyStoreMode: product.nearbyStoreMode || "",
     nearbyStoreLabel: product.nearbyStoreLabel || "",

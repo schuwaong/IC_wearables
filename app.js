@@ -1519,6 +1519,10 @@ function normalizeAffiliateProducts(payload) {
       buyLink: String(product.buyLink || product.link || product.url || ""),
       isFallback: Boolean(product.isFallback || product.source === "generic-search"),
       actionLabel: String(product.actionLabel || (product.isFallback ? "Search" : "Shop")),
+      commissionable: Boolean(product.commissionable),
+      affiliateNetwork: String(product.affiliateNetwork || ""),
+      trackingStatus: String(product.trackingStatus || ""),
+      trackingLabel: String(product.trackingLabel || ""),
       nearbyStoreUrl: String(product.nearbyStoreUrl || product.storeLocatorUrl || product.storeUrl || ""),
       nearbyStoreMode: String(product.nearbyStoreMode || ""),
       nearbyStoreLabel: String(product.nearbyStoreLabel || ""),
@@ -1801,12 +1805,19 @@ function createProductRow(product, piece) {
   brand.textContent = product.brand;
   title.textContent = product.productName;
   price.textContent = product.price;
+  const trackingStatus = document.createElement("small");
+  trackingStatus.className = "look-product-budget";
+  trackingStatus.textContent =
+    product.trackingLabel ||
+    (product.commissionable
+      ? `Affiliate tracked${product.affiliateNetwork ? ` via ${product.affiliateNetwork}` : ""}`
+      : "Not affiliate tracked yet");
   if (budget) {
     budget.className = "look-product-budget";
     budget.textContent = `Budget target: ${product.budgetRange}`;
-    copy.append(pieceLabel, brand, title, price, budget);
+    copy.append(pieceLabel, brand, title, price, trackingStatus, budget);
   } else {
-    copy.append(pieceLabel, brand, title, price);
+    copy.append(pieceLabel, brand, title, price, trackingStatus);
   }
 
   const actions = document.createElement("div");
@@ -1923,6 +1934,7 @@ function createLibraryProductRow(product) {
   title.textContent = `${product.productName || "Product"}${product.brand ? ` - ${product.brand}` : ""}`;
   status.textContent = [
     product.isFallback ? "Fallback search link" : "Exact product",
+    product.trackingLabel || (product.commissionable ? "affiliate tracked" : "not affiliate tracked"),
     product.imageUrl ? "has image URL" : "no image URL",
     product.localImagePath ? `cached: ${product.localImagePath}` : product.imageCacheStatus,
   ]
@@ -1956,7 +1968,7 @@ async function hydrateProductLibraryPanel() {
     const diagnostics = Array.isArray(library.affiliateDiagnostics) ? library.affiliateDiagnostics : [];
     const products = Array.isArray(library.products) ? library.products : [];
     productLibrarySummary.textContent =
-      `${summary.products || products.length || 0} rows loaded for ${library.countryCode || "HK"}: ${summary.exactProducts || 0} exact products, ${summary.fallbackSearchLinks || 0} fallback search links, ${summary.cachedImages || 0} cached images.`;
+      `${summary.products || products.length || 0} rows loaded for ${library.countryCode || "HK"}: ${summary.exactProducts || 0} exact products, ${summary.fallbackSearchLinks || 0} fallback search links, ${summary.commissionableProducts || 0} affiliate-tracked links, ${summary.cachedImages || 0} cached images.`;
 
     const children = [];
     const openJson = document.createElement("a");
