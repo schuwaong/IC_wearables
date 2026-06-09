@@ -73,7 +73,7 @@ const IMAGE_REFERENCE_MAX_COUNT = Math.max(
 const IMAGE_REFERENCE_PROVIDER_ORDER = String(
   window.IC_IMAGE_REFERENCE_PROVIDER_ORDER ||
     safeStorageValue("icImageReferenceProviderOrder") ||
-    "vertex,gemini,dashscope,local-template",
+    "vertex,gemini,pollinations,dashscope",
 )
   .split(",")
   .map((provider) => provider.trim().toLowerCase())
@@ -971,7 +971,7 @@ function handleFaceUpload(file) {
   reader.readAsDataURL(file);
 }
 
-function resizeImageDataUrl(dataUrl, maxSide = 960, quality = 0.86) {
+function resizeImageDataUrl(dataUrl, maxSide = 1280, quality = 0.92) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
@@ -1741,7 +1741,8 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
       : "If Image 2 is an IC_wearables outfit-combination board, use it only as a combined garment, shoe, bag, accessory, colour, and texture reference. Do not copy any board typography, layout, placeholder letters, catalogue model face, hair, body, pose, or identity. If no Image 2 exists, style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance.",
     productSummary ? `Product references: ${productSummary}.` : "",
     budgetRange ? `Budget target for the shopper's region: ${budgetRange}. Keep the outfit realistically within that range.` : "",
-    "Do not change identity, do not create a different model, do not change hairstyle, do not change hairline, do not change expression, and do not add a smile. Preserve natural skin texture, facial asymmetry, and the uploaded hair shape from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
+    "Identity priority rule: Image 1 overrides every other image and every style instruction for the face, head, skin, hair, hairline, expression, and visible age. Images 2 and later are garments only. Never borrow a catalogue model's face, hair, pose identity, body identity, expression, smile, makeup style, or skin tone from product images.",
+    "Do not change identity, do not create a different model, do not change hairstyle, do not change hairline, do not change expression, and do not add a smile. Preserve natural skin texture, facial asymmetry, uploaded face proportions, uploaded head shape, and the uploaded hair shape from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
   ]
     .filter(Boolean)
     .join(" ");
@@ -2321,7 +2322,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         maxReferenceImages: IMAGE_REFERENCE_MAX_COUNT,
         allowTextFallback: false,
         providerOrder: IMAGE_REFERENCE_PROVIDER_ORDER,
-        disallowLocalTemplate: false,
+        disallowLocalTemplate: true,
       });
     });
     image.onload = () => {
@@ -2646,6 +2647,8 @@ async function generateStylePhoto() {
         seed: hashText(`${latestFaceResult.profile?.name || ""}-${JSON.stringify(currentStyleSelections())}-${styleImageRenderNonce}`),
         referenceImages: [faceReference],
         allowTextFallback: false,
+        providerOrder: IMAGE_REFERENCE_PROVIDER_ORDER,
+        disallowLocalTemplate: true,
       });
 
       generatedStyleImage.onload = () => {

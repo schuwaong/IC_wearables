@@ -351,6 +351,12 @@ Provider order defaults to:
 dashscope,vertex,gemini,cloudflare,pollinations,local-template
 ```
 
+Face-reference renders use a stricter default order:
+
+```text
+IMAGE_REFERENCE_PROVIDER_ORDER=vertex,gemini,pollinations,dashscope
+```
+
 Alibaba DashScope/Qwen Image is tried first, Gemini can be enabled as a
 higher-quality reference-image fallback, Vertex AI can be enabled as a second
 Google-hosted fallback for face-preserving renders, Cloudflare Workers AI
@@ -428,6 +434,7 @@ Optional controls:
 
 ```text
 IMAGE_PROVIDER_ORDER=dashscope,vertex,gemini,cloudflare,pollinations,local-template
+IMAGE_REFERENCE_PROVIDER_ORDER=vertex,gemini,pollinations,dashscope
 IMAGE_NEGATIVE_PROMPT=low quality, distorted face, warped face, changed identity, different face in each panel, changed expression, added smile, grin, text, logo, watermark
 DASHSCOPE_PROMPT_EXTEND=false
 VERTEX_AI_TIMEOUT_MS=30000
