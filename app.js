@@ -1903,6 +1903,18 @@ function createProductNotice(message) {
   return notice;
 }
 
+function createProductLinkList(title, items = []) {
+  const block = document.createElement("div");
+  block.className = "look-product-meta";
+  const lines = [title, ...items]
+    .filter(Boolean)
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+  block.textContent = lines.join("\n");
+  block.style.whiteSpace = "pre-wrap";
+  return block;
+}
+
 function absoluteProjectUrl(rawUrl = "") {
   try {
     return new URL(rawUrl, window.location.href).toString();
@@ -2484,6 +2496,88 @@ function geminiReferenceInstructions(lookTitle, referenceCount) {
   ].join("\n");
 }
 
+function groupedProductOptions(rows = []) {
+  const groups = new Map();
+  rows.forEach((row) => {
+    const key = String(row?.piece?.label || "").trim();
+    if (!key) return;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
+  });
+  return groups;
+}
+
+function preferredProductRow(options = []) {
+  return options.find((row) => !row?.product?.isFallback) || options[0] || null;
+}
+
+function buildLookVariantRows(rows = [], variantIndex = 0) {
+  const groups = groupedProductOptions(rows);
+  if (!groups.size) return [];
+  const variantRows = [];
+  groups.forEach((options) => {
+    const normalizedOptions = options.filter(Boolean);
+    if (!normalizedOptions.length) return;
+    const choice = normalizedOptions[variantIndex % normalizedOptions.length] || preferredProductRow(normalizedOptions);
+    if (choice) variantRows.push(choice);
+  });
+  return variantRows;
+}
+
+function productUrlLines(rows = []) {
+  return rows
+    .map(({ piece, product }) => {
+      const label = String(piece?.label || "Piece").trim();
+      const name = String(product?.productName || "").trim();
+      const url = String(product?.buyLink || product?.affiliateLink || "").trim();
+      if (!url) return "";
+      return `${label}: ${name} -> ${url}`;
+    })
+    .filter(Boolean);
+}
+
+function selectedLookTitle(idea, variantIndex = 0) {
+  return variantIndex > 0 ? `${idea.title} variant ${variantIndex + 1}` : idea.title;
+}
+
+function buildOutfitOnlyPrompt(run, idea, rows = [], variantIndex = 0) {
+  const selections = { ...defaultStyleSelections(), ...(run.selections || {}) };
+  const palette = run.profile.palette.join(", ");
+  const variantRows = buildLookVariantRows(rows, variantIndex);
+  const productSummary = variantRows
+    .map(({ piece, product }) =>
+      `${piece.label}: ${product.productName} from ${product.brand}${product.price ? ` (${product.price})` : ""}`,
+    )
+    .join("; ");
+  const pieces = idea.pieces.map((piece) => piece.label).join(", ");
+  return [
+    `IC_wearables exact-product outfit board for ${selectedLookTitle(idea, variantIndex)}.`,
+    `Colour season: ${run.profile.name}. Palette hex colours: ${palette}.`,
+    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
+    `Outfit pieces to show together: ${pieces}.`,
+    productSummary ? `Exact products: ${productSummary}.` : "",
+    "Create a clean garment-only outfit composition on a neutral studio background. Do not include any face, head, hair, person, mannequin, model, or body part.",
+    "Show the exact clothing, shoes, bag, jewellery, textures, colour blocking, and silhouette from the references. Keep the products recognisable and proportionally balanced as one complete look.",
+    "No text, no logos, no watermark.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function copyPromptManualHandoff(prompt, rows = [], referenceCount = 0) {
+  const urlLines = productUrlLines(rows);
+  return [
+    prompt,
+    "",
+    geminiReferenceInstructions("", referenceCount),
+    urlLines.length ? "" : null,
+    urlLines.length ? "Product URLs:" : null,
+    ...urlLines,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+}
+
 async function collectLookReferenceBundle(run, idea, rows = []) {
   const resolvedRows = Array.isArray(rows) ? rows : [];
   const faceReference = run.faceReferenceDataUrl || (await faceReferenceDataUrl()) || "";
@@ -2497,13 +2591,24 @@ async function collectLookReferenceBundle(run, idea, rows = []) {
   ]);
 
   const productImageUrls = resolvedRows
+    .map((row) => ({
+      ...row,
+      product: {
+        ...row.product,
+        imageUrl: normalizeProductImageUrl(row.product),
+      },
+    }))
     .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
     .sort((left, right) => productReferencePriority(left) - productReferencePriority(right))
     .map(({ product }) => product.imageUrl)
     .filter((url, index, all) => all.indexOf(url) === index)
-    .slice(0, MAX_AUTOMATIC_PRODUCT_REFERENCE_IMAGES);
+    .slice(0, Math.max(1, IMAGE_REFERENCE_MAX_COUNT - 1));
 
-  const garmentReferences = combinationBoard?.boardUrl ? [combinationBoard.boardUrl] : productImageUrls;
+  const garmentReferences = productImageUrls.length
+    ? productImageUrls
+    : combinationBoard?.boardUrl
+      ? [combinationBoard.boardUrl]
+      : [];
   return {
     faceReference,
     garmentReferences,
@@ -2538,11 +2643,7 @@ async function downloadLookReferenceBundle(run, idea, rows = []) {
 async function copyGeminiLookPrompt(run, idea, index, rows = []) {
   const bundle = await collectLookReferenceBundle(run, idea, rows);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, rows);
-  const handoffText = [
-    prompt,
-    "",
-    geminiReferenceInstructions(idea.title, bundle.referenceImages.length),
-  ].join("\n");
+  const handoffText = copyPromptManualHandoff(prompt, rows, bundle.referenceImages.length);
   await copyTextToClipboard(handoffText);
   return bundle;
 }
@@ -2634,12 +2735,19 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
   }));
 
   const productImageUrls = resolvedRows
+    .map((row) => ({
+      ...row,
+      product: {
+        ...row.product,
+        imageUrl: normalizeProductImageUrl(row.product),
+      },
+    }))
     .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
     .sort((left, right) => productReferencePriority(left) - productReferencePriority(right))
     .map(({ product }) => product.imageUrl)
     .filter((url, index, all) => all.indexOf(url) === index)
     .filter((url) => /^https?:\/\//i.test(url))
-    .slice(0, MAX_AUTOMATIC_PRODUCT_REFERENCE_IMAGES);
+    .slice(0, Math.max(1, IMAGE_REFERENCE_MAX_COUNT - 1));
   const combinationBoard = await Promise.race([
     combinationBoardForLook(run, idea),
     delay(LOOK_REFERENCE_WAIT_MS).then(() => null),
@@ -2653,7 +2761,11 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       imageProvider: "fallback",
     };
   }
-  const productReferenceImages = combinationBoard?.boardUrl ? [combinationBoard.boardUrl] : productImageUrls;
+  const productReferenceImages = productImageUrls.length
+    ? productImageUrls
+    : combinationBoard?.boardUrl
+      ? [combinationBoard.boardUrl]
+      : [];
   const referenceImages = [run.faceReferenceDataUrl, ...productReferenceImages].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
   const fallbackImageUrl = idea.fallbackImage;
@@ -2668,11 +2780,11 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
   setRunlogState(
     idea.title,
     "rendering",
-    combinationBoard?.boardUrl
-      ? "Rendering with scanned face plus one outfit-combination board."
-      : productImageUrls.length
-        ? `Rendering with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
-      : "Rendering with the scanned face and product text only.",
+    productImageUrls.length
+      ? `Rendering with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
+      : combinationBoard?.boardUrl
+        ? "Rendering with scanned face plus one outfit-combination board."
+        : "Rendering with the scanned face and product text only.",
   );
 
   try {
@@ -2694,11 +2806,11 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       setRunlogState(
         idea.title,
         "rendering",
-        combinationBoard?.boardUrl
-          ? "Rendering now with Image 1 face plus Image 2 outfit-combination board."
-          : productImageUrls.length
-            ? `Rendering now with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
-          : "Rendering now with the scanned face and product text only.",
+        productImageUrls.length
+          ? `Rendering now with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
+          : combinationBoard?.boardUrl
+            ? "Rendering now with Image 1 face plus Image 2 outfit-combination board."
+            : "Rendering now with the scanned face and product text only.",
       );
       return generatedReferenceImage(prompt, {
         width: 800,
@@ -2722,9 +2834,9 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         statusElement,
         result.usedReferences
           ? productReferenceImages.length
-            ? combinationBoard?.boardUrl
-              ? "Generated from scanned face and outfit-combination board."
-              : "Generated from scanned face and garment references."
+            ? productImageUrls.length
+              ? "Generated from scanned face and exact garment references."
+              : "Generated from scanned face and outfit-combination board."
             : "Generated from scanned face and product text."
           : "Generated from styling prompt.",
       );
@@ -2732,7 +2844,7 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
         idea.title,
         "success",
         result.usedReferences
-          ? `Image ready via ${result.provider} with the scanned face${combinationBoard?.boardUrl ? " and outfit board" : productImageUrls.length ? " and garment references" : ""}.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`
+          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and exact garment references" : combinationBoard?.boardUrl ? " and outfit board" : ""}.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`
           : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`,
       );
     };
@@ -2775,6 +2887,87 @@ function productReferencePriority(row) {
   }
   if (/(bag|earring|necklace|ring|bracelet|watch|belt|scarf|jewell?ery)/.test(label)) return 2;
   return 1;
+}
+
+function setButtonBusy(button, label, busy) {
+  if (!button) return;
+  button.disabled = busy;
+  button.textContent = label;
+}
+
+function loadImageElement(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Could not load image: ${url}`));
+    image.src = url;
+  });
+}
+
+function drawContainedImage(context, image, x, y, width, height) {
+  const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  const dx = x + (width - drawWidth) / 2;
+  const dy = y + (height - drawHeight) / 2;
+  context.drawImage(image, dx, dy, drawWidth, drawHeight);
+}
+
+async function buildVariantPreviewDataUrl(idea, rows = [], variantIndex = 0) {
+  const width = 900;
+  const height = 1100;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#f5efe5";
+  context.fillRect(0, 0, width, height);
+
+  context.fillStyle = "#16110e";
+  context.font = "700 38px Georgia, serif";
+  context.fillText(selectedLookTitle(idea, variantIndex), 44, 70);
+  context.font = "600 18px Arial, sans-serif";
+  context.fillStyle = "#6b5a4c";
+  context.fillText("Outfit-only preview built from exact product references", 44, 108);
+
+  const cells = [
+    { x: 44, y: 150, width: 380, height: 390 },
+    { x: 476, y: 150, width: 380, height: 390 },
+    { x: 44, y: 586, width: 380, height: 390 },
+    { x: 476, y: 586, width: 380, height: 390 },
+  ];
+
+  const imagePromises = rows.slice(0, cells.length).map(async ({ piece, product }, index) => {
+    const cell = cells[index];
+    const url = normalizeProductImageUrl(product);
+    return { piece, product, cell, image: url ? await loadImageElement(url).catch(() => null) : null };
+  });
+  const resolved = await Promise.all(imagePromises);
+
+  resolved.forEach(({ piece, product, cell, image }) => {
+    context.fillStyle = "#fffaf2";
+    context.strokeStyle = "rgba(34, 24, 18, 0.12)";
+    context.lineWidth = 2;
+    context.beginPath();
+    context.roundRect(cell.x, cell.y, cell.width, cell.height, 24);
+    context.fill();
+    context.stroke();
+    if (image) {
+      drawContainedImage(context, image, cell.x + 18, cell.y + 18, cell.width - 36, cell.height - 92);
+    } else {
+      context.fillStyle = "#d8cbb8";
+      context.fillRect(cell.x + 18, cell.y + 18, cell.width - 36, cell.height - 92);
+    }
+    context.fillStyle = "#201813";
+    context.font = "700 20px Arial, sans-serif";
+    context.fillText(String(piece?.label || "Piece"), cell.x + 18, cell.y + cell.height - 38);
+    context.fillStyle = "#756454";
+    context.font = "600 16px Arial, sans-serif";
+    context.fillText(String(product?.brand || ""), cell.x + 18, cell.y + cell.height - 14);
+  });
+
+  return canvas.toDataURL("image/jpeg", 0.92);
 }
 
 function renderFemaleLookCard(run, idea, index) {
@@ -2854,12 +3047,24 @@ function renderFemaleLookCard(run, idea, index) {
   loading.textContent = "Finding matching pieces...";
   productList.appendChild(loading);
 
-  body.append(top, pieceList, imageActions, rackTitle, productList);
+  const combinationsTitle = document.createElement("h3");
+  combinationsTitle.textContent = "Try look combinations";
+
+  const combinationList = document.createElement("div");
+  combinationList.className = "look-product-list";
+  combinationList.setAttribute("aria-label", `${idea.title} outfit combinations`);
+  const combinationLoading = document.createElement("div");
+  combinationLoading.className = "look-product-loading";
+  combinationLoading.textContent = "Preparing same-look combinations...";
+  combinationList.appendChild(combinationLoading);
+
+  body.append(top, pieceList, imageActions, rackTitle, productList, combinationsTitle, combinationList);
   card.append(media, body);
   return {
     card,
     body,
     productList,
+    combinationList,
     image,
     imageStatus,
     regenerateButton,
@@ -2935,6 +3140,65 @@ async function hydrateLookProducts(run, idea, productList) {
   return { affiliateCount, fallbackCount, totalCount: rows.length, rows };
 }
 
+async function renderLookCombinations(run, idea, rows = [], combinationList, onTryLook = null) {
+  if (!combinationList) return { variants: [], selectedVariantRows: rows };
+  const countryCode = inferredCountryCode();
+  const variantCount = Math.max(
+    1,
+    Math.min(
+      3,
+      ...Array.from(groupedProductOptions(rows).values()).map((options) => Math.max(1, options.length)),
+    ),
+  );
+  const variants = await Promise.all(Array.from({ length: variantCount }, async (_, index) => {
+    const variantRows = buildLookVariantRows(rows, index);
+    const board = combinationList.ownerDocument.createElement("article");
+    board.className = "look-combination-card";
+    const preview = combinationList.ownerDocument.createElement("img");
+    preview.className = "look-combination-preview";
+    preview.alt = `${selectedLookTitle(idea, index)} outfit-only preview`;
+    preview.loading = "lazy";
+    preview.src = await buildVariantPreviewDataUrl(idea, variantRows, index).catch(() => "");
+    const heading = combinationList.ownerDocument.createElement("strong");
+    heading.textContent = selectedLookTitle(idea, index);
+    const note = combinationList.ownerDocument.createElement("p");
+    note.textContent =
+      index === 0
+        ? "Primary exact-product combination for this look."
+        : `Alternate same-look combination built from matched options for ${marketLabel(countryCode)}.`;
+    const chips = combinationList.ownerDocument.createElement("div");
+    chips.className = "look-piece-list";
+    variantRows.forEach(({ piece, product }) => {
+      const chip = combinationList.ownerDocument.createElement("span");
+      chip.textContent = `${piece.label}: ${product.brand}`;
+      chips.appendChild(chip);
+    });
+    const links = productUrlLines(variantRows);
+    const actions = combinationList.ownerDocument.createElement("div");
+    actions.className = "generated-look-actions";
+    const tryButton = combinationList.ownerDocument.createElement("button");
+    tryButton.type = "button";
+    tryButton.className = "generated-look-secondary";
+    tryButton.textContent = "Try look";
+    tryButton.disabled = run.sample;
+    if (onTryLook) {
+      tryButton.addEventListener("click", async () => {
+        setButtonBusy(tryButton, "Rendering...", true);
+        try {
+          await onTryLook(variantRows, index);
+        } finally {
+          setButtonBusy(tryButton, "Try look", false);
+        }
+      });
+    }
+    actions.appendChild(tryButton);
+    board.append(preview, heading, note, createProductLinkList("Products", links), chips, actions);
+    return { index, rows: variantRows, board, tryButton };
+  }));
+  combinationList.replaceChildren(...variants.map((variant) => variant.board));
+  return { variants, selectedVariantRows: variants[0]?.rows || rows };
+}
+
 function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
   if (!cardState?.regenerateButton) return;
   const lookKey = femaleLookStateKey(run, idea, index);
@@ -2945,7 +3209,15 @@ function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
     setLookImageStatus(cardState.imageStatus, "Retrying image generation...");
     setRunlogState(idea.title, "rendering", "Retrying this look image.");
     const productStats = await productStatsPromise.catch(() => ({ rows: [], affiliateCount: 0, fallbackCount: 0, totalCount: 0 }));
-    await hydrateLookImage(run, idea, index, cardState.image, cardState.imageStatus, productStats.rows, { cardState });
+    await hydrateLookImage(
+      run,
+      idea,
+      index,
+      cardState.image,
+      cardState.imageStatus,
+      cardState.selectedVariantRows?.length ? cardState.selectedVariantRows : productStats.rows,
+      { cardState },
+    );
   });
 
   cardState.copyPromptButton?.addEventListener("click", async () => {
@@ -2957,7 +3229,8 @@ function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
         fallbackCount: 0,
         totalCount: 0,
       }));
-      const bundle = await copyGeminiLookPrompt(run, idea, index, productStats.rows);
+      const selectedRows = cardState.selectedVariantRows?.length ? cardState.selectedVariantRows : productStats.rows;
+      const bundle = await copyGeminiLookPrompt(run, idea, index, selectedRows);
       setLookImageStatus(
         cardState.imageStatus,
         `Gemini prompt copied. Use Image 1 for face identity and ${Math.max(0, bundle.referenceImages.length - 1)} garment reference image${Math.max(0, bundle.referenceImages.length - 1) === 1 ? "" : "s"}.`,
@@ -2977,7 +3250,8 @@ function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
         fallbackCount: 0,
         totalCount: 0,
       }));
-      const bundle = await downloadLookReferenceBundle(run, idea, productStats.rows);
+      const selectedRows = cardState.selectedVariantRows?.length ? cardState.selectedVariantRows : productStats.rows;
+      const bundle = await downloadLookReferenceBundle(run, idea, selectedRows);
       setLookImageStatus(
         cardState.imageStatus,
         `Downloaded ${bundle.referenceImages.length} reference image${bundle.referenceImages.length === 1 ? "" : "s"} for manual Gemini use.`,
@@ -3000,17 +3274,27 @@ function initFemaleResultsPage() {
   initialiseFemaleRunlog();
 
   const productJobs = femaleOutfitIdeas.map(async (idea, index) => {
-    const { card, productList, image, imageStatus, regenerateButton } = renderFemaleLookCard(run, idea, index);
+    const { card, productList, combinationList, image, imageStatus, regenerateButton, copyPromptButton, downloadRefsButton } = renderFemaleLookCard(run, idea, index);
     femaleLooksGrid.appendChild(card);
-    const productStatsPromise = hydrateLookProducts(run, idea, productList);
-    bindLookRegenerate(run, idea, index, { card, image, imageStatus, regenerateButton, productList }, productStatsPromise);
+    const cardState = { card, image, imageStatus, regenerateButton, copyPromptButton, downloadRefsButton, productList, combinationList, selectedVariantRows: [] };
+    const productStatsPromise = hydrateLookProducts(run, idea, productList).then(async (stats) => {
+      const combinationState = await renderLookCombinations(run, idea, stats.rows, combinationList, async (variantRows) => {
+        cardState.selectedVariantRows = variantRows;
+        setLookImageStatus(imageStatus, "Rendering this exact look with your face...");
+        await hydrateLookImage(run, idea, index, image, imageStatus, variantRows, { cardState });
+        setRunlogState(idea.title, "success", "Rendered the selected combination with the scanned face and exact product references.");
+      });
+      cardState.selectedVariantRows = combinationState.selectedVariantRows || stats.rows;
+      return { ...stats, ...combinationState };
+    });
+    bindLookRegenerate(run, idea, index, cardState, productStatsPromise);
     const imageStatsPromise = run.sample
       ? (() => {
           setRunlogState(idea.title, "sample", "Sample mode is showing the placeholder look without calling the image backend.");
           return Promise.resolve({ imageUsedReferences: false, productReferenceCount: 0, imageProvider: "sample" });
         })()
-      : hydrateLookImage(run, idea, index, image, imageStatus, productStatsPromise.then((stats) => stats.rows), {
-          cardState: { card, image, imageStatus, regenerateButton, productList },
+      : hydrateLookImage(run, idea, index, image, imageStatus, productStatsPromise.then((stats) => stats.selectedVariantRows || stats.rows), {
+          cardState,
         });
 
     const [productStats, imageStats] = await Promise.all([productStatsPromise, imageStatsPromise]);

@@ -269,11 +269,17 @@ async function boardSvg(combination) {
 }
 
 async function writeBoard(combination) {
+  const countrySlug = slug(combination.countryCode || "global");
   const familySlug = slug(combination.seasonFamily);
   const seasonSlug = slug(combination.mode === "family" ? combination.seasonFamily : combination.season);
   const lookSlug = slug(combination.look);
   const filename = `${seasonSlug}__${lookSlug}.png`;
-  const outputPath = path.join(OUTPUT_DIR, combination.mode === "family" ? "families" : familySlug, filename);
+  const outputPath = path.join(
+    OUTPUT_DIR,
+    countrySlug,
+    combination.mode === "family" ? "families" : familySlug,
+    filename,
+  );
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   const svg = await boardSvg(combination);
   await sharp(Buffer.from(svg)).png().toFile(outputPath);
@@ -283,10 +289,10 @@ async function writeBoard(combination) {
 function groupProducts(products) {
   const groups = new Map();
   for (const product of products) {
-    if (!product.season || !product.look) continue;
+    if (!product.season || !product.look || !product.countryCode) continue;
     const family = seasonFamily(product.season);
     const groupSeason = GROUP_BY === "season" ? product.season : family;
-    const key = `${GROUP_BY === "season" ? "season" : "family"}::${family}::${groupSeason}::${product.look}`;
+    const key = `${String(product.countryCode || "").trim().toUpperCase()}::${GROUP_BY === "season" ? "season" : "family"}::${family}::${groupSeason}::${product.look}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(product);
   }
@@ -300,12 +306,13 @@ async function main() {
   const combinations = [];
 
   for (const [key, group] of groupProducts(products)) {
-    const [mode, family, season, look] = key.split("::");
+    const [countryCode, mode, family, season, look] = key.split("::");
     const selectedProducts = pickCombinationProducts(group);
     if (!selectedProducts.length) continue;
 
     const combination = {
-      id: `${slug(mode)}__${slug(season)}__${slug(look)}`,
+      id: `${slug(countryCode)}__${slug(mode)}__${slug(season)}__${slug(look)}`,
+      countryCode,
       mode,
       seasonFamily: family,
       season,
@@ -338,6 +345,7 @@ async function main() {
     outputDir: portablePath(path.relative(PROJECT_ROOT, resolveProjectPath(OUTPUT_DIR))),
     summary: {
       combinations: combinations.length,
+      countries: [...new Set(combinations.map((combination) => combination.countryCode))].length,
       families: [...new Set(combinations.map((combination) => combination.seasonFamily))].length,
       exactProductCombinations: combinations.filter((combination) => combination.exactProductCount > 0).length,
       combinationsWithProductImages: combinations.filter((combination) => combination.productImageCount > 0).length,
