@@ -2548,12 +2548,31 @@ function preferredProductRow(options = []) {
   return options.find((row) => !row?.product?.isFallback) || options[0] || null;
 }
 
+function bundleEligibleProductRow(row = {}) {
+  const product = row.product || {};
+  const link = String(product.buyLink || product.affiliateLink || product.rawBuyLink || "").trim();
+  return !product.isFallback && looksLikeSpecificProductPage(link) && Boolean(normalizeProductImageUrl(product));
+}
+
+function groupedBundleProductOptions(rows = []) {
+  return Array.from(groupedProductOptions(rows).entries()).map(([piece, options]) => [
+    piece,
+    options.filter(bundleEligibleProductRow),
+  ]);
+}
+
+function bundlePermutationCount(rows = []) {
+  const groups = groupedBundleProductOptions(rows).filter(([, options]) => options.length);
+  if (groups.length < 3) return 0;
+  return groups.reduce((total, [, options]) => total * Math.max(1, options.length), 1);
+}
+
 function buildLookVariantRows(rows = [], variantIndex = 0) {
-  const groups = groupedProductOptions(rows);
-  if (!groups.size) return [];
+  const groups = groupedBundleProductOptions(rows).filter(([, options]) => options.length);
+  if (groups.length < 3) return [];
   const variantRows = [];
   let divisor = 1;
-  groups.forEach((options) => {
+  groups.forEach(([, options]) => {
     const normalizedOptions = options.filter(Boolean);
     if (!normalizedOptions.length) return;
     const optionIndex = Math.floor(variantIndex / divisor) % normalizedOptions.length;
@@ -3341,8 +3360,7 @@ async function hydrateLookProducts(run, idea, productList) {
 async function renderLookCombinations(run, idea, rows = [], combinationList, onTryLook = null) {
   if (!combinationList) return { variants: [], selectedVariantRows: rows };
   const countryCode = inferredCountryCode();
-  const groupedOptions = Array.from(groupedProductOptions(rows).values()).map((options) => options.filter(Boolean));
-  const totalPermutations = groupedOptions.reduce((total, options) => total * Math.max(1, options.length), 1);
+  const totalPermutations = bundlePermutationCount(rows);
   const variantCount = Math.max(1, Math.min(10, totalPermutations));
   const variants = await Promise.all(Array.from({ length: variantCount }, async (_, index) => {
     const variantRows = buildLookVariantRows(rows, index);

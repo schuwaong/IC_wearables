@@ -17,6 +17,8 @@ const SEASON_FILTER = String(process.env.PRODUCT_COMBINATION_SEASON_FILTER || ""
 const FAMILY_FILTER = String(process.env.PRODUCT_COMBINATION_FAMILY_FILTER || "").trim().toLowerCase();
 const LOOK_FILTER = String(process.env.PRODUCT_COMBINATION_LOOK_FILTER || "").trim().toLowerCase();
 const ALLOW_REMOTE_IMAGES = process.env.PRODUCT_COMBINATION_ALLOW_REMOTE_IMAGES === "true";
+const REQUIRE_EXACT_PRODUCTS = process.env.PRODUCT_COMBINATION_REQUIRE_EXACT !== "false";
+const REQUIRE_PRODUCT_MEDIA = process.env.PRODUCT_COMBINATION_REQUIRE_MEDIA !== "false";
 const FAMILY_PALETTES = {
   Spring: ["#ffd166", "#ff8c69", "#36b37e", "#41c7c7", "#fff2c2", "#d98c28"],
   Summer: ["#7f95ad", "#c9a7b7", "#6b778d", "#e6e9ed", "#8d6f8b", "#b7c7d9"],
@@ -127,6 +129,8 @@ function firstProductForPiece(products, piece) {
 function rankedProductsForPiece(products, piece) {
   return products
     .filter((product) => product.piece === piece)
+    .filter((product) => !REQUIRE_EXACT_PRODUCTS || !product.isFallback)
+    .filter((product) => !REQUIRE_PRODUCT_MEDIA || product.localImagePath || product.imageUrl || product.affiliateLink)
     .slice()
     .sort((left, right) => {
       const leftScore = Number(!left.isFallback) * 8 + Number(Boolean(left.localImagePath || left.imageUrl)) * 4 + Number(Boolean(left.affiliateLink)) * 2;
@@ -136,14 +140,25 @@ function rankedProductsForPiece(products, piece) {
     });
 }
 
-function pickCombinationProducts(products, variantIndex = 0) {
+function candidatesByPiece(products) {
   const pieces = [...new Set(products.map((product) => product.piece).filter(Boolean))];
-  const selectedPieces = pieces.slice(0, MAX_PRODUCTS_PER_COMBINATION);
+  return pieces
+    .map((piece) => [piece, rankedProductsForPiece(products, piece)])
+    .filter(([, candidates]) => candidates.length);
+}
+
+function combinationCountForGroup(products) {
+  const groupedCandidates = candidatesByPiece(products).slice(0, MAX_PRODUCTS_PER_COMBINATION);
+  if (groupedCandidates.length < Math.min(3, MAX_PRODUCTS_PER_COMBINATION)) return 0;
+  return groupedCandidates.reduce((total, [, candidates]) => total * Math.max(1, candidates.length), 1);
+}
+
+function pickCombinationProducts(products, variantIndex = 0) {
+  const groupedCandidates = candidatesByPiece(products).slice(0, MAX_PRODUCTS_PER_COMBINATION);
+  if (groupedCandidates.length < Math.min(3, MAX_PRODUCTS_PER_COMBINATION)) return [];
   let divisor = 1;
-  return selectedPieces
-    .map((piece) => {
-      const candidates = rankedProductsForPiece(products, piece);
-      if (!candidates.length) return firstProductForPiece(products, piece);
+  return groupedCandidates
+    .map(([, candidates]) => {
       const index = Math.floor(variantIndex / divisor) % candidates.length;
       divisor *= Math.max(1, candidates.length);
       return candidates[index] || candidates[0];
@@ -167,16 +182,49 @@ async function imageDataUri(product) {
     return `data:image/png;base64,${buffer.toString("base64")}`;
   }
 
-  if (!ALLOW_REMOTE_IMAGES || !product.imageUrl) return "";
+  if (!ALLOW_REMOTE_IMAGES) return "";
+  if (!product.imageUrl && product.affiliateLink) {
+    product.imageUrl = await productPageImageUrl(product.affiliateLink);
+  }
+  if (!product.imageUrl) return "";
   try {
     const response = await fetch(product.imageUrl, {
       headers: { Accept: "image/avif,image/webp,image/png,image/jpeg,image/*" },
     });
+    if (!response.ok && product.affiliateLink) {
+      const fallbackImageUrl = await productPageImageUrl(product.affiliateLink);
+      if (fallbackImageUrl && fallbackImageUrl !== product.imageUrl) {
+        product.imageUrl = fallbackImageUrl;
+        return imageDataUri(product);
+      }
+      return "";
+    }
     if (!response.ok) return "";
     const contentType = (response.headers.get("content-type") || "image/jpeg").split(";")[0];
     if (!contentType.startsWith("image/")) return "";
     const buffer = await sharp(Buffer.from(await response.arrayBuffer())).png().toBuffer();
     return `data:image/png;base64,${buffer.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
+
+async function productPageImageUrl(url) {
+  try {
+    const response = await fetch(url, {
+      redirect: "follow",
+      headers: {
+        Accept: "text/html,application/xhtml+xml",
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
+    if (!response.ok) return "";
+    const html = await response.text();
+    const match =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)/i);
+    if (!match?.[1]) return "";
+    return new URL(match[1].replace(/&amp;/g, "&"), response.url).toString();
   } catch {
     return "";
   }
@@ -333,7 +381,8 @@ async function main() {
     if (FAMILY_FILTER && String(family || "").toLowerCase() !== FAMILY_FILTER) continue;
     if (LOOK_FILTER && String(look || "").toLowerCase() !== LOOK_FILTER) continue;
 
-    for (let variantIndex = 0; variantIndex < VARIANTS_PER_GROUP; variantIndex += 1) {
+    const groupVariantCount = Math.min(VARIANTS_PER_GROUP, combinationCountForGroup(group));
+    for (let variantIndex = 0; variantIndex < groupVariantCount; variantIndex += 1) {
       const selectedProducts = pickCombinationProducts(group, variantIndex);
       if (!selectedProducts.length) continue;
 
