@@ -27,8 +27,6 @@ const resultsPaletteSwatches = document.getElementById("resultsPaletteSwatches")
 const resultsStatus = document.getElementById("resultsStatus");
 const resultsRunlog = document.getElementById("resultsRunlog");
 const resultsRunlogSummary = document.getElementById("resultsRunlogSummary");
-const productLibrarySummary = document.getElementById("productLibrarySummary");
-const productLibraryList = document.getElementById("productLibraryList");
 const locationStatus = document.getElementById("locationStatus");
 const enableLocationButton = document.getElementById("enableLocationButton");
 
@@ -42,18 +40,31 @@ let latestFaceDataUrl = "";
 let latestFaceReferenceDataUrl = "";
 let styleImageRenderNonce = 0;
 let shopperLocation = null;
+
+function readIntegerConfig(values, fallback, options = {}) {
+  const min = Number.isFinite(options.min) ? options.min : 0;
+  const max = Number.isFinite(options.max) ? options.max : Number.MAX_SAFE_INTEGER;
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return Math.round(Math.max(min, Math.min(max, parsed)));
+  }
+  const parsedFallback = Number(fallback);
+  return Math.round(Math.max(min, Math.min(max, Number.isFinite(parsedFallback) ? parsedFallback : min)));
+}
+
 const MIN_SKIN_SAMPLES_FOR_FACE = 24;
 const MIN_SKIN_RATIO_FOR_FALLBACK = 0.04;
 const WHITE_BALANCE_STRENGTH = 0.68;
-const FACE_SCAN_READY_MESSAGE = "Face scan ready. Generate the locked five-look image.";
+const FACE_SCAN_READY_MESSAGE = "Face scan ready. Create the locked five-look image.";
 const FACE_SCAN_READY_FEMALE_MESSAGE =
-  "Face scan ready. Adjust mood, fit, frame, and budget, then generate five fixed outfit looks.";
+  "Face scan ready. Adjust mood, fit, frame, and budget, then create five fixed outfit looks.";
 const FACE_SCAN_REQUIRED_MESSAGE = "Scan or upload a clear front-facing face photo first.";
 const FACE_SCAN_ERROR_MESSAGE = "Face scan could not be completed. Upload a clear front-facing face photo and try again.";
-const IMAGE_GENERATING_MESSAGE = "Generating a face-preserving five-look image...";
-const IMAGE_SUCCESS_MESSAGE = "Five-look image generated with the scanned face reference.";
+const IMAGE_GENERATING_MESSAGE = "Creating a face-preserving five-look image...";
+const IMAGE_SUCCESS_MESSAGE = "Five-look image ready.";
 const IMAGE_ERROR_MESSAGE = "Face-preserving image generation is temporarily unavailable. Try again.";
-const RESULTS_LIVE_MESSAGE = "Five generated looks are ready with live product links for each outfit piece.";
+const RESULTS_LIVE_MESSAGE = "Five looks are ready with live product links for each outfit piece.";
 const RESULTS_PARTIAL_FALLBACK_MESSAGE =
   "Some exact product pages are unavailable right now. Search links are available for the remaining pieces.";
 const RESULTS_FALLBACK_MESSAGE =
@@ -61,10 +72,12 @@ const RESULTS_FALLBACK_MESSAGE =
 const RESULTS_UNCONFIGURED_MESSAGE =
   "Live product links are not connected on this site yet.";
 const RESULTS_SAMPLE_MESSAGE = "Showing sample looks. Run a new face scan for a personalised results set.";
-const RESULTS_PROGRESS_MESSAGE = "Preparing 5 total looks and checking live product links.";
+const RESULTS_PROGRESS_MESSAGE = "Preparing 5 total looks, live product links, and limited AI renders.";
 const RESULTS_IMAGE_FALLBACK_MESSAGE = "Some look images are unavailable. Check the generation trace for per-look provider failures.";
 const RESULTS_COMBINED_FALLBACK_MESSAGE =
   "Some look images are unavailable or product matches are search-link fallbacks. Check the generation trace for per-look details.";
+const RESULTS_IMAGE_LIMIT_MESSAGE =
+  "Automatic AI image generation is capped for this run. Product links stay live; use Try look on any card to render another exact look.";
 const IMAGE_REQUEST_TIMEOUT_MS = 45000;
 const IMAGE_REFERENCE_MAX_COUNT = Math.max(
   1,
@@ -86,6 +99,16 @@ const IMAGE_REQUEST_MAX_CONCURRENCY = Math.max(
       2,
   ) || 2,
 );
+const FEMALE_IMAGE_GENERATION_LIMIT = readIntegerConfig(
+  [
+    safeStorageValue("icFemaleImageGenerationLimit"),
+    safeStorageValue("icFemaleImageMaxGenerations"),
+    window.IC_FEMALE_IMAGE_GENERATION_LIMIT,
+    window.IC_FEMALE_IMAGE_MAX_GENERATIONS,
+  ],
+  1,
+  { min: 0, max: 5 },
+);
 const PRODUCT_REQUEST_TIMEOUT_MS = 12000;
 const LOOK_REFERENCE_WAIT_MS = 1500;
 const PROJECT_ROOT_RELATIVE_PREFIX = pathName.includes("/female/") || pathName.includes("/men/") ? "../" : "";
@@ -102,6 +125,7 @@ const LOOK_LOG_PHASE_LABELS = {
   rendering: "Rendering",
   success: "Ready",
   fallback: "Fallback",
+  limited: "Limited",
   sample: "Sample",
   error: "Error",
 };
@@ -111,6 +135,7 @@ const LOOK_LOG_PHASE_PRIORITY = {
   rendering: 2,
   success: 3,
   fallback: 3,
+  limited: 3,
   sample: 3,
   error: 3,
 };
@@ -200,6 +225,36 @@ const seasonProfiles = [
 const femaleRunlogRows = new Map();
 const CHROMA_GREEN_BACKGROUND_INSTRUCTION =
   "Use a flat, evenly lit chroma key green background (#00B140) behind the full body only. No scenery, room, street, furniture, shadows, gradients, props, text, logos, or patterned background. Keep clean separation around hair, shoulders, arms, clothing edges, shoes, and accessories so the subject can be cropped and the background can be replaced later.";
+const replacementBackgrounds = [
+  {
+    label: "Studio",
+    imageUrl: `${PROJECT_ROOT_RELATIVE_PREFIX}assets/generated-backgrounds/studio-editorial.png`,
+    base: "#ebe1d2",
+    accent: "#bca47f",
+    floor: "#d4c0a4",
+  },
+  {
+    label: "City",
+    imageUrl: `${PROJECT_ROOT_RELATIVE_PREFIX}assets/generated-backgrounds/city-editorial.png`,
+    base: "#1d2730",
+    accent: "#d2a45f",
+    floor: "#11161b",
+  },
+  {
+    label: "Gallery",
+    imageUrl: `${PROJECT_ROOT_RELATIVE_PREFIX}assets/generated-backgrounds/gallery-editorial.png`,
+    base: "#f2eee7",
+    accent: "#8a7865",
+    floor: "#d9d0c4",
+  },
+  {
+    label: "Lounge",
+    imageUrl: `${PROJECT_ROOT_RELATIVE_PREFIX}assets/generated-backgrounds/lounge-editorial.png`,
+    base: "#30251e",
+    accent: "#c5945a",
+    floor: "#18120f",
+  },
+];
 
 const mensBackgroundSets = {
   metropolitan: {
@@ -792,7 +847,7 @@ function buildStyleImagePrompt(result) {
     `Background set label for later replacement: ${backgroundSet.label}. Do not render the described scene yet; render chroma green instead.`,
     CHROMA_GREEN_BACKGROUND_INSTRUCTION,
     "All five panels must be present in the same image. Do not collapse them into one background and do not omit any look.",
-    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
+    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}.`,
     `Image frame: ${selections.frame}. In every panel, show a clear face and believable outfit proportions.`,
     `Colour profile: ${result.profile.name}. Palette hex colours for clothing, shoes, and accessories only: ${palette}.`,
     `Visual read: ${axisSummary}. Wardrobe direction: ${result.profile.wardrobe}.`,
@@ -1426,6 +1481,8 @@ function productOptionsPerPiece(countryCode) {
   switch (countryCode) {
     case "HK":
       return 3;
+    case "MY":
+      return 4;
     default:
       return 1;
   }
@@ -1554,7 +1611,7 @@ function normalizeAffiliateProducts(payload) {
     }))
     .map((product) => ({
       ...product,
-      imageUrl: normalizeProductImageUrl(product),
+      imageUrl: exactProductImageUrl(product),
       exactProductPage: !product.isFallback && looksLikeSpecificProductPage(product.rawBuyLink),
     }));
 }
@@ -1739,7 +1796,7 @@ function buildFemaleLookPrompt(run, idea, index) {
     `Look ${index + 1}: ${idea.title}. Direction: ${idea.tone}.`,
     `Locked occasion for this look: ${lookOccasion}. Background placeholder label for later replacement: ${lookBackground}. Do not render that scene yet; render chroma green instead.`,
     CHROMA_GREEN_BACKGROUND_INSTRUCTION,
-    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
+    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}.`,
     "Use the colour palette only for clothing, shoes, bags, jewellery, and makeup harmony, not as an abstract background wash.",
     `Colour season: ${run.profile.name}. Palette hex colours: ${palette}. Wardrobe direction: ${run.profile.wardrobe}.`,
     `Outfit pieces to show: ${pieces}. ${frameInstruction}`,
@@ -1770,9 +1827,9 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
       : "There is no face reference image for this render, so do not invent a stylised or exaggerated face.",
     productImageCount
       ? "Use Images 2 and later only as garment, shoe, bag, and accessory references. Copy clothing silhouette, fabric texture, colour blocking, and styling details from those product images. Ignore and do not copy any catalogue model face, body, pose, skin, hair, or identity from product images."
-      : "If Image 2 is an IC_wearables outfit-combination board, use it only as a combined garment, shoe, bag, accessory, colour, and texture reference. Do not copy any board typography, layout, placeholder letters, catalogue model face, hair, body, pose, or identity. If no Image 2 exists, style the clothing from the matched product names, outfit piece labels, budget, look category, and colour-season guidance.",
+      : "If Image 2 is an IC_wearables outfit reference, use it only as a combined garment, shoe, bag, accessory, colour, and texture reference. Do not copy any typography, layout, placeholder letters, catalogue model face, hair, body, pose, or identity. If no Image 2 exists, style the clothing from the matched product names, outfit piece labels, look category, and colour-season guidance.",
     productSummary ? `Product references: ${productSummary}.` : "",
-    budgetRange ? `Budget target for the shopper's region: ${budgetRange}. Keep the outfit realistically within that range.` : "",
+    budgetRange ? `Regional price range returned by product matching: ${budgetRange}.` : "",
     "Identity priority rule: Image 1 overrides every other image and every style instruction for the face, head, skin, hair, hairline, expression, and visible age. Images 2 and later are garments only. Never borrow a catalogue model's face, hair, pose identity, body identity, expression, smile, makeup style, or skin tone from product images.",
     "Do not change identity, do not create a different model, do not change hairstyle, do not change hairline, do not change expression, and do not add a smile. Preserve natural skin texture, facial asymmetry, uploaded face proportions, uploaded head shape, and the uploaded hair shape from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
   ]
@@ -1796,7 +1853,9 @@ function renderResultsSummary(run) {
   if (resultsRunlogSummary) {
     resultsRunlogSummary.textContent = run.sample
       ? "This sample run keeps the 5-look green-screen layout visible so you can preview business formal, smart casual, city casual, athleisure, and quiet luxury cards."
-      : "Each look runs separately on chroma green so you can crop the subject, replace the background, and verify each style one by one.";
+      : FEMALE_IMAGE_GENERATION_LIMIT > 0
+        ? `The first ${FEMALE_IMAGE_GENERATION_LIMIT} look${FEMALE_IMAGE_GENERATION_LIMIT === 1 ? "" : "s"} render automatically by default; the rest keep fallback previews, live products, and manual Try look rendering.`
+        : "Automatic AI image generation is off for this run; each look keeps fallback previews, live products, and manual Try look rendering.";
   }
 
   if (!resultsPaletteSwatches) return;
@@ -1814,7 +1873,7 @@ function createProductRow(product, piece) {
   row.className = "look-product-row";
   if (product.isFallback) row.classList.add("is-fallback");
 
-  const exactImageUrl = normalizeProductImageUrl(product);
+  const exactImageUrl = exactProductImageUrl(product);
   if (exactImageUrl) {
     const image = document.createElement("img");
     image.src = exactImageUrl;
@@ -1834,28 +1893,18 @@ function createProductRow(product, piece) {
   const title = document.createElement("strong");
   const price = document.createElement("small");
   const matchStatus = document.createElement("small");
-  const budget = product.budgetRange ? document.createElement("small") : null;
   pieceLabel.className = "look-product-piece";
   pieceLabel.textContent = piece.label;
   brand.textContent = product.brand;
   title.textContent = product.productName;
   price.textContent = product.price;
   matchStatus.className = "look-product-budget";
-  matchStatus.textContent = product.isFallback ? "Fallback search result" : "Exact product page";
-  const trackingStatus = document.createElement("small");
-  trackingStatus.className = "look-product-budget";
-  trackingStatus.textContent =
-    product.trackingLabel ||
-    (product.commissionable
-      ? `Affiliate tracked${product.affiliateNetwork ? ` via ${product.affiliateNetwork}` : ""}`
-      : "Not affiliate tracked yet");
-  if (budget) {
-    budget.className = "look-product-budget";
-    budget.textContent = `Budget target: ${product.budgetRange}`;
-    copy.append(pieceLabel, brand, title, price, matchStatus, trackingStatus, budget);
-  } else {
-    copy.append(pieceLabel, brand, title, price, matchStatus, trackingStatus);
-  }
+  matchStatus.textContent = exactImageUrl
+    ? "Used as garment image reference"
+    : product.isFallback
+      ? "Marketplace/search link only"
+      : "Exact product page";
+  copy.append(pieceLabel, brand, title, price, matchStatus);
 
   const actions = document.createElement("div");
   actions.className = "look-product-actions";
@@ -1865,7 +1914,7 @@ function createProductRow(product, piece) {
   if (product.buyLink) {
     action.href = product.buyLink;
     action.target = "_blank";
-    action.rel = "noopener noreferrer sponsored";
+    action.rel = product.commissionable ? "noopener noreferrer sponsored" : "noopener noreferrer";
     action.setAttribute("aria-label", `Shop ${piece.label}`);
   } else {
     action.classList.add("is-disabled");
@@ -1979,6 +2028,12 @@ function normalizeProductImageUrl(product = {}) {
   return /^https?:\/\//i.test(remoteUrl) ? remoteUrl : "";
 }
 
+function exactProductImageUrl(product = {}) {
+  const link = String(product.buyLink || product.affiliateLink || product.rawBuyLink || "").trim();
+  if (product.isFallback || !looksLikeSpecificProductPage(link)) return "";
+  return normalizeProductImageUrl(product);
+}
+
 function productLibraryCandidates() {
   return [
     ...marketAssetCandidates("library"),
@@ -2019,7 +2074,7 @@ function approvedBrandSetForCountry(countryCode = "") {
     case "HK":
       return new Set(["zalora hk", "taobao hk"]);
     case "MY":
-      return new Set(["love bonito my", "jd sports my"]);
+      return new Set(["love bonito my", "jd sports my", "shopee my", "tiktok shop my", "taobao my"]);
     default:
       return null;
   }
@@ -2040,6 +2095,9 @@ function approvedBrandNameForProduct(product = {}, countryCode = "") {
   if (String(countryCode || "").trim().toUpperCase() === "MY") {
     if (normalizedLink.includes("lovebonito.com/my")) return "love bonito my";
     if (normalizedLink.includes("jdsports.my")) return "jd sports my";
+    if (normalizedLink.includes("shopee.com.my")) return "shopee my";
+    if (normalizedLink.includes("tiktok.com/shop") || normalizedLink.includes("tiktok.com/@")) return "tiktok shop my";
+    if (normalizedLink.includes("taobao.com")) return "taobao my";
   }
   return "";
 }
@@ -2051,8 +2109,10 @@ async function loadProductLibraryIndex() {
       const products = Array.isArray(library?.products) ? library.products : [];
       products.forEach((product) => {
         const key = productLibraryIndexKey(product);
-        if (!key || index.has(key)) return;
-        index.set(key, product);
+        if (!key) return;
+        const matches = index.get(key) || [];
+        matches.push(product);
+        index.set(key, matches);
       });
       return index;
     });
@@ -2062,6 +2122,7 @@ async function loadProductLibraryIndex() {
 
 async function hydrateProductsFromLibrary(rows = [], run = null, idea = null) {
   const index = await loadProductLibraryIndex().catch(() => new Map());
+  const usedLibraryMatches = new Map();
   return rows.map((row) => {
     const product = row?.product || {};
     const countryCode = String(product.countryCode || row?.countryCode || inferredCountryCode() || "").trim().toUpperCase();
@@ -2073,8 +2134,11 @@ async function hydrateProductsFromLibrary(rows = [], run = null, idea = null) {
       piece: row?.piece?.label || "",
       brand: approvedBrand,
     });
-    const libraryMatch = index.get(libraryKey);
+    const libraryMatches = index.get(libraryKey) || [];
+    const usedCount = usedLibraryMatches.get(libraryKey) || 0;
+    const libraryMatch = libraryMatches[usedCount] || libraryMatches[0];
     if (!libraryMatch) return row;
+    usedLibraryMatches.set(libraryKey, usedCount + 1);
     const hasExactProductPage = !product.isFallback && looksLikeSpecificProductPage(product.buyLink || product.affiliateLink || "");
     const shouldUpgrade = product.isFallback || !hasExactProductPage || !normalizeProductImageUrl(product);
     if (!shouldUpgrade) return row;
@@ -2098,8 +2162,8 @@ async function hydrateProductsFromLibrary(rows = [], run = null, idea = null) {
         affiliateNetwork: libraryMatch.affiliateNetwork || product.affiliateNetwork || "",
         trackingStatus: libraryMatch.trackingStatus || product.trackingStatus || "",
         trackingLabel: libraryMatch.trackingLabel || product.trackingLabel || "",
-        localImagePath: product.localImagePath || libraryMatch.localImagePath || libraryMatch.sourceImage || "",
-        imageUrl: product.imageUrl || libraryMatch.imageUrl || "",
+        localImagePath: libraryMatch.localImagePath || libraryMatch.sourceImage || libraryMatch.cropImage || "",
+        imageUrl: libraryMatch.imageUrl || "",
       },
     };
   });
@@ -2159,101 +2223,6 @@ async function combinationBoardForLook(run, idea) {
   };
 }
 
-function createLibraryProductRow(product) {
-  const row = document.createElement("article");
-  row.className = "library-product-row";
-  if (product.isFallback) row.classList.add("is-fallback");
-
-  const imageUrl = normalizeProductImageUrl(product);
-  if (imageUrl) {
-    const image = document.createElement("img");
-    image.className = "library-product-image";
-    image.src = imageUrl;
-    image.alt = product.productName || "Product image";
-    image.loading = "lazy";
-    row.appendChild(image);
-  } else {
-    const marker = document.createElement("span");
-    marker.className = "product-marker";
-    marker.textContent = String(product.piece || product.brand || "P").slice(0, 1).toUpperCase();
-    row.appendChild(marker);
-  }
-
-  const copy = document.createElement("div");
-  const meta = document.createElement("span");
-  const title = document.createElement("strong");
-  const status = document.createElement("small");
-  meta.textContent = [product.season, product.look, product.piece].filter(Boolean).join(" / ");
-  title.textContent = `${product.productName || "Product"}${product.brand ? ` - ${product.brand}` : ""}`;
-  status.textContent = [
-    product.isFallback ? "Fallback search link" : "Exact product",
-    product.trackingLabel || (product.commissionable ? "affiliate tracked" : "not affiliate tracked"),
-    imageUrl ? "has exact image" : "no image",
-    product.localImagePath ? `cached: ${product.localImagePath}` : product.imageCacheStatus,
-  ]
-    .filter(Boolean)
-    .join(" | ");
-  copy.append(meta, title, status);
-
-  const action = product.affiliateLink ? document.createElement("a") : document.createElement("span");
-  action.className = "look-product-action";
-  action.textContent = product.actionLabel || (product.affiliateLink ? "Open" : "No link");
-  if (product.affiliateLink) {
-    action.href = product.affiliateLink;
-    action.target = "_blank";
-    action.rel = "noopener noreferrer sponsored";
-  } else {
-    action.classList.add("is-disabled");
-  }
-
-  row.append(copy, action);
-  return row;
-}
-
-async function hydrateProductLibraryPanel() {
-  if (!productLibrarySummary || !productLibraryList) return;
-  try {
-    const library = await loadProductLibrary();
-    if (!library) throw new Error("Library request failed");
-    const summary = library.summary || {};
-    const diagnostics = Array.isArray(library.affiliateDiagnostics) ? library.affiliateDiagnostics : [];
-    const products = Array.isArray(library.products) ? library.products : [];
-    productLibrarySummary.textContent =
-      `${summary.products || products.length || 0} rows loaded for ${library.countryCode || "HK"}: ${summary.exactProducts || 0} exact products, ${summary.fallbackSearchLinks || 0} fallback search links, ${summary.commissionableProducts || 0} affiliate-tracked links, ${summary.cachedImages || 0} cached images.`;
-
-    const children = [];
-    const openJson = document.createElement("a");
-    openJson.className = "library-json-link";
-    openJson.href = library.__resolvedHref || absoluteProjectUrl(PRODUCT_LIBRARY_URL);
-    openJson.target = "_blank";
-    openJson.rel = "noopener noreferrer";
-    openJson.textContent = "Open raw product-library.json";
-    children.push(openJson);
-
-    if (diagnostics.length) {
-      const diagnosticBox = document.createElement("div");
-      diagnosticBox.className = "library-diagnostics";
-      const title = document.createElement("strong");
-      title.textContent = "Affiliate diagnostics";
-      const list = document.createElement("ul");
-      diagnostics.slice(0, 6).forEach((detail) => {
-        const item = document.createElement("li");
-        item.textContent = detail;
-        list.appendChild(item);
-      });
-      diagnosticBox.append(title, list);
-      children.push(diagnosticBox);
-    }
-
-    children.push(...products.slice(0, 24).map((product) => createLibraryProductRow(product)));
-    productLibraryList.replaceChildren(...children);
-  } catch (error) {
-    productLibrarySummary.textContent =
-      "Product library JSON is not published with this static site yet. You can still inspect it locally in data/product-library.json.";
-    productLibraryList.replaceChildren();
-  }
-}
-
 function createRunlogRow(idea, index) {
   const row = document.createElement("article");
   row.className = "results-runlog-row is-working";
@@ -2285,16 +2254,18 @@ function setRunlogState(lookKey, phase, message) {
   const currentPriority = LOOK_LOG_PHASE_PRIORITY[entry.phase] ?? -1;
   if (nextPriority < currentPriority) return;
   entry.phase = phase;
-  entry.row.classList.remove("is-working", "is-success", "is-fallback", "is-error");
+  entry.row.classList.remove("is-working", "is-success", "is-fallback", "is-limited", "is-error");
 
   const visualPhase =
     phase === "success" || phase === "sample"
       ? "is-success"
       : phase === "fallback"
         ? "is-fallback"
-        : phase === "error"
-          ? "is-error"
-          : "is-working";
+        : phase === "limited"
+          ? "is-limited"
+          : phase === "error"
+            ? "is-error"
+            : "is-working";
 
   entry.row.classList.add(visualPhase);
   entry.badge.textContent = LOOK_LOG_PHASE_LABELS[phase] || phase;
@@ -2416,7 +2387,7 @@ function setLookErrorState(cardState, message) {
   cardState.image.dataset.renderState = "error";
   cardState.image.setAttribute("aria-hidden", "true");
   setLookImageStatus(cardState.imageStatus, message);
-  setLookActionState(cardState.regenerateButton, "Regenerate", false);
+  setLookActionState(cardState.backgroundButton, "Change background", true);
 }
 
 function setLookFallbackState(cardState, imageUrl, message) {
@@ -2432,8 +2403,28 @@ function setLookFallbackState(cardState, imageUrl, message) {
     setLookErrorState(cardState, "Fallback image could not be displayed.");
   };
   cardState.image.src = imageUrl;
+  cardState.greenImageUrl = imageUrl;
+  cardState.backgroundIndex = -1;
   setLookImageStatus(cardState.imageStatus, message);
-  setLookActionState(cardState.regenerateButton, "Regenerate", false);
+  setLookActionState(cardState.backgroundButton, "Change background", false);
+}
+
+function setLookLimitedState(cardState, idea) {
+  setLookFallbackState(
+    cardState,
+    idea.fallbackImage,
+    "Automatic AI image generation is capped for this run. Product links and manual rendering are still available.",
+  );
+  setRunlogState(
+    idea.title,
+    "limited",
+    "Skipped the automatic AI render to stay within the configured image-generation limit.",
+  );
+  return {
+    imageUsedReferences: false,
+    productReferenceCount: 0,
+    imageProvider: "limited",
+  };
 }
 
 async function copyTextToClipboard(text) {
@@ -2536,6 +2527,33 @@ function productUrlLines(rows = []) {
     .filter(Boolean);
 }
 
+function normalizeRowsForProductReferences(rows = []) {
+  return (Array.isArray(rows) ? rows : []).map((row) => ({
+    ...row,
+    product: {
+      ...row.product,
+      imageUrl: exactProductImageUrl(row.product),
+    },
+  }));
+}
+
+function productReferenceRows(rows = []) {
+  return normalizeRowsForProductReferences(rows)
+    .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
+    .sort((left, right) => productReferencePriority(left) - productReferencePriority(right));
+}
+
+function productReferenceUrlLines(rows = []) {
+  return productReferenceRows(rows)
+    .map(({ piece, product }) => {
+      const label = String(piece?.label || "Piece").trim();
+      const name = String(product?.productName || "").trim();
+      const url = String(product?.buyLink || product?.affiliateLink || "").trim();
+      return url ? `${label}: ${name} -> ${url}` : "";
+    })
+    .filter(Boolean);
+}
+
 function selectedLookTitle(idea, variantIndex = 0) {
   return variantIndex > 0 ? `${idea.title} variant ${variantIndex + 1}` : idea.title;
 }
@@ -2551,9 +2569,9 @@ function buildOutfitOnlyPrompt(run, idea, rows = [], variantIndex = 0) {
     .join("; ");
   const pieces = idea.pieces.map((piece) => piece.label).join(", ");
   return [
-    `IC_wearables exact-product outfit board for ${selectedLookTitle(idea, variantIndex)}.`,
+    `IC_wearables exact-product outfit reference for ${selectedLookTitle(idea, variantIndex)}.`,
     `Colour season: ${run.profile.name}. Palette hex colours: ${palette}.`,
-    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}. Budget direction: ${selections.budget}.`,
+    `Style mood: ${selections.mood}. Fit goal: ${selections.fit}.`,
     `Outfit pieces to show together: ${pieces}.`,
     productSummary ? `Exact products: ${productSummary}.` : "",
     "Create a clean garment-only outfit composition on a neutral studio background. Do not include any face, head, hair, person, mannequin, model, or body part.",
@@ -2566,12 +2584,16 @@ function buildOutfitOnlyPrompt(run, idea, rows = [], variantIndex = 0) {
 
 function copyPromptManualHandoff(prompt, rows = [], referenceCount = 0) {
   const urlLines = productUrlLines(rows);
+  const referenceUrlLines = productReferenceUrlLines(rows);
   return [
     prompt,
     "",
     geminiReferenceInstructions("", referenceCount),
+    referenceUrlLines.length ? "" : null,
+    referenceUrlLines.length ? "Product URLs used as image references:" : null,
+    ...referenceUrlLines,
     urlLines.length ? "" : null,
-    urlLines.length ? "Product URLs:" : null,
+    urlLines.length ? "All selected product URLs:" : null,
     ...urlLines,
   ]
     .filter((line) => line !== null)
@@ -2590,16 +2612,7 @@ async function collectLookReferenceBundle(run, idea, rows = []) {
     delay(LOOK_REFERENCE_WAIT_MS).then(() => null),
   ]);
 
-  const productImageUrls = resolvedRows
-    .map((row) => ({
-      ...row,
-      product: {
-        ...row.product,
-        imageUrl: normalizeProductImageUrl(row.product),
-      },
-    }))
-    .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
-    .sort((left, right) => productReferencePriority(left) - productReferencePriority(right))
+  const productImageUrls = productReferenceRows(resolvedRows)
     .map(({ product }) => product.imageUrl)
     .filter((url, index, all) => all.indexOf(url) === index)
     .slice(0, Math.max(1, IMAGE_REFERENCE_MAX_COUNT - 1));
@@ -2683,30 +2696,30 @@ function formatImageAttempts(attempts = []) {
   return { failed, skipped };
 }
 
-function createPromptInspector(prompt, providerOrder = IMAGE_REFERENCE_PROVIDER_ORDER) {
+function createPromptInspector(prompt, rows = [], providerOrder = IMAGE_REFERENCE_PROVIDER_ORDER) {
   const details = document.createElement("details");
   details.className = "look-prompt-inspector";
   const summary = document.createElement("summary");
-  summary.textContent = "View exact generation prompt";
+  summary.textContent = "View exact generation prompt and product links";
   const meta = document.createElement("p");
   meta.textContent = `Reference fallback order: ${providerOrder.join(" -> ") || "backend default"}`;
   const pre = document.createElement("pre");
-  pre.textContent = prompt || "Prompt will appear when this look starts rendering.";
+  pre.textContent = copyPromptManualHandoff(prompt, rows, productReferenceRows(rows).length + 1) || "Prompt will appear when this look starts rendering.";
   details.append(summary, meta, pre);
   return details;
 }
 
-function upsertPromptInspector(cardState, prompt) {
+function upsertPromptInspector(cardState, prompt, rows = []) {
   if (!cardState?.body) return;
   let inspector = cardState.body.querySelector(".look-prompt-inspector");
   if (!inspector) {
-    inspector = createPromptInspector(prompt);
+    inspector = createPromptInspector(prompt, rows);
     const rackTitle = cardState.body.querySelector("h3");
     cardState.body.insertBefore(inspector, rackTitle || null);
     return;
   }
   const pre = inspector.querySelector("pre");
-  if (pre) pre.textContent = prompt || "";
+  if (pre) pre.textContent = copyPromptManualHandoff(prompt, rows, productReferenceRows(rows).length + 1) || "";
 }
 
 function delay(ms) {
@@ -2719,31 +2732,17 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
   let resolvedRows = [];
   if (rowsOrPromise && typeof rowsOrPromise.then === "function") {
     try {
-      resolvedRows = await Promise.race([rowsOrPromise, delay(LOOK_REFERENCE_WAIT_MS).then(() => [])]);
+      setLookImageStatus(statusElement, "Waiting for matched products before image generation...");
+      resolvedRows = await rowsOrPromise;
     } catch (error) {
       resolvedRows = [];
     }
   } else {
     resolvedRows = Array.isArray(rowsOrPromise) ? rowsOrPromise : [];
   }
-  resolvedRows = resolvedRows.map((row) => ({
-    ...row,
-    product: {
-      ...row.product,
-      imageUrl: normalizeProductImageUrl(row.product),
-    },
-  }));
+  resolvedRows = normalizeRowsForProductReferences(resolvedRows);
 
-  const productImageUrls = resolvedRows
-    .map((row) => ({
-      ...row,
-      product: {
-        ...row.product,
-        imageUrl: normalizeProductImageUrl(row.product),
-      },
-    }))
-    .filter(({ product }) => product.buyLink && /^https?:\/\//i.test(product.imageUrl))
-    .sort((left, right) => productReferencePriority(left) - productReferencePriority(right))
+  const productImageUrls = productReferenceRows(resolvedRows)
     .map(({ product }) => product.imageUrl)
     .filter((url, index, all) => all.indexOf(url) === index)
     .filter((url) => /^https?:\/\//i.test(url))
@@ -2769,22 +2768,22 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
   const referenceImages = [run.faceReferenceDataUrl, ...productReferenceImages].filter(Boolean).slice(0, IMAGE_REFERENCE_MAX_COUNT);
   const prompt = buildReferencedFemaleLookPrompt(run, idea, index, resolvedRows);
   const fallbackImageUrl = idea.fallbackImage;
-  upsertPromptInspector(cardState, prompt);
+  upsertPromptInspector(cardState, prompt, resolvedRows);
 
   setLookImageStatus(
     statusElement,
     run.faceReferenceDataUrl
-      ? "Generating with scanned face reference..."
-      : "Generating from colour profile...",
+      ? "Creating with face reference..."
+      : "Creating from colour profile...",
   );
   setRunlogState(
     idea.title,
     "rendering",
     productImageUrls.length
-      ? `Rendering with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
+      ? `Rendering with face reference plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
       : combinationBoard?.boardUrl
-        ? "Rendering with scanned face plus one outfit-combination board."
-        : "Rendering with the scanned face and product text only.",
+        ? "Rendering with face and outfit references."
+        : "Rendering with face reference and product text.",
   );
 
   try {
@@ -2797,20 +2796,20 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       );
     }
     const result = await runQueuedImageGeneration(() => {
-      setLookImageStatus(statusElement, "Generating with scanned face reference...");
+      setLookImageStatus(statusElement, "Creating with face reference...");
       if (cardState) {
         cardState.image.dataset.renderState = "loading";
         cardState.image.removeAttribute("aria-hidden");
-        setLookActionState(cardState.regenerateButton, "Rendering...", true);
+        setLookActionState(cardState.backgroundButton, "Change background", true);
       }
       setRunlogState(
         idea.title,
         "rendering",
         productImageUrls.length
-          ? `Rendering now with the scanned face plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
+          ? `Rendering now with face reference plus ${productImageUrls.length} garment reference image${productImageUrls.length === 1 ? "" : "s"}.`
           : combinationBoard?.boardUrl
-            ? "Rendering now with Image 1 face plus Image 2 outfit-combination board."
-            : "Rendering now with the scanned face and product text only.",
+            ? "Rendering now with face and outfit references."
+            : "Rendering now with face reference and product text.",
       );
       return generatedReferenceImage(prompt, {
         width: 800,
@@ -2828,29 +2827,32 @@ async function hydrateLookImage(run, idea, index, image, statusElement, rowsOrPr
       if (cardState) {
         cardState.image.dataset.renderState = "ready";
         cardState.image.removeAttribute("aria-hidden");
-        setLookActionState(cardState.regenerateButton, "Regenerate", false);
+        cardState.greenImageUrl = result.imageUrl;
+        cardState.backgroundIndex = -1;
+        setLookActionState(cardState.backgroundButton, "Change background", false);
       }
       setLookImageStatus(
         statusElement,
         result.usedReferences
           ? productReferenceImages.length
             ? productImageUrls.length
-              ? "Generated from scanned face and exact garment references."
-              : "Generated from scanned face and outfit-combination board."
-            : "Generated from scanned face and product text."
-          : "Generated from styling prompt.",
+              ? "Look ready with exact garment references."
+              : "Look ready with outfit references."
+            : "Look ready with product text."
+          : "Look ready from styling prompt.",
       );
       setRunlogState(
         idea.title,
         "success",
         result.usedReferences
-          ? `Image ready via ${result.provider} with the scanned face${productImageUrls.length ? " and exact garment references" : combinationBoard?.boardUrl ? " and outfit board" : ""}.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`
+          ? `Image ready via ${result.provider}${productImageUrls.length ? " with exact garment references" : combinationBoard?.boardUrl ? " with outfit references" : " with product text"}.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`
           : `Image ready via ${result.provider} without reference images.${attemptSummary.failed.length ? ` Earlier provider failures were skipped over automatically.` : ""}`,
       );
     };
     image.onerror = () => {
       setLookErrorState(cardState, "Image generation failed. The returned image could not be displayed.");
       setRunlogState(idea.title, "error", "The provider returned an unreadable image for this look.");
+      setLookActionState(cardState?.backgroundButton, "Change background", true);
     };
     image.src = result.imageUrl;
     return {
@@ -2914,6 +2916,136 @@ function drawContainedImage(context, image, x, y, width, height) {
   context.drawImage(image, dx, dy, drawWidth, drawHeight);
 }
 
+function drawFallbackReplacementBackground(context, width, height, preset) {
+  const gradient = context.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, preset.base);
+  gradient.addColorStop(0.55, preset.accent);
+  gradient.addColorStop(1, preset.floor);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+
+  context.fillStyle = "rgba(255, 255, 255, 0.16)";
+  context.fillRect(0, Math.round(height * 0.68), width, Math.round(height * 0.32));
+  context.fillStyle = "rgba(0, 0, 0, 0.14)";
+  context.fillRect(0, Math.round(height * 0.72), width, Math.round(height * 0.28));
+}
+
+async function drawReplacementBackground(context, width, height, preset) {
+  if (!preset.imageUrl) {
+    drawFallbackReplacementBackground(context, width, height, preset);
+    return;
+  }
+
+  try {
+    const background = await loadImageElement(preset.imageUrl);
+    const scale = Math.max(width / background.naturalWidth, height / background.naturalHeight);
+    const drawWidth = background.naturalWidth * scale;
+    const drawHeight = background.naturalHeight * scale;
+    const dx = (width - drawWidth) / 2;
+    const dy = (height - drawHeight) / 2;
+    context.drawImage(background, dx, dy, drawWidth, drawHeight);
+  } catch (error) {
+    drawFallbackReplacementBackground(context, width, height, preset);
+  }
+}
+
+function isChromaGreenPixel(red, green, blue, alpha) {
+  if (alpha < 8) return true;
+  return green > 90 && green > red * 1.28 && green > blue * 1.22 && green - Math.max(red, blue) > 28;
+}
+
+function chromaCropBounds(imageData) {
+  const { data, width, height } = imageData;
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const offset = (y * width + x) * 4;
+      if (!isChromaGreenPixel(data[offset], data[offset + 1], data[offset + 2], data[offset + 3])) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+
+  if (minX > maxX || minY > maxY) return { x: 0, y: 0, width, height };
+  const padX = Math.round(width * 0.035);
+  const padY = Math.round(height * 0.035);
+  return {
+    x: Math.max(0, minX - padX),
+    y: Math.max(0, minY - padY),
+    width: Math.min(width, maxX + padX) - Math.max(0, minX - padX),
+    height: Math.min(height, maxY + padY) - Math.max(0, minY - padY),
+  };
+}
+
+async function replaceChromaBackground(imageUrl, preset) {
+  const sourceImage = await loadImageElement(imageUrl);
+  const sourceCanvas = document.createElement("canvas");
+  sourceCanvas.width = sourceImage.naturalWidth || sourceImage.width;
+  sourceCanvas.height = sourceImage.naturalHeight || sourceImage.height;
+  const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+  sourceContext.drawImage(sourceImage, 0, 0, sourceCanvas.width, sourceCanvas.height);
+
+  const imageData = sourceContext.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+  const { data } = imageData;
+  for (let index = 0; index < data.length; index += 4) {
+    if (isChromaGreenPixel(data[index], data[index + 1], data[index + 2], data[index + 3])) {
+      data[index + 3] = 0;
+    }
+  }
+  sourceContext.putImageData(imageData, 0, 0);
+
+  const bounds = chromaCropBounds(imageData);
+  const outputCanvas = document.createElement("canvas");
+  outputCanvas.width = sourceCanvas.width;
+  outputCanvas.height = sourceCanvas.height;
+  const outputContext = outputCanvas.getContext("2d");
+  await drawReplacementBackground(outputContext, outputCanvas.width, outputCanvas.height, preset);
+
+  const maxWidth = outputCanvas.width * 0.88;
+  const maxHeight = outputCanvas.height * 0.94;
+  const scale = Math.min(maxWidth / bounds.width, maxHeight / bounds.height, 1.4);
+  const drawWidth = bounds.width * scale;
+  const drawHeight = bounds.height * scale;
+  const dx = (outputCanvas.width - drawWidth) / 2;
+  const dy = outputCanvas.height - drawHeight - outputCanvas.height * 0.025;
+  outputContext.drawImage(
+    sourceCanvas,
+    bounds.x,
+    bounds.y,
+    bounds.width,
+    bounds.height,
+    dx,
+    dy,
+    drawWidth,
+    drawHeight,
+  );
+
+  return outputCanvas.toDataURL("image/png");
+}
+
+async function applyNextLookBackground(cardState, idea) {
+  if (!cardState?.image) return;
+  const sourceUrl = cardState.greenImageUrl || cardState.image.currentSrc || cardState.image.src;
+  if (!sourceUrl) throw new Error("No image is available yet.");
+
+  const nextIndex = ((cardState.backgroundIndex ?? -1) + 1) % replacementBackgrounds.length;
+  const preset = replacementBackgrounds[nextIndex];
+  setLookActionState(cardState.backgroundButton, "Changing...", true);
+  setLookImageStatus(cardState.imageStatus, `Replacing green with ${preset.label.toLowerCase()} background...`);
+  const renderedUrl = await replaceChromaBackground(sourceUrl, preset);
+  cardState.backgroundIndex = nextIndex;
+  cardState.image.src = renderedUrl;
+  cardState.image.dataset.renderState = "background-replaced";
+  setLookActionState(cardState.backgroundButton, `Background: ${preset.label}`, false);
+  setLookImageStatus(cardState.imageStatus, `${idea.title} background changed to ${preset.label}.`);
+}
+
 async function buildVariantPreviewDataUrl(idea, rows = [], variantIndex = 0) {
   const width = 900;
   const height = 1100;
@@ -2940,7 +3072,7 @@ async function buildVariantPreviewDataUrl(idea, rows = [], variantIndex = 0) {
 
   const imagePromises = rows.slice(0, cells.length).map(async ({ piece, product }, index) => {
     const cell = cells[index];
-    const url = normalizeProductImageUrl(product);
+    const url = exactProductImageUrl(product);
     return { piece, product, cell, image: url ? await loadImageElement(url).catch(() => null) : null };
   });
   const resolved = await Promise.all(imagePromises);
@@ -2987,7 +3119,7 @@ function renderFemaleLookCard(run, idea, index) {
     imageStatus.textContent = "Image generation failed for this look.";
   };
   if (run.sample) image.src = idea.fallbackImage;
-  image.alt = `${idea.title} generated outfit for ${run.profile.name}`;
+  image.alt = `${idea.title} outfit for ${run.profile.name}`;
   image.loading = index === 0 ? "eager" : "lazy";
   image.dataset.renderState = run.sample ? "sample" : "idle";
   media.append(image, imageStatus);
@@ -3015,12 +3147,12 @@ function renderFemaleLookCard(run, idea, index) {
 
   const imageActions = document.createElement("div");
   imageActions.className = "generated-look-actions";
-  const regenerateButton = document.createElement("button");
-  regenerateButton.type = "button";
-  regenerateButton.className = "generated-look-regenerate";
-  regenerateButton.textContent = "Regenerate";
-  regenerateButton.disabled = run.sample;
-  imageActions.appendChild(regenerateButton);
+  const backgroundButton = document.createElement("button");
+  backgroundButton.type = "button";
+  backgroundButton.className = "generated-look-secondary";
+  backgroundButton.textContent = "Change background";
+  backgroundButton.disabled = run.sample;
+  imageActions.appendChild(backgroundButton);
 
   const copyPromptButton = document.createElement("button");
   copyPromptButton.type = "button";
@@ -3028,13 +3160,6 @@ function renderFemaleLookCard(run, idea, index) {
   copyPromptButton.textContent = "Copy Gemini prompt";
   copyPromptButton.disabled = run.sample;
   imageActions.appendChild(copyPromptButton);
-
-  const downloadRefsButton = document.createElement("button");
-  downloadRefsButton.type = "button";
-  downloadRefsButton.className = "generated-look-secondary";
-  downloadRefsButton.textContent = "Download refs";
-  downloadRefsButton.disabled = run.sample;
-  imageActions.appendChild(downloadRefsButton);
 
   const rackTitle = document.createElement("h3");
   rackTitle.textContent = "Product links";
@@ -3067,9 +3192,8 @@ function renderFemaleLookCard(run, idea, index) {
     combinationList,
     image,
     imageStatus,
-    regenerateButton,
+    backgroundButton,
     copyPromptButton,
-    downloadRefsButton,
   };
 }
 
@@ -3103,10 +3227,6 @@ async function hydrateLookProducts(run, idea, productList) {
   const firstReason = rows.find((row) => row.reason)?.reason || "";
   const budgetRange = rows.map((row) => row.product.budgetRange).find(Boolean) || "";
   const children = [];
-
-  if (budgetRange) {
-    children.push(createProductMeta(`Budget target for this region: ${budgetRange}`));
-  }
 
   if (maxProductsPerPiece > 1) {
     children.push(createProductMeta(`Showing up to ${maxProductsPerPiece} matched options per piece for ${marketLabel(countryCode)}.`));
@@ -3199,25 +3319,19 @@ async function renderLookCombinations(run, idea, rows = [], combinationList, onT
   return { variants, selectedVariantRows: variants[0]?.rows || rows };
 }
 
-function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
-  if (!cardState?.regenerateButton) return;
+function bindLookCardActions(run, idea, index, cardState, productStatsPromise) {
+  if (!cardState) return;
   const lookKey = femaleLookStateKey(run, idea, index);
   femaleLookCardState.set(lookKey, { run, idea, index, ...cardState, productStatsPromise });
 
-  cardState.regenerateButton.addEventListener("click", async () => {
-    setLookActionState(cardState.regenerateButton, "Rendering...", true);
-    setLookImageStatus(cardState.imageStatus, "Retrying image generation...");
-    setRunlogState(idea.title, "rendering", "Retrying this look image.");
-    const productStats = await productStatsPromise.catch(() => ({ rows: [], affiliateCount: 0, fallbackCount: 0, totalCount: 0 }));
-    await hydrateLookImage(
-      run,
-      idea,
-      index,
-      cardState.image,
-      cardState.imageStatus,
-      cardState.selectedVariantRows?.length ? cardState.selectedVariantRows : productStats.rows,
-      { cardState },
-    );
+  cardState.backgroundButton?.addEventListener("click", async () => {
+    try {
+      await applyNextLookBackground(cardState, idea);
+      setRunlogState(idea.title, "success", "Replaced the chroma green background on the current image.");
+    } catch (error) {
+      setLookActionState(cardState.backgroundButton, "Change background", false);
+      setLookImageStatus(cardState.imageStatus, error?.message || "Could not change the background.");
+    }
   });
 
   cardState.copyPromptButton?.addEventListener("click", async () => {
@@ -3241,26 +3355,6 @@ function bindLookRegenerate(run, idea, index, cardState, productStatsPromise) {
     }
   });
 
-  cardState.downloadRefsButton?.addEventListener("click", async () => {
-    try {
-      setLookImageStatus(cardState.imageStatus, "Preparing downloadable references...");
-      const productStats = await productStatsPromise.catch(() => ({
-        rows: [],
-        affiliateCount: 0,
-        fallbackCount: 0,
-        totalCount: 0,
-      }));
-      const selectedRows = cardState.selectedVariantRows?.length ? cardState.selectedVariantRows : productStats.rows;
-      const bundle = await downloadLookReferenceBundle(run, idea, selectedRows);
-      setLookImageStatus(
-        cardState.imageStatus,
-        `Downloaded ${bundle.referenceImages.length} reference image${bundle.referenceImages.length === 1 ? "" : "s"} for manual Gemini use.`,
-      );
-      setRunlogState(idea.title, "success", "Downloaded the face and garment references for manual Gemini Flash rendering.");
-    } catch (error) {
-      setLookImageStatus(cardState.imageStatus, error?.message || "Could not download the reference images.");
-    }
-  });
 }
 
 function initFemaleResultsPage() {
@@ -3268,31 +3362,33 @@ function initFemaleResultsPage() {
 
   const run = readFemaleStyleRun();
   renderResultsSummary(run);
-  hydrateProductLibraryPanel();
   femaleLooksGrid.innerHTML = "";
   femaleLookCardState.clear();
   initialiseFemaleRunlog();
 
   const productJobs = femaleOutfitIdeas.map(async (idea, index) => {
-    const { card, productList, combinationList, image, imageStatus, regenerateButton, copyPromptButton, downloadRefsButton } = renderFemaleLookCard(run, idea, index);
+    const { card, productList, combinationList, image, imageStatus, backgroundButton, copyPromptButton } = renderFemaleLookCard(run, idea, index);
     femaleLooksGrid.appendChild(card);
-    const cardState = { card, image, imageStatus, regenerateButton, copyPromptButton, downloadRefsButton, productList, combinationList, selectedVariantRows: [] };
+    const cardState = { card, image, imageStatus, backgroundButton, copyPromptButton, productList, combinationList, selectedVariantRows: [] };
     const productStatsPromise = hydrateLookProducts(run, idea, productList).then(async (stats) => {
       const combinationState = await renderLookCombinations(run, idea, stats.rows, combinationList, async (variantRows) => {
         cardState.selectedVariantRows = variantRows;
         setLookImageStatus(imageStatus, "Rendering this exact look with your face...");
         await hydrateLookImage(run, idea, index, image, imageStatus, variantRows, { cardState });
-        setRunlogState(idea.title, "success", "Rendered the selected combination with the scanned face and exact product references.");
+        setRunlogState(idea.title, "success", "Rendered the selected combination with face and product references.");
       });
       cardState.selectedVariantRows = combinationState.selectedVariantRows || stats.rows;
       return { ...stats, ...combinationState };
     });
-    bindLookRegenerate(run, idea, index, cardState, productStatsPromise);
+    bindLookCardActions(run, idea, index, cardState, productStatsPromise);
+    const shouldAutoGenerateImage = !run.sample && index < FEMALE_IMAGE_GENERATION_LIMIT;
     const imageStatsPromise = run.sample
       ? (() => {
           setRunlogState(idea.title, "sample", "Sample mode is showing the placeholder look without calling the image backend.");
           return Promise.resolve({ imageUsedReferences: false, productReferenceCount: 0, imageProvider: "sample" });
         })()
+      : !shouldAutoGenerateImage
+        ? productStatsPromise.then(() => setLookLimitedState(cardState, idea))
       : hydrateLookImage(run, idea, index, image, imageStatus, productStatsPromise.then((stats) => stats.selectedVariantRows || stats.rows), {
           cardState,
         });
@@ -3314,6 +3410,7 @@ function initFemaleResultsPage() {
     const affiliateCount = stats.reduce((sum, stat) => sum + stat.affiliateCount, 0);
     const productFallbackCount = stats.reduce((sum, stat) => sum + stat.fallbackCount, 0);
     const imageFallbackCount = stats.filter((stat) => stat.imageProvider === "fallback" || stat.imageProvider === "error").length;
+    const imageLimitedCount = stats.filter((stat) => stat.imageProvider === "limited").length;
 
     if (imageFallbackCount && (productFallbackCount || affiliateCount)) {
       resultsStatus.textContent = RESULTS_COMBINED_FALLBACK_MESSAGE;
@@ -3322,6 +3419,11 @@ function initFemaleResultsPage() {
 
     if (imageFallbackCount) {
       resultsStatus.textContent = RESULTS_IMAGE_FALLBACK_MESSAGE;
+      return;
+    }
+
+    if (imageLimitedCount) {
+      resultsStatus.textContent = RESULTS_IMAGE_LIMIT_MESSAGE;
       return;
     }
 
@@ -3389,14 +3491,14 @@ async function generateStylePhoto() {
         if (generationStatus) generationStatus.textContent = IMAGE_SUCCESS_MESSAGE;
         if (generatePhotoButton) {
           generatePhotoButton.disabled = false;
-          generatePhotoButton.textContent = "Regenerate five-look image";
+          generatePhotoButton.textContent = "Create five-look image";
         }
       };
       generatedStyleImage.onerror = () => {
         if (generationStatus) generationStatus.textContent = IMAGE_ERROR_MESSAGE;
         if (generatePhotoButton) {
           generatePhotoButton.disabled = false;
-          generatePhotoButton.textContent = "Regenerate five-look image";
+          generatePhotoButton.textContent = "Create five-look image";
         }
       };
       generatedStyleImage.src = result.imageUrl;
@@ -3409,7 +3511,7 @@ async function generateStylePhoto() {
       }
       if (generatePhotoButton) {
         generatePhotoButton.disabled = false;
-        generatePhotoButton.textContent = "Regenerate five-look image";
+        generatePhotoButton.textContent = "Create five-look image";
       }
     }
   }
@@ -3430,11 +3532,40 @@ function initLocationSettings() {
   enableLocationButton?.addEventListener("click", enableNearbyStores);
 }
 
+async function initMotionRuntime() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  try {
+    const { animate, hover, stagger, inView } = await import("https://cdn.jsdelivr.net/npm/motion@latest/+esm");
+    document.documentElement.classList.add("motion-ready");
+
+    animate(
+      ".site-header, .hero-content, .hero-proof span",
+      { opacity: [0, 1], y: [18, 0], filter: ["blur(10px)", "blur(0px)"] },
+      { duration: 0.72, delay: stagger(0.07), easing: [0.16, 1, 0.3, 1] }
+    );
+
+    inView(".scene-section, .face-tool, .search-band, .opening-band", (element) => {
+      animate(element, { opacity: [0, 1], y: [28, 0] }, { duration: 0.72, easing: [0.16, 1, 0.3, 1] });
+    }, { margin: "0px 0px -16% 0px" });
+
+    document.querySelectorAll(".primary-link, .secondary-link, button, .story-pill, .look-card").forEach((element) => {
+      hover(element, () => {
+        animate(element, { scale: 1.018 }, { type: "spring", stiffness: 420, damping: 30 });
+        return () => animate(element, { scale: 1 }, { type: "spring", stiffness: 420, damping: 30 });
+      });
+    });
+  } catch (error) {
+    document.documentElement.classList.remove("motion-ready");
+  }
+}
+
 updateHeader();
 initProgressObserver();
 initWaitlistForm();
 initFaceColourStudio();
 initLocationSettings();
 initFemaleResultsPage();
+initMotionRuntime();
 
 window.addEventListener("scroll", updateHeader, { passive: true });
