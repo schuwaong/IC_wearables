@@ -1575,11 +1575,18 @@ h3 {
 
 .look-combination-card {
   display: grid;
+  grid-template-rows: auto auto auto auto 1fr auto;
   gap: 12px;
+  flex: 0 0 min(330px, 82vw);
+  min-height: 620px;
   padding: 14px;
   border: 1px solid rgba(248, 241, 230, 0.12);
   border-radius: var(--radius);
-  background: rgba(248, 241, 230, 0.035);
+  background:
+    linear-gradient(180deg, rgba(248, 241, 230, 0.06), rgba(248, 241, 230, 0.025)),
+    rgba(8, 8, 7, 0.44);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+  scroll-snap-align: start;
 }
 
 .look-combination-card strong {
@@ -1595,8 +1602,25 @@ h3 {
   line-height: 1.45;
 }
 
+.look-combination-price {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(224, 182, 101, 0.32);
+  border-radius: 999px;
+  background: rgba(224, 182, 101, 0.12);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .look-combination-preview {
   width: 100%;
+  aspect-ratio: 4 / 5;
   border-radius: calc(var(--radius) - 6px);
   border: 1px solid rgba(248, 241, 230, 0.12);
   background: rgba(248, 241, 230, 0.08);
@@ -1652,6 +1676,20 @@ h3 {
 .look-product-list {
   display: grid;
   gap: 10px;
+}
+
+.generated-look-body > .look-product-list[aria-label$="outfit combinations"] {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 2px 16px;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: rgba(224, 182, 101, 0.5) rgba(248, 241, 230, 0.06);
+}
+
+.look-combination-card .product-link-list {
+  max-height: 118px;
+  overflow: auto;
 }
 
 .look-product-loading {

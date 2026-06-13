@@ -1816,6 +1816,7 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
       `${piece.label}: ${product.productName} from ${product.brand}${product.price ? ` (${product.price})` : ""}`,
     )
     .join("; ");
+  const productUrls = productUrlLines(liveRows).join("; ");
   const productImageCount = liveRows.filter(({ product }) => product.imageUrl).length;
   const budgetRange = rows.map(({ product }) => product.budgetRange).find(Boolean) || "";
   const hasFaceReference = Boolean(run.faceReferenceDataUrl);
@@ -1829,6 +1830,7 @@ function buildReferencedFemaleLookPrompt(run, idea, index, rows = []) {
       ? "Use Images 2 and later only as garment, shoe, bag, and accessory references. Copy clothing silhouette, fabric texture, colour blocking, and styling details from those product images. Ignore and do not copy any catalogue model face, body, pose, skin, hair, or identity from product images."
       : "If Image 2 is an IC_wearables outfit reference, use it only as a combined garment, shoe, bag, accessory, colour, and texture reference. Do not copy any typography, layout, placeholder letters, catalogue model face, hair, body, pose, or identity. If no Image 2 exists, style the clothing from the matched product names, outfit piece labels, look category, and colour-season guidance.",
     productSummary ? `Product references: ${productSummary}.` : "",
+    productUrls ? `Product URLs to follow for the selected bundle: ${productUrls}.` : "",
     budgetRange ? `Regional price range returned by product matching: ${budgetRange}.` : "",
     "Identity priority rule: Image 1 overrides every other image and every style instruction for the face, head, skin, hair, hairline, expression, and visible age. Images 2 and later are garments only. Never borrow a catalogue model's face, hair, pose identity, body identity, expression, smile, makeup style, or skin tone from product images.",
     "Do not change identity, do not create a different model, do not change hairstyle, do not change hairline, do not change expression, and do not add a smile. Preserve natural skin texture, facial asymmetry, uploaded face proportions, uploaded head shape, and the uploaded hair shape from Image 1. Avoid mannequin, catalogue cutout, distorted face, mismatched limbs, text, logos, or watermarks.",
@@ -1954,7 +1956,7 @@ function createProductNotice(message) {
 
 function createProductLinkList(title, items = []) {
   const block = document.createElement("div");
-  block.className = "look-product-meta";
+  block.className = "look-product-meta product-link-list";
   const lines = [title, ...items]
     .filter(Boolean)
     .map((value) => String(value).trim())
@@ -1997,6 +1999,7 @@ function marketAssetCandidates(kind, countryCode = inferredCountryCode()) {
 
   if (kind === "combinations") {
     return productAssetCandidates(
+      `assets/outfit-combinations/${normalizedCountry.toLowerCase()}-dark-winter/manifest.json`,
       `data/outfit-combination-crops/${normalizedCountry.toLowerCase()}/manifest.json`,
       `assets/outfit-combinations/${normalizedCountry.toLowerCase()}/manifest.json`,
     );
@@ -2019,6 +2022,21 @@ async function fetchFirstJson(candidates) {
     }
   }
   throw lastError || new Error("No JSON candidate could be loaded.");
+}
+
+async function fetchJsonManifests(candidates) {
+  const uniqueCandidates = candidates.filter((candidate, index, all) => all.indexOf(candidate) === index);
+  const settled = await Promise.allSettled(
+    uniqueCandidates.map(async (candidate) => {
+      const href = absoluteProjectUrl(candidate);
+      const response = await fetch(href, { cache: "no-store" });
+      if (!response.ok) throw new Error(`request failed with ${response.status}`);
+      return { payload: await response.json(), href, candidate };
+    }),
+  );
+  return settled
+    .filter((entry) => entry.status === "fulfilled")
+    .map((entry) => entry.value);
 }
 
 function normalizeProductImageUrl(product = {}) {
@@ -2180,10 +2198,18 @@ function seasonFamilyName(seasonName) {
 
 async function productCombinationManifest() {
   if (!productCombinationManifestPromise) {
-    productCombinationManifestPromise = fetchFirstJson(productCombinationCandidates())
-      .then(({ payload, href }) => ({
-        ...payload,
-        __resolvedHref: href,
+    productCombinationManifestPromise = fetchJsonManifests(productCombinationCandidates())
+      .then((manifests) => ({
+        generatedAt: new Date().toISOString(),
+        summary: {
+          manifests: manifests.length,
+          combinations: manifests.reduce(
+            (total, { payload }) => total + (Array.isArray(payload?.combinations) ? payload.combinations.length : 0),
+            0,
+          ),
+        },
+        combinations: manifests.flatMap(({ payload }) => (Array.isArray(payload?.combinations) ? payload.combinations : [])),
+        __resolvedHref: manifests.map(({ href }) => href).join(", "),
       }))
       .catch(() => null);
   }
@@ -2191,22 +2217,42 @@ async function productCombinationManifest() {
 }
 
 async function combinationBoardForLook(run, idea) {
+  return combinationBoardForVariant(run, idea, 0);
+}
+
+async function combinationBoardForVariant(run, idea, variantIndex = 0) {
   const manifest = await productCombinationManifest();
   const combinations = Array.isArray(manifest?.combinations) ? manifest.combinations : [];
   const countryCode = inferredCountryCode();
   const family = seasonFamilyName(run.profile?.name);
+  const requestedVariant = Number(variantIndex) + 1;
   const match =
     combinations.find(
       (combination) =>
         String(combination.countryCode || "").trim().toUpperCase() === countryCode &&
-        combination.mode === "family" &&
-        combination.seasonFamily === family &&
-        combination.look === idea.title,
+        combination.season === run.profile?.name &&
+        combination.look === idea.title &&
+        Number(combination.variant || 1) === requestedVariant,
     ) ||
     combinations.find(
       (combination) =>
         String(combination.countryCode || "").trim().toUpperCase() === countryCode &&
         combination.season === run.profile?.name &&
+        combination.look === idea.title,
+    ) ||
+    combinations.find(
+      (combination) =>
+        String(combination.countryCode || "").trim().toUpperCase() === countryCode &&
+        combination.mode === "family" &&
+        combination.seasonFamily === family &&
+        combination.look === idea.title &&
+        Number(combination.variant || 1) === requestedVariant,
+    ) ||
+    combinations.find(
+      (combination) =>
+        String(combination.countryCode || "").trim().toUpperCase() === countryCode &&
+        combination.mode === "family" &&
+        combination.seasonFamily === family &&
         combination.look === idea.title,
     ) ||
     combinations.find((combination) => combination.mode === "family" && combination.seasonFamily === family && combination.look === idea.title) ||
@@ -2506,10 +2552,13 @@ function buildLookVariantRows(rows = [], variantIndex = 0) {
   const groups = groupedProductOptions(rows);
   if (!groups.size) return [];
   const variantRows = [];
+  let divisor = 1;
   groups.forEach((options) => {
     const normalizedOptions = options.filter(Boolean);
     if (!normalizedOptions.length) return;
-    const choice = normalizedOptions[variantIndex % normalizedOptions.length] || preferredProductRow(normalizedOptions);
+    const optionIndex = Math.floor(variantIndex / divisor) % normalizedOptions.length;
+    const choice = normalizedOptions[optionIndex] || preferredProductRow(normalizedOptions);
+    divisor *= Math.max(1, normalizedOptions.length);
     if (choice) variantRows.push(choice);
   });
   return variantRows;
@@ -2525,6 +2574,35 @@ function productUrlLines(rows = []) {
       return `${label}: ${name} -> ${url}`;
     })
     .filter(Boolean);
+}
+
+function parsePriceValue(value) {
+  const text = String(value || "");
+  const matches = [...text.matchAll(/(?:RM|MYR|HK\$|\$|USD|SGD|AUD|GBP|EUR)?\s*([0-9][0-9,]*(?:\.[0-9]+)?)/gi)]
+    .map((match) => Number(String(match[1]).replace(/,/g, "")))
+    .filter((number) => Number.isFinite(number));
+  if (!matches.length) return 0;
+  return Math.max(...matches);
+}
+
+function currencyPrefixFromRows(rows = []) {
+  const text = rows.map(({ product }) => product?.price || product?.budgetRange || "").join(" ");
+  if (/MYR|RM\b/i.test(text)) return "MYR";
+  if (/HK\$/i.test(text)) return "HK$";
+  if (/SGD/i.test(text)) return "SGD";
+  if (/AUD/i.test(text)) return "AUD";
+  if (/GBP|£/i.test(text)) return "GBP";
+  if (/EUR|€/i.test(text)) return "EUR";
+  if (/USD|\$/i.test(text)) return "USD";
+  return "";
+}
+
+function bundlePriceLabel(rows = []) {
+  const total = rows.reduce((sum, { product }) => sum + parsePriceValue(product?.price), 0);
+  const currency = currencyPrefixFromRows(rows);
+  if (!total) return "Bundle price on site";
+  const formatted = total >= 1000 ? Math.round(total).toLocaleString() : total.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  return `${currency ? `${currency} ` : ""}${formatted} bundle`;
 }
 
 function normalizeRowsForProductReferences(rows = []) {
@@ -2560,20 +2638,20 @@ function selectedLookTitle(idea, variantIndex = 0) {
 
 function buildOutfitOnlyPrompt(run, idea, rows = [], variantIndex = 0) {
   const selections = { ...defaultStyleSelections(), ...(run.selections || {}) };
-  const palette = run.profile.palette.join(", ");
   const variantRows = buildLookVariantRows(rows, variantIndex);
   const productSummary = variantRows
     .map(({ piece, product }) =>
       `${piece.label}: ${product.productName} from ${product.brand}${product.price ? ` (${product.price})` : ""}`,
     )
     .join("; ");
+  const productUrls = productUrlLines(variantRows).join("; ");
   const pieces = idea.pieces.map((piece) => piece.label).join(", ");
   return [
     `IC_wearables exact-product outfit reference for ${selectedLookTitle(idea, variantIndex)}.`,
-    `Colour season: ${run.profile.name}. Palette hex colours: ${palette}.`,
     `Style mood: ${selections.mood}. Fit goal: ${selections.fit}.`,
     `Outfit pieces to show together: ${pieces}.`,
     productSummary ? `Exact products: ${productSummary}.` : "",
+    productUrls ? `Product URLs: ${productUrls}.` : "",
     "Create a clean garment-only outfit composition on a neutral studio background. Do not include any face, head, hair, person, mannequin, model, or body part.",
     "Show the exact clothing, shoes, bag, jewellery, textures, colour blocking, and silhouette from the references. Keep the products recognisable and proportionally balanced as one complete look.",
     "No text, no logos, no watermark.",
@@ -3263,29 +3341,37 @@ async function hydrateLookProducts(run, idea, productList) {
 async function renderLookCombinations(run, idea, rows = [], combinationList, onTryLook = null) {
   if (!combinationList) return { variants: [], selectedVariantRows: rows };
   const countryCode = inferredCountryCode();
-  const variantCount = Math.max(
-    1,
-    Math.min(
-      3,
-      ...Array.from(groupedProductOptions(rows).values()).map((options) => Math.max(1, options.length)),
-    ),
-  );
+  const groupedOptions = Array.from(groupedProductOptions(rows).values()).map((options) => options.filter(Boolean));
+  const totalPermutations = groupedOptions.reduce((total, options) => total * Math.max(1, options.length), 1);
+  const variantCount = Math.max(1, Math.min(10, totalPermutations));
   const variants = await Promise.all(Array.from({ length: variantCount }, async (_, index) => {
     const variantRows = buildLookVariantRows(rows, index);
+    const pregeneratedBoard = await Promise.race([
+      combinationBoardForVariant(run, idea, index),
+      delay(LOOK_REFERENCE_WAIT_MS).then(() => null),
+    ]);
     const board = combinationList.ownerDocument.createElement("article");
     board.className = "look-combination-card";
     const preview = combinationList.ownerDocument.createElement("img");
     preview.className = "look-combination-preview";
     preview.alt = `${selectedLookTitle(idea, index)} outfit-only preview`;
     preview.loading = "lazy";
-    preview.src = await buildVariantPreviewDataUrl(idea, variantRows, index).catch(() => "");
+    preview.src = pregeneratedBoard?.boardUrl || (await buildVariantPreviewDataUrl(idea, variantRows, index).catch(() => ""));
     const heading = combinationList.ownerDocument.createElement("strong");
     heading.textContent = selectedLookTitle(idea, index);
+    const bundlePrice = bundlePriceLabel(variantRows);
+    const priceTag = combinationList.ownerDocument.createElement("span");
+    priceTag.className = "look-combination-price";
+    priceTag.textContent = bundlePrice;
     const note = combinationList.ownerDocument.createElement("p");
     note.textContent =
       index === 0
-        ? "Primary exact-product combination for this look."
-        : `Alternate same-look combination built from matched options for ${marketLabel(countryCode)}.`;
+        ? pregeneratedBoard
+          ? "Primary pre-generated product bundle for this look."
+          : "Primary exact-product combination for this look."
+        : pregeneratedBoard
+          ? `Pre-generated same-look bundle ${index + 1} for ${marketLabel(countryCode)}.`
+          : `Alternate same-look combination built from matched options for ${marketLabel(countryCode)}.`;
     const chips = combinationList.ownerDocument.createElement("div");
     chips.className = "look-piece-list";
     variantRows.forEach(({ piece, product }) => {
@@ -3299,7 +3385,7 @@ async function renderLookCombinations(run, idea, rows = [], combinationList, onT
     const tryButton = combinationList.ownerDocument.createElement("button");
     tryButton.type = "button";
     tryButton.className = "generated-look-secondary";
-    tryButton.textContent = "Try look";
+    tryButton.textContent = "See how you look";
     tryButton.disabled = run.sample;
     if (onTryLook) {
       tryButton.addEventListener("click", async () => {
@@ -3307,12 +3393,12 @@ async function renderLookCombinations(run, idea, rows = [], combinationList, onT
         try {
           await onTryLook(variantRows, index);
         } finally {
-          setButtonBusy(tryButton, "Try look", false);
+          setButtonBusy(tryButton, "See how you look", false);
         }
       });
     }
     actions.appendChild(tryButton);
-    board.append(preview, heading, note, createProductLinkList("Products", links), chips, actions);
+    board.append(preview, heading, priceTag, note, createProductLinkList("Product URLs", links), chips, actions);
     return { index, rows: variantRows, board, tryButton };
   }));
   combinationList.replaceChildren(...variants.map((variant) => variant.board));

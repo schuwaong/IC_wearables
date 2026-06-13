@@ -1,0 +1,3416 @@
+{
+  "generatedAt": "2026-06-13T13:50:45.859Z",
+  "sourceLibrary": "assets/product-library-my.json",
+  "outputDir": "assets/outfit-combinations/my-dark-winter",
+  "summary": {
+    "combinations": 50,
+    "countries": 1,
+    "families": 1,
+    "variantsPerGroup": 10,
+    "exactProductCombinations": 50,
+    "combinationsWithProductImages": 50
+  },
+  "usageNote": "Send Image 1 as the scanned face and Image 2 as the outfit combination board. The board is a garment/product reference only and must not change face, hair, expression, or identity.",
+  "combinations": [
+    {
+      "id": "my__season__dark-winter__business-formal__v1",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 1,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "Mili Linen Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 145.00 - MYR 239.00",
+          "affiliateLink": "https://www.lovebonito.com/my/mili-linen-shawl-collared-blazer-11n4060227.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4060227-1_ed9h4ob13nxtnklp.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-silk-satin-blouse-dark-winter-business-formal",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v1.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v2",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 2,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "Mili Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 209.00",
+          "affiliateLink": "https://invl.me/clnj02x?sid=icw-icw-my-dark-winter-women-tailored-blazer-dark-winter-business-formal",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4030052-1_onppgctsrhpxl4xf.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-silk-satin-blouse-dark-winter-business-formal",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v2.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v3",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 3,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer office Dark Winter Business formal search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20tailored%20blazer%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-silk-satin-blouse-dark-winter-business-formal",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v3.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v4",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 4,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer office Dark Winter Business formal search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20tailored%20blazer%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-silk-satin-blouse-dark-winter-business-formal",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v4.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v5",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 5,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer office Dark Winter Business formal search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20tailored%20blazer%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-silk-satin-blouse-dark-winter-business-formal",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v5.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v6",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 6,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "Mili Linen Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 145.00 - MYR 239.00",
+          "affiliateLink": "https://www.lovebonito.com/my/mili-linen-shawl-collared-blazer-11n4060227.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4060227-1_ed9h4ob13nxtnklp.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women satin blouse office Dark Winter Business formal search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20satin%20blouse%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v6.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v7",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 7,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "Mili Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 209.00",
+          "affiliateLink": "https://invl.me/clnj02x?sid=icw-icw-my-dark-winter-women-tailored-blazer-dark-winter-business-formal",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4030052-1_onppgctsrhpxl4xf.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women satin blouse office Dark Winter Business formal search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20satin%20blouse%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v7.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v8",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 8,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer office Dark Winter Business formal search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20tailored%20blazer%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women satin blouse office Dark Winter Business formal search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20satin%20blouse%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v8.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v9",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 9,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer office Dark Winter Business formal search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20tailored%20blazer%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women satin blouse office Dark Winter Business formal search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20satin%20blouse%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v9.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__business-formal__v10",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Business formal",
+      "occasion": "business formal",
+      "variant": 10,
+      "products": [
+        {
+          "piece": "Tailored blazer",
+          "productName": "women tailored blazer office Dark Winter Business formal search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20tailored%20blazer%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Near-face blouse",
+          "productName": "women satin blouse office Dark Winter Business formal search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20satin%20blouse%20office%20Dark%20Winter%20Business%20formal",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored trouser or skirt",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-trousers-pencil-skirt-dark-winter-business-for",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather pump or loafer",
+          "productName": "Puma Speedcat Ballet Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 379.00",
+          "affiliateLink": "https://invl.me/clnj03u?sid=icw-icw-my-dark-winter-women-leather-pumps-loafers-dark-winter-business-formal",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120485220_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__business-formal__v10.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v1",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 1,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "Mili Linen Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 145.00 - MYR 239.00",
+          "affiliateLink": "https://www.lovebonito.com/my/mili-linen-shawl-collared-blazer-11n4060227.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4060227-1_ed9h4ob13nxtnklp.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "Knit Relaxed Long Top",
+          "brand": "Love Bonito MY",
+          "price": "MYR 90.00",
+          "affiliateLink": "https://invl.me/clnj039?sid=icw-icw-my-dark-winter-women-fine-knit-top-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/1/31c6031801-1_bz1kpp1mfq9pmdhb.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v1.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v2",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 2,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "Mili Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 209.00",
+          "affiliateLink": "https://invl.me/clnj02x?sid=icw-icw-my-dark-winter-women-relaxed-blazer-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4030052-1_onppgctsrhpxl4xf.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "Knit Relaxed Long Top",
+          "brand": "Love Bonito MY",
+          "price": "MYR 90.00",
+          "affiliateLink": "https://invl.me/clnj039?sid=icw-icw-my-dark-winter-women-fine-knit-top-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/1/31c6031801-1_bz1kpp1mfq9pmdhb.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v2.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v3",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 3,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer smart casual Dark Winter Smart casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20relaxed%20blazer%20smart%20casual%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "Knit Relaxed Long Top",
+          "brand": "Love Bonito MY",
+          "price": "MYR 90.00",
+          "affiliateLink": "https://invl.me/clnj039?sid=icw-icw-my-dark-winter-women-fine-knit-top-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/1/31c6031801-1_bz1kpp1mfq9pmdhb.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v3.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v4",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 4,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer smart casual Dark Winter Smart casual search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20relaxed%20blazer%20smart%20casual%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "Knit Relaxed Long Top",
+          "brand": "Love Bonito MY",
+          "price": "MYR 90.00",
+          "affiliateLink": "https://invl.me/clnj039?sid=icw-icw-my-dark-winter-women-fine-knit-top-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/1/31c6031801-1_bz1kpp1mfq9pmdhb.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v4.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v5",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 5,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer smart casual Dark Winter Smart casual search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20relaxed%20blazer%20smart%20casual%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "Knit Relaxed Long Top",
+          "brand": "Love Bonito MY",
+          "price": "MYR 90.00",
+          "affiliateLink": "https://invl.me/clnj039?sid=icw-icw-my-dark-winter-women-fine-knit-top-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/1/31c6031801-1_bz1kpp1mfq9pmdhb.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v5.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v6",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 6,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "Mili Linen Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 145.00 - MYR 239.00",
+          "affiliateLink": "https://www.lovebonito.com/my/mili-linen-shawl-collared-blazer-11n4060227.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4060227-1_ed9h4ob13nxtnklp.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Dark Winter Smart casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20fine%20knit%20top%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v6.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v7",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 7,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "Mili Shawl Collared Blazer",
+          "brand": "Love Bonito MY",
+          "price": "MYR 209.00",
+          "affiliateLink": "https://invl.me/clnj02x?sid=icw-icw-my-dark-winter-women-relaxed-blazer-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n4030052-1_onppgctsrhpxl4xf.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Dark Winter Smart casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20fine%20knit%20top%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v7.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v8",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 8,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer smart casual Dark Winter Smart casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20relaxed%20blazer%20smart%20casual%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Dark Winter Smart casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20fine%20knit%20top%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v8.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v9",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 9,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer smart casual Dark Winter Smart casual search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20relaxed%20blazer%20smart%20casual%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Dark Winter Smart casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20fine%20knit%20top%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v9.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__smart-casual__v10",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Smart casual",
+      "occasion": "smart casual",
+      "variant": 10,
+      "products": [
+        {
+          "piece": "Soft blazer",
+          "productName": "women relaxed blazer smart casual Dark Winter Smart casual search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20relaxed%20blazer%20smart%20casual%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fine knit top",
+          "productName": "women fine knit top Dark Winter Smart casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20fine%20knit%20top%20Dark%20Winter%20Smart%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-tailored-jeans-trousers-dark-winter-smart-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Loafer or slingback",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-loafers-slingback-shoes-dark-winter-smart-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__smart-casual__v10.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v1",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 1,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "Nike Running Swift Jacket",
+          "brand": "JD Sports MY",
+          "price": "MYR 579.00",
+          "affiliateLink": "https://invl.me/clnj03d?sid=icw-icw-my-dark-winter-women-cropped-jacket-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_753104_a.jpg?crop=center&height=1200&v=1764756873&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-premium-t-shirt-fine-knit-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v1.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v2",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 2,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "RuchedReady Collared Boxy Crop Jacket",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00 - MYR 239.00",
+          "affiliateLink": "https://www.lovebonito.com/my/ruchedreadyr-collared-boxy-crop-jacket-31n4100557.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/1/31n4100557-1_u7xtsaw8x4ur8rv0.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-premium-t-shirt-fine-knit-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v2.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v3",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 3,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Dark Winter City casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20cropped%20jacket%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-premium-t-shirt-fine-knit-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v3.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v4",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 4,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Dark Winter City casual search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20cropped%20jacket%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-premium-t-shirt-fine-knit-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v4.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v5",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 5,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Dark Winter City casual search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20cropped%20jacket%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-premium-t-shirt-fine-knit-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v5.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v6",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 6,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "Nike Running Swift Jacket",
+          "brand": "JD Sports MY",
+          "price": "MYR 579.00",
+          "affiliateLink": "https://invl.me/clnj03d?sid=icw-icw-my-dark-winter-women-cropped-jacket-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_753104_a.jpg?crop=center&height=1200&v=1764756873&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt knit Dark Winter City casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20premium%20t%20shirt%20knit%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v6.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v7",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 7,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "RuchedReady Collared Boxy Crop Jacket",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00 - MYR 239.00",
+          "affiliateLink": "https://www.lovebonito.com/my/ruchedreadyr-collared-boxy-crop-jacket-31n4100557.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/1/31n4100557-1_u7xtsaw8x4ur8rv0.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt knit Dark Winter City casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20premium%20t%20shirt%20knit%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v7.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v8",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 8,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Dark Winter City casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20cropped%20jacket%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt knit Dark Winter City casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20premium%20t%20shirt%20knit%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v8.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v9",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 9,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Dark Winter City casual search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20cropped%20jacket%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt knit Dark Winter City casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20premium%20t%20shirt%20knit%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v9.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__city-casual__v10",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "City casual",
+      "occasion": "city casual",
+      "variant": 10,
+      "products": [
+        {
+          "piece": "Cropped jacket",
+          "productName": "women cropped jacket Dark Winter City casual search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20cropped%20jacket%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Premium tee or knit",
+          "productName": "women premium t shirt knit Dark Winter City casual search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20premium%20t%20shirt%20knit%20Dark%20Winter%20City%20casual",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Straight denim or trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-straight-leg-jeans-trousers-dark-winter-city-casual",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Clean sneaker",
+          "productName": "Tommy Hilfiger Casual Capsule Sneakers Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 300.00",
+          "affiliateLink": "https://invl.me/clnj03t?sid=icw-icw-my-dark-winter-women-minimal-leather-sneakers-dark-winter-city-casual",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_120519260_a.jpg?crop=center&height=1200&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__city-casual__v10.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v1",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 1,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "Nike Running Swift Jacket",
+          "brand": "JD Sports MY",
+          "price": "MYR 579.00",
+          "affiliateLink": "https://invl.me/clnj03d?sid=icw-icw-my-dark-winter-women-technical-jacket-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_753104_a.jpg?crop=center&height=1200&v=1764756873&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-performance-tank-t-shirt-dark-winter-athleisure",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v1.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v2",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 2,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "RuchedReady Yue Mandarin Collar Cinched Jacket",
+          "brand": "Love Bonito MY",
+          "price": "MYR 180.00 - MYR 269.00",
+          "affiliateLink": "https://www.lovebonito.com/my/ruchedreadyr-yue-mandarin-collar-cinched-jacket-11n6011135.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n6011135-1_bdrlda8pwof3swzm.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-performance-tank-t-shirt-dark-winter-athleisure",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v2.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v3",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 3,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women running training jacket Dark Winter Athleisure search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20running%20training%20jacket%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-performance-tank-t-shirt-dark-winter-athleisure",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v3.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v4",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 4,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women running training jacket Dark Winter Athleisure search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20running%20training%20jacket%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-performance-tank-t-shirt-dark-winter-athleisure",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v4.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v5",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 5,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women running training jacket Dark Winter Athleisure search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20running%20training%20jacket%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "RuchedReady Ily Notch Collar Blouse",
+          "brand": "Love Bonito MY",
+          "price": "MYR 75.00",
+          "affiliateLink": "https://invl.me/clnj02y?sid=icw-icw-my-dark-winter-women-performance-tank-t-shirt-dark-winter-athleisure",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11a4090291-1_1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v5.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v6",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 6,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "Nike Running Swift Jacket",
+          "brand": "JD Sports MY",
+          "price": "MYR 579.00",
+          "affiliateLink": "https://invl.me/clnj03d?sid=icw-icw-my-dark-winter-women-technical-jacket-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_753104_a.jpg?crop=center&height=1200&v=1764756873&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Dark Winter Athleisure search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20performance%20tank%20t%20shirt%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v6.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v7",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 7,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "RuchedReady Yue Mandarin Collar Cinched Jacket",
+          "brand": "Love Bonito MY",
+          "price": "MYR 180.00 - MYR 269.00",
+          "affiliateLink": "https://www.lovebonito.com/my/ruchedreadyr-yue-mandarin-collar-cinched-jacket-11n6011135.html",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11n6011135-1_bdrlda8pwof3swzm.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "verified-direct"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Dark Winter Athleisure search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20performance%20tank%20t%20shirt%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v7.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v8",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 8,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women running training jacket Dark Winter Athleisure search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20running%20training%20jacket%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Dark Winter Athleisure search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20performance%20tank%20t%20shirt%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v8.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v9",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 9,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women running training jacket Dark Winter Athleisure search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20running%20training%20jacket%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Dark Winter Athleisure search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20performance%20tank%20t%20shirt%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v9.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__athleisure__v10",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Athleisure",
+      "occasion": "athleisure",
+      "variant": 10,
+      "products": [
+        {
+          "piece": "Technical jacket",
+          "productName": "women running training jacket Dark Winter Athleisure search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20running%20training%20jacket%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Performance tank or tee",
+          "productName": "women performance tank t shirt Dark Winter Athleisure search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20performance%20tank%20t%20shirt%20Dark%20Winter%20Athleisure",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Tailored legging or jogger",
+          "productName": "Nike High-Waisted Leggings",
+          "brand": "JD Sports MY",
+          "price": "MYR 110.00",
+          "affiliateLink": "https://invl.me/clnj03q?sid=icw-icw-my-dark-winter-women-premium-leggings-joggers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_FN3242-010_a.jpg?crop=center&height=1200&v=1751520020&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Training sneaker",
+          "productName": "Nike Air Superfly Women's",
+          "brand": "JD Sports MY",
+          "price": "MYR 260.00",
+          "affiliateLink": "https://invl.me/clnj03s?sid=icw-icw-my-dark-winter-women-premium-training-sneakers-dark-winter-athleisure",
+          "imageUrl": "https://www.jdsports.my/cdn/shop/files/jd_ANZ0138714_al.jpg?crop=center&height=1200&v=1778129865&width=1200",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__athleisure__v10.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v1",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 1,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "Rocio Sheer Knit Cardigan",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00",
+          "affiliateLink": "https://invl.me/clnj03a?sid=icw-icw-my-dark-winter-women-cashmere-knit-sweater-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/2/1/21o6031363-1_igxnme8wwhfthlm5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "Rocio Sheer Knit Cardigan",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00",
+          "affiliateLink": "https://invl.me/clnj03a?sid=icw-icw-my-dark-winter-women-wool-coat-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/2/1/21o6031363-1_igxnme8wwhfthlm5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v1.png",
+      "productCount": 4,
+      "productImageCount": 4,
+      "exactProductCount": 4
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v2",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 2,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women knit sweater quiet luxury Dark Winter Quiet luxury search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20knit%20sweater%20quiet%20luxury%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "Rocio Sheer Knit Cardigan",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00",
+          "affiliateLink": "https://invl.me/clnj03a?sid=icw-icw-my-dark-winter-women-wool-coat-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/2/1/21o6031363-1_igxnme8wwhfthlm5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v2.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v3",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 3,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women knit sweater quiet luxury Dark Winter Quiet luxury search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20knit%20sweater%20quiet%20luxury%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "Rocio Sheer Knit Cardigan",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00",
+          "affiliateLink": "https://invl.me/clnj03a?sid=icw-icw-my-dark-winter-women-wool-coat-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/2/1/21o6031363-1_igxnme8wwhfthlm5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v3.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v4",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 4,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women knit sweater quiet luxury Dark Winter Quiet luxury search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20knit%20sweater%20quiet%20luxury%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "Rocio Sheer Knit Cardigan",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00",
+          "affiliateLink": "https://invl.me/clnj03a?sid=icw-icw-my-dark-winter-women-wool-coat-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/2/1/21o6031363-1_igxnme8wwhfthlm5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v4.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v5",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 5,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "Rocio Sheer Knit Cardigan",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00",
+          "affiliateLink": "https://invl.me/clnj03a?sid=icw-icw-my-dark-winter-women-cashmere-knit-sweater-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/2/1/21o6031363-1_igxnme8wwhfthlm5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Dark Winter Quiet luxury search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20wool%20coat%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v5.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v6",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 6,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women knit sweater quiet luxury Dark Winter Quiet luxury search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20knit%20sweater%20quiet%20luxury%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Dark Winter Quiet luxury search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20wool%20coat%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v6.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v7",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 7,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women knit sweater quiet luxury Dark Winter Quiet luxury search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20knit%20sweater%20quiet%20luxury%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Dark Winter Quiet luxury search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20wool%20coat%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v7.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v8",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 8,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women knit sweater quiet luxury Dark Winter Quiet luxury search results",
+          "brand": "Taobao MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://s.taobao.com/search?q=women%20knit%20sweater%20quiet%20luxury%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Dark Winter Quiet luxury search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20wool%20coat%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v8.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v9",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 9,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "Rocio Sheer Knit Cardigan",
+          "brand": "Love Bonito MY",
+          "price": "MYR 120.00",
+          "affiliateLink": "https://invl.me/clnj03a?sid=icw-icw-my-dark-winter-women-cashmere-knit-sweater-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/2/1/21o6031363-1_igxnme8wwhfthlm5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Dark Winter Quiet luxury search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20wool%20coat%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v9.png",
+      "productCount": 4,
+      "productImageCount": 3,
+      "exactProductCount": 3
+    },
+    {
+      "id": "my__season__dark-winter__quiet-luxury__v10",
+      "countryCode": "MY",
+      "mode": "season",
+      "seasonFamily": "Winter",
+      "season": "Dark Winter",
+      "palette": [
+        "#111827",
+        "#f7f8fb",
+        "#0f5b76",
+        "#8f1d3f",
+        "#4b5563",
+        "#0b3b3e"
+      ],
+      "look": "Quiet luxury",
+      "occasion": "quiet luxury",
+      "variant": 10,
+      "products": [
+        {
+          "piece": "Cashmere knit",
+          "productName": "women knit sweater quiet luxury Dark Winter Quiet luxury search results",
+          "brand": "Shopee MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://shopee.com.my/search?keyword=women%20knit%20sweater%20quiet%20luxury%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Wool coat",
+          "productName": "women wool coat Dark Winter Quiet luxury search results",
+          "brand": "TikTok Shop MY",
+          "price": "MYR price on site",
+          "affiliateLink": "https://www.tiktok.com/shop/s/women%20wool%20coat%20Dark%20Winter%20Quiet%20luxury",
+          "imageUrl": "",
+          "localImagePath": "",
+          "isFallback": true,
+          "source": "approved-marketplace-search"
+        },
+        {
+          "piece": "Fluid trouser",
+          "productName": "Lana Relaxed Tailored Pants",
+          "brand": "Love Bonito MY",
+          "price": "MYR 135.00",
+          "affiliateLink": "https://invl.me/clnj02z?sid=icw-icw-my-dark-winter-women-fluid-wool-trousers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/1/1/11f4060231-106-2_3_5.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        },
+        {
+          "piece": "Leather tote or loafer",
+          "productName": "Love, Bonito Foldable Tote Bag",
+          "brand": "Love Bonito MY",
+          "price": "MYR 45.00",
+          "affiliateLink": "https://invl.me/clnj03b?sid=icw-icw-my-dark-winter-women-leather-tote-loafers-dark-winter-quiet-luxury",
+          "imageUrl": "https://www.lovebonito.com/cdn-cgi/image/width=572,quality=75,format=webp/https://media.lovebonito.com/media/catalog/product/3/3/33w6032206-1.jpg",
+          "localImagePath": "",
+          "isFallback": false,
+          "source": "involve-asia"
+        }
+      ],
+      "boardImage": "assets/outfit-combinations/my-dark-winter/my/winter/dark-winter__quiet-luxury__v10.png",
+      "productCount": 4,
+      "productImageCount": 2,
+      "exactProductCount": 2
+    }
+  ]
+}

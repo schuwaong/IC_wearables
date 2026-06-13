@@ -12,6 +12,10 @@ const GROUP_BY = String(process.env.PRODUCT_COMBINATION_GROUP_BY || "family").tr
 const BOARD_WIDTH = Math.max(900, Number(process.env.PRODUCT_COMBINATION_WIDTH) || 1200);
 const BOARD_HEIGHT = Math.max(1200, Number(process.env.PRODUCT_COMBINATION_HEIGHT) || 1600);
 const MAX_PRODUCTS_PER_COMBINATION = Math.max(3, Math.min(8, Number(process.env.PRODUCT_COMBINATION_MAX_PRODUCTS) || 4));
+const VARIANTS_PER_GROUP = Math.max(1, Math.min(20, Number(process.env.PRODUCT_COMBINATION_VARIANTS) || 10));
+const SEASON_FILTER = String(process.env.PRODUCT_COMBINATION_SEASON_FILTER || "").trim().toLowerCase();
+const FAMILY_FILTER = String(process.env.PRODUCT_COMBINATION_FAMILY_FILTER || "").trim().toLowerCase();
+const LOOK_FILTER = String(process.env.PRODUCT_COMBINATION_LOOK_FILTER || "").trim().toLowerCase();
 const ALLOW_REMOTE_IMAGES = process.env.PRODUCT_COMBINATION_ALLOW_REMOTE_IMAGES === "true";
 const FAMILY_PALETTES = {
   Spring: ["#ffd166", "#ff8c69", "#36b37e", "#41c7c7", "#fff2c2", "#d98c28"],
@@ -120,12 +124,31 @@ function firstProductForPiece(products, piece) {
   );
 }
 
-function pickCombinationProducts(products) {
+function rankedProductsForPiece(products, piece) {
+  return products
+    .filter((product) => product.piece === piece)
+    .slice()
+    .sort((left, right) => {
+      const leftScore = Number(!left.isFallback) * 8 + Number(Boolean(left.localImagePath || left.imageUrl)) * 4 + Number(Boolean(left.affiliateLink)) * 2;
+      const rightScore = Number(!right.isFallback) * 8 + Number(Boolean(right.localImagePath || right.imageUrl)) * 4 + Number(Boolean(right.affiliateLink)) * 2;
+      if (rightScore !== leftScore) return rightScore - leftScore;
+      return String(left.productName || "").localeCompare(String(right.productName || ""));
+    });
+}
+
+function pickCombinationProducts(products, variantIndex = 0) {
   const pieces = [...new Set(products.map((product) => product.piece).filter(Boolean))];
-  return pieces
-    .map((piece) => firstProductForPiece(products, piece))
-    .filter(Boolean)
-    .slice(0, MAX_PRODUCTS_PER_COMBINATION);
+  const selectedPieces = pieces.slice(0, MAX_PRODUCTS_PER_COMBINATION);
+  let divisor = 1;
+  return selectedPieces
+    .map((piece) => {
+      const candidates = rankedProductsForPiece(products, piece);
+      if (!candidates.length) return firstProductForPiece(products, piece);
+      const index = Math.floor(variantIndex / divisor) % candidates.length;
+      divisor *= Math.max(1, candidates.length);
+      return candidates[index] || candidates[0];
+    })
+    .filter(Boolean);
 }
 
 async function fileExists(filePath) {
@@ -140,10 +163,8 @@ async function fileExists(filePath) {
 async function imageDataUri(product) {
   const localPath = product.localImagePath ? resolveProjectPath(product.localImagePath) : "";
   if (localPath && (await fileExists(localPath))) {
-    const buffer = await fs.readFile(localPath);
-    const extension = path.extname(localPath).replace(".", "").toLowerCase();
-    const mime = extension === "jpg" || extension === "jpeg" ? "image/jpeg" : `image/${extension || "png"}`;
-    return `data:${mime};base64,${buffer.toString("base64")}`;
+    const buffer = await sharp(await fs.readFile(localPath)).png().toBuffer();
+    return `data:image/png;base64,${buffer.toString("base64")}`;
   }
 
   if (!ALLOW_REMOTE_IMAGES || !product.imageUrl) return "";
@@ -154,8 +175,8 @@ async function imageDataUri(product) {
     if (!response.ok) return "";
     const contentType = (response.headers.get("content-type") || "image/jpeg").split(";")[0];
     if (!contentType.startsWith("image/")) return "";
-    const buffer = Buffer.from(await response.arrayBuffer());
-    return `data:${contentType};base64,${buffer.toString("base64")}`;
+    const buffer = await sharp(Buffer.from(await response.arrayBuffer())).png().toBuffer();
+    return `data:image/png;base64,${buffer.toString("base64")}`;
   } catch {
     return "";
   }
@@ -273,7 +294,8 @@ async function writeBoard(combination) {
   const familySlug = slug(combination.seasonFamily);
   const seasonSlug = slug(combination.mode === "family" ? combination.seasonFamily : combination.season);
   const lookSlug = slug(combination.look);
-  const filename = `${seasonSlug}__${lookSlug}.png`;
+  const variantSuffix = combination.variant ? `__v${combination.variant}` : "";
+  const filename = `${seasonSlug}__${lookSlug}${variantSuffix}.png`;
   const outputPath = path.join(
     OUTPUT_DIR,
     countrySlug,
@@ -307,36 +329,43 @@ async function main() {
 
   for (const [key, group] of groupProducts(products)) {
     const [countryCode, mode, family, season, look] = key.split("::");
-    const selectedProducts = pickCombinationProducts(group);
-    if (!selectedProducts.length) continue;
+    if (SEASON_FILTER && String(season || "").toLowerCase() !== SEASON_FILTER) continue;
+    if (FAMILY_FILTER && String(family || "").toLowerCase() !== FAMILY_FILTER) continue;
+    if (LOOK_FILTER && String(look || "").toLowerCase() !== LOOK_FILTER) continue;
 
-    const combination = {
-      id: `${slug(countryCode)}__${slug(mode)}__${slug(season)}__${slug(look)}`,
-      countryCode,
-      mode,
-      seasonFamily: family,
-      season,
-      palette: mode === "family" ? FAMILY_PALETTES[family] || selectedProducts[0]?.palette || [] : selectedProducts[0]?.palette || [],
-      look,
-      occasion: selectedProducts[0]?.occasion || "",
-      products: selectedProducts,
-    };
-    combination.boardImage = await writeBoard(combination);
-    combination.productCount = selectedProducts.length;
-    combination.productImageCount = selectedProducts.filter((product) => product.localImagePath || product.imageUrl).length;
-    combination.exactProductCount = selectedProducts.filter((product) => !product.isFallback).length;
-    combination.products = selectedProducts.map((product) => ({
-      piece: product.piece,
-      productName: product.productName,
-      brand: product.brand,
-      price: product.price,
-      affiliateLink: product.affiliateLink,
-      imageUrl: product.imageUrl,
-      localImagePath: product.localImagePath,
-      isFallback: Boolean(product.isFallback),
-      source: product.source,
-    }));
-    combinations.push(combination);
+    for (let variantIndex = 0; variantIndex < VARIANTS_PER_GROUP; variantIndex += 1) {
+      const selectedProducts = pickCombinationProducts(group, variantIndex);
+      if (!selectedProducts.length) continue;
+
+      const combination = {
+        id: `${slug(countryCode)}__${slug(mode)}__${slug(season)}__${slug(look)}__v${variantIndex + 1}`,
+        countryCode,
+        mode,
+        seasonFamily: family,
+        season,
+        palette: mode === "family" ? FAMILY_PALETTES[family] || selectedProducts[0]?.palette || [] : selectedProducts[0]?.palette || [],
+        look,
+        occasion: selectedProducts[0]?.occasion || "",
+        variant: variantIndex + 1,
+        products: selectedProducts,
+      };
+      combination.boardImage = await writeBoard(combination);
+      combination.productCount = selectedProducts.length;
+      combination.productImageCount = selectedProducts.filter((product) => product.localImagePath || product.imageUrl).length;
+      combination.exactProductCount = selectedProducts.filter((product) => !product.isFallback).length;
+      combination.products = selectedProducts.map((product) => ({
+        piece: product.piece,
+        productName: product.productName,
+        brand: product.brand,
+        price: product.price,
+        affiliateLink: product.affiliateLink,
+        imageUrl: product.imageUrl,
+        localImagePath: product.localImagePath,
+        isFallback: Boolean(product.isFallback),
+        source: product.source,
+      }));
+      combinations.push(combination);
+    }
   }
 
   const manifest = {
@@ -347,6 +376,7 @@ async function main() {
       combinations: combinations.length,
       countries: [...new Set(combinations.map((combination) => combination.countryCode))].length,
       families: [...new Set(combinations.map((combination) => combination.seasonFamily))].length,
+      variantsPerGroup: VARIANTS_PER_GROUP,
       exactProductCombinations: combinations.filter((combination) => combination.exactProductCount > 0).length,
       combinationsWithProductImages: combinations.filter((combination) => combination.productImageCount > 0).length,
     },
